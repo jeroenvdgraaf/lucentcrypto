@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<!-- Copyright (C) 2026 Jeroen van de Graaf -->
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LucentCrypto</title>
+<meta name="description" content="Sorteios que qualquer pessoa pode conferir, e amigo oculto sem servidor.">
+<style>
+:root {
+  --bg: #eef2f3; --surface: #ffffff; --ink: #13232b; --muted: #50646d; --line: #cdd8dc; --accent: #a85d08; --pine: #1f5a44;
+  --display: "Avenir Next", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #0d1417; --surface: #141f24; --ink: #e2ebee; --muted: #98abb2; --line: #26363d; --accent: #f0a443; --pine: #4fb487; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #0d1417; --surface: #141f24; --ink: #e2ebee; --muted: #98abb2; --line: #26363d; --accent: #f0a443; --pine: #4fb487; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 var(--body); padding: 40px 16px 48px; }
+main { max-width: 760px; margin: 0 auto; display: grid; gap: 28px; }
+.family { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 800 clamp(32px, 7vw, 48px)/1.05 var(--display); letter-spacing: -0.02em; margin: 6px 0 10px; }
+.lead { margin: 0; color: var(--muted); max-width: 60ch; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+a.card { display: grid; gap: 8px; text-decoration: none; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; border-top: 4px solid var(--c); }
+a.card:hover { border-color: var(--c); }
+a.card:focus-visible { outline: 2px solid var(--c); outline-offset: 3px; }
+a.card h2 { font: 700 22px/1.2 var(--display); margin: 0; color: var(--c); }
+a.card p { margin: 0; font-size: 15px; }
+a.card .go { font-weight: 600; color: var(--c); }
+footer { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="family">LucentCrypto</div>
+    <h1>Sorteios em que dá para confiar</h1>
+    <p class="lead">Ferramentas pequenas, abertas e gratuitas que funcionam no seu navegador, sem cadastro e sem guardar seus dados em servidor.</p>
+  </header>
+  <div class="cards">
+    <a class="card" href="/sorteios/" style="--c: var(--accent)">
+      <h2>Lucent Sorteios</h2>
+      <p>Listas com pesos, moeda, dados e cartas. No modo verificável, as opções são lacradas antes do sorteio e o resultado vem de uma fonte pública; qualquer pessoa confere depois com o certificado.</p>
+      <span class="go">Abrir Lucent Sorteios →</span>
+    </a>
+    <a class="card" href="/amigo-oculto/" style="--c: var(--pine)">
+      <h2>Lucent Amigo Oculto</h2>
+      <p>Sorteie o amigo oculto da família ou do trabalho e mande a cada pessoa um link só dela. Ninguém, nem quem organiza, precisa ver o resultado.</p>
+      <span class="go">Abrir Lucent Amigo Oculto →</span>
+    </a>
+  </div>
+  <footer>LucentCrypto · <a href="/spec/SPEC-v3.md" style="color:inherit">especificação do protocolo</a> · <a href="/verifier/verify_draw.py" style="color:inherit">verificador em Python</a></footer>
+</main>
+</body>
+</html>
