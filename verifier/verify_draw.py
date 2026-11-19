@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2026 Jeroen van de Graaf
-"""verify_draw.py: verificador de referência do Lucent Sorteios (protocolo LucentDraw/2).
+"""verify_draw.py: verificador de referência do Lucent Sorteios (protocolos LucentDraw/3, /2 e /1).
 
 Segunda implementação, independente da página HTML, do algoritmo de conferência
-(SPEC, seção 9). Usa apenas a biblioteca padrão do Python; o pacote `requests`
+(SPEC, seção 9; SPEC-v3, seção 7 para LucentDraw/3). Usa apenas a biblioteca padrão do Python; o pacote `requests`
 só é necessário para buscar os valores nas fontes (blocos Ethereum, farol drand,
 resultados da Caixa). A verificação BLS do drand é feita aqui mesmo, em Python
 puro (BLS12-381, RFC 9380), sem bibliotecas externas.
@@ -38,12 +38,15 @@ import subprocess
 import sys
 import tempfile
 import unicodedata
+from fractions import Fraction
 from functools import lru_cache
+from math import gcd
 
 # =============================================================================
 # Constantes do protocolo
 # =============================================================================
 
+V3 = "LucentDraw/3"
 V2 = "LucentDraw/2"
 V1 = "LucentDraw/1"
 SOURCE_ORDER = ("eth", "drand", "megasena", "federal")
@@ -73,12 +76,8 @@ OFFICIAL_PAGES = {
     "megasena": "https://loterias.caixa.gov.br/Paginas/Mega-Sena.aspx",
     "federal": "https://loterias.caixa.gov.br/Paginas/Federal.aspx",
 }
-# Calendário de sorteios assumido (dias da semana 0=domingo, hora de Brasília).
-# A CONFIRMAR PELO RESPONSÁVEL (ver DECISIONS.md). Usado só para a comparação de horário.
-LOTTERY_CALENDAR = {
-    "megasena": {"weekdays": [2, 4, 6], "time": "21:00"},
-    "federal": {"weekdays": [3, 6], "time": "19:00"},
-}
+# Não há calendário de sorteios (decisão do responsável, ver DECISIONS.md e SPEC-v3 4): o horário de
+# uma loteria é comparado com o INÍCIO do dia do sorteio (00:00 em America/Sao_Paulo, UTC−3).
 BRT = _dt.timezone(_dt.timedelta(hours=-3))  # Brasil sem horário de verão desde 2019
 
 OID_SHA256 = "2.16.840.1.101.3.4.2.1"
@@ -112,9 +111,12 @@ def norm_hex(h) -> str:
     return h[2:] if h.startswith("0x") else h
 
 
-def _check_json_types(v, path="spec"):
-    """Só inteiros (sem float, sem bool) dentro de spec (SPEC 3.1)."""
+def _check_json_types(v, path="spec", bool_paths=()):
+    """Só inteiros (sem float) dentro de spec (SPEC 3.1); booleano só nos caminhos de bool_paths
+    (em LucentDraw/3, apenas spec.task.replace)."""
     if isinstance(v, bool):
+        if path in bool_paths:
+            return
         raise ValueError(f"{path}: valor booleano não é permitido")
     if isinstance(v, float):
         raise ValueError(f"{path}: número não inteiro não é permitido")
@@ -122,16 +124,20 @@ def _check_json_types(v, path="spec"):
         for k, x in v.items():
             if not isinstance(k, str):
                 raise ValueError(f"{path}: chave não textual")
-            _check_json_types(x, f"{path}.{k}")
+            _check_json_types(x, f"{path}.{k}", bool_paths)
     elif isinstance(v, list):
         for i, x in enumerate(v):
-            _check_json_types(x, f"{path}[{i}]")
+            _check_json_types(x, f"{path}[{i}]", bool_paths)
     elif v is not None and not isinstance(v, (str, int)):
         raise ValueError(f"{path}: tipo não suportado")
 
 
+def _bool_paths(spec):
+    return ("spec.task.replace",) if isinstance(spec, dict) and spec.get("v") == V3 else ()
+
+
 def canonical_json(obj) -> str:
-    _check_json_types(obj)
+    _check_json_types(obj, "spec", _bool_paths(obj))
     return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
 
@@ -166,6 +172,171 @@ def order_v1(seed: str, names):
     return sorted(names, key=lambda n: key_v1(seed, n))  # sem desempate (sort estável)
 
 
+# ----------------------------------------------------------------- LucentDraw/3 (SPEC-v3 2, 3)
+
+TASK_PRESETS = ("list", "coin", "die", "cards")
+_W_INT = re.compile(r"[0-9]+")
+_W_DEC = re.compile(r"[0-9]*\.[0-9]+|[0-9]+\.[0-9]*")
+_W_FRAC = re.compile(r"([0-9]+)[ \t]*/[ \t]*([0-9]+)")
+WEIGHT_ERRORS = {
+    "empty": "peso vazio: use 1 para chance normal ou 0 para deixar fora do sorteio",
+    "syntax": "use um inteiro (3), um decimal (0,35) ou uma fração (1/7)",
+    "negative": "peso negativo não é permitido",
+    "zeroDen": "fração com denominador zero",
+}
+
+
+def parse_weight(w):
+    """Peso digitado -> Fraction exata (>= 0). Gramática da SPEC-v3 2 depois de NFC, trim e "," -> ".".
+
+    Só algarismos ASCII; espaço ou tab só em volta de "/". Lança ValueError(código) se inválido.
+    """
+    if not isinstance(w, str):
+        raise ValueError("syntax")
+    s = norm_text(w).replace(",", ".")
+    if not s:
+        raise ValueError("empty")
+    if _W_INT.fullmatch(s):
+        return Fraction(int(s))
+    if _W_DEC.fullmatch(s):
+        a, b = s.split(".")
+        return Fraction(int((a or "0") + b), 10 ** len(b))
+    m = _W_FRAC.fullmatch(s)
+    if m:
+        if int(m.group(2)) == 0:
+            raise ValueError("zeroDen")
+        return Fraction(int(m.group(1)), int(m.group(2)))
+    raise ValueError("negative" if s[:1] in ("-", "−") else "syntax")
+
+
+def integer_weights(weights):
+    """w_i = n_i * (L / d_i), L = mmc dos denominadores (frações reduzidas). Devolve (ints, L, W)."""
+    fr = [parse_weight(w) for w in weights]
+    L = 1
+    for f in fr:
+        L = L * f.denominator // gcd(L, f.denominator)
+    ints = [f.numerator * (L // f.denominator) for f in fr]
+    return ints, L, sum(ints)
+
+
+def share_text(w: int, W: int) -> str:
+    """Porcentagem exata de w/W arredondada a 0,1 (só para exibir)."""
+    if not W or w == 0:
+        return "0 %"
+    if w == W:
+        return "100 %"
+    tenths = (w * 2000 + W) // (2 * W)
+    if tenths == 0:
+        return "< 0,1 %"
+    if tenths >= 1000:
+        return "> 99,9 %"
+    return f"{tenths // 10},{tenths % 10} %"
+
+
+def seed_v3(C: str, values: dict) -> str:
+    return H("\n".join([V3, "seed", C] + [f"{k}={values.get(k) or '-'}" for k in SOURCE_ORDER]))
+
+
+def pick_hash(seed: str, j: int) -> str:
+    return H(V3 + "\npick\n" + seed + "\n" + str(j))
+
+
+def select_picks(seed: str, task: dict):
+    """Regra de escolha (SPEC-v3 3), só inteiros. Devolve (picks, steps), steps = [{j, r, x, W, index}]."""
+    ints, _, _ = integer_weights(task["weights"])
+    alive = [i for i, w in enumerate(ints) if w > 0]
+    picks, steps = [], []
+    for j in range(task["count"]):
+        W = sum(ints[i] for i in alive)
+        if W == 0:
+            raise ValueError("sem opções restantes")
+        r = pick_hash(seed, j)
+        x = (int(r, 16) * W) >> 256  # em [0, W)
+        acc = 0
+        for k, i in enumerate(alive):
+            acc += ints[i]
+            if x < acc:
+                picks.append(i)
+                steps.append({"j": j, "r": r, "x": x, "W": W, "index": i})
+                if not task["replace"]:
+                    del alive[k]
+                break
+    return picks, steps
+
+
+def validate_task(task) -> list:
+    """Regras de task (SPEC-v3 2). Lista de problemas, vazia se bem formada."""
+    if not isinstance(task, dict):
+        return ["task não é um objeto"]
+    problems = []
+    expected = {"preset", "options", "weights", "count", "replace"}
+    missing, extra = expected - task.keys(), task.keys() - expected
+    if missing:
+        problems.append("task: campos ausentes: " + ", ".join(sorted(missing)))
+    if extra:
+        problems.append("task: campos desconhecidos: " + ", ".join(sorted(extra)))
+    if task.get("preset") not in TASK_PRESETS:
+        problems.append('task.preset deve ser "list", "coin", "die" ou "cards"')
+    opts = task.get("options") if isinstance(task.get("options"), list) else None
+    if not opts:
+        problems.append("task.options precisa ser uma lista com pelo menos uma opção")
+    for i, o in enumerate(opts or []):
+        if not isinstance(o, str) or not o:
+            problems.append(f"opção {i + 1} vazia ou inválida")
+        elif norm_text(o) != o:
+            problems.append(f"opção {i + 1} não está normalizada (NFC, sem espaços nas pontas)")
+    strs = [o for o in (opts or []) if isinstance(o, str)]
+    dups = sorted({o for o in strs if strs.count(o) > 1})
+    if dups:
+        problems.append("opções repetidas: " + ", ".join(dups))
+    ws = task.get("weights") if isinstance(task.get("weights"), list) else None
+    positive, bad_weight = 0, False
+    if ws is None:
+        problems.append("task.weights não é uma lista")
+    else:
+        if opts is not None and len(ws) != len(opts):
+            problems.append("task.weights precisa ter um peso para cada opção")
+        for i, w in enumerate(ws):
+            if not isinstance(w, str):
+                bad_weight = True
+                problems.append(f"peso {i + 1}: " + WEIGHT_ERRORS["syntax"])
+                continue
+            if norm_text(w) != w:
+                problems.append(f"peso {i + 1} não está normalizado (NFC, sem espaços nas pontas)")
+            try:
+                if parse_weight(w) > 0:
+                    positive += 1
+            except ValueError as e:
+                bad_weight = True
+                problems.append(f"peso {i + 1}: " + WEIGHT_ERRORS.get(str(e), str(e)))
+        if not bad_weight and positive == 0:
+            problems.append("pelo menos um peso precisa ser maior que zero")
+    count = task.get("count")
+    if not _is_int(count) or count < 1:
+        problems.append("task.count precisa ser um inteiro maior ou igual a 1")
+    if not isinstance(task.get("replace"), bool):
+        problems.append("task.replace precisa ser true ou false")
+    elif not task["replace"] and _is_int(count) and ws is not None and positive > 0 and count > positive:
+        problems.append("sem reposição, task.count não pode passar do número de opções com peso maior que zero")
+    return problems
+
+
+def task_summary(task: dict) -> str:
+    n, preset = task["count"], task["preset"]
+    if preset == "coin":
+        return f"{n} lançamento" + ("" if n == 1 else "s")
+    if preset == "die":
+        loaded = any(w != "1" for w in task["weights"])
+        return (f"{n} dado" + ("" if n == 1 else "s") + f" de {len(task['options'])} faces"
+                + (" (dado viciado: pesos diferentes)" if loaded else ""))
+    if preset == "cards":
+        return "embaralhar o baralho (52 cartas, sem reposição)" if n == 52 else (
+            f"{n} carta" + ("" if n == 1 else "s") + ", sem reposição")
+    o = len(task["options"])
+    return (f"{o} opç" + ("ão" if o == 1 else "ões") + f", {n} escolha" + ("" if n == 1 else "s")
+            + (", com reposição" if task["replace"] else ", sem reposição"))
+
+
 # ----------------------------------------------------------------- strings de valor (SPEC 4)
 
 def megasena_value(contest: int, numbers) -> str:
@@ -187,23 +358,56 @@ def _federal_prizes_ok(prizes) -> bool:
             and all(isinstance(p, str) and re.fullmatch(r"[0-9]{5}", p) for p in prizes))
 
 
-def lottery_value(game: str, contest: int, ev: dict) -> str:
+# LucentDraw/3 (SPEC-v3 4): concurso como texto ("3001", "6054-2"), números inteiros sem zeros à esquerda.
+_CONTEST_V3 = re.compile(r"[1-9][0-9]*(?:-[1-9][0-9]*)?")
+
+
+def contest_ok_v3(c) -> bool:
+    return isinstance(c, str) and _CONTEST_V3.fullmatch(c) is not None
+
+
+def _federal_prizes_ok_v3(prizes) -> bool:
+    return (isinstance(prizes, list) and len(prizes) == 5
+            and all(_is_int(p) and 0 <= p <= 999999 for p in prizes))
+
+
+def _to_int(x):
+    """Valores vindos de fora (Caixa, relay) podem ser inteiros ou texto com algarismos."""
+    return int(x) if isinstance(x, str) and re.fullmatch(r"[0-9]{1,9}", x) else x
+
+
+def megasena_value_v3(contest: str, numbers) -> str:
+    return f"{contest}:" + "-".join(str(n) for n in sorted(_to_int(x) for x in numbers))
+
+
+def federal_value_v3(contest: str, prizes) -> str:
+    return f"{contest}:" + "-".join(str(_to_int(p)) for p in prizes)
+
+
+def lottery_evidence_ok(game: str, ev: dict, v: str = V2) -> bool:
+    if game == "megasena":
+        return _megasena_numbers_ok(ev.get("numbers"))
+    return _federal_prizes_ok_v3(ev.get("prizes")) if v == V3 else _federal_prizes_ok(ev.get("prizes"))
+
+
+def lottery_value(game: str, contest, ev: dict, v: str = V2) -> str:
+    if v == V3:
+        return megasena_value_v3(contest, ev["numbers"]) if game == "megasena" else federal_value_v3(contest, ev["prizes"])
     if game == "megasena":
         return megasena_value(contest, ev["numbers"])
-    return federal_value(contest, ev["prizes"])
+    return federal_value(contest, [f"{p:05d}" if _is_int(p) else p for p in ev["prizes"]])
 
 
 def drand_round_time(r: int) -> int:
     return QUICKNET_GENESIS + (r - 1) * QUICKNET_PERIOD
 
 
-def lottery_draw_time(game: str, draw_date: str):
-    """Horário previsto do sorteio (unix s) a partir da data e do calendário assumido."""
+def draw_day_start(draw_date) -> int | None:
+    """Início do dia do sorteio (00:00 em Brasília, UTC−3), unix s; None se a data for inválida."""
     try:
         d = _dt.date.fromisoformat(draw_date)
-        hh, mm = (int(x) for x in LOTTERY_CALENDAR[game]["time"].split(":"))
-        return int(_dt.datetime(d.year, d.month, d.day, hh, mm, tzinfo=BRT).timestamp())
-    except Exception:
+        return int(_dt.datetime(d.year, d.month, d.day, 0, 0, tzinfo=BRT).timestamp())
+    except (TypeError, ValueError):
         return None
 
 
@@ -216,12 +420,22 @@ def _caixa_date(s):
     return f"{m.group(3)}-{m.group(2)}-{m.group(1)}" if m else None
 
 
-def normalize_caixa(game: str, contest: int, j: dict):
-    """Converte a resposta JSON da Caixa para o formato normalizado, ou None se não houver resultado."""
+def normalize_caixa(game: str, contest, j: dict):
+    """Converte a resposta JSON da Caixa para o formato normalizado, ou None se não houver resultado.
+
+    contest inteiro = formato LucentDraw/2 (bilhetes com 5 algarismos, texto); contest texto =
+    LucentDraw/3 (SPEC-v3 4: bilhetes inteiros de até 6 algarismos).
+    """
     if not isinstance(j, dict):
         return None
-    if j.get("numero") is not None and int(j.get("numero")) != contest:
-        return None
+    v3 = isinstance(contest, str)
+    num = j.get("numero")
+    if num is not None:
+        try:
+            if (str(num).strip() != contest) if v3 else (int(num) != contest):
+                return None
+        except (TypeError, ValueError):
+            return None
     raw = j.get("listaDezenas") or j.get("dezenasSorteadasOrdemSorteio") or []
     date = _caixa_date(j.get("dataApuracao"))
     if game == "megasena":
@@ -232,6 +446,11 @@ def normalize_caixa(game: str, contest: int, j: dict):
         if not _megasena_numbers_ok(nums):
             return None
         return {"game": game, "contest": contest, "numbers": nums, "drawDate": date}
+    if v3:
+        prizes = [int(str(x).strip()) if re.fullmatch(r"[0-9]{1,6}", str(x).strip()) else None for x in raw]
+        if not _federal_prizes_ok_v3(prizes):
+            return None
+        return {"game": game, "contest": contest, "prizes": prizes, "drawDate": date}
     prizes = []
     for x in raw:
         d = re.sub(r"\D", "", str(x))
@@ -944,11 +1163,12 @@ def validate_spec(spec) -> list:
         return ["spec não é um objeto"]
     v = spec.get("v")
     try:
-        _check_json_types(spec)
+        _check_json_types(spec, "spec", _bool_paths(spec))
     except ValueError as e:
         problems.append(str(e))
-    if v == V2:
-        expected = {"v", "id", "title", "mode", "candidates", "contribution", "sources"}
+    if v in (V2, V3):
+        expected = ({"v", "id", "title", "mode", "contribution", "sources", "task"} if v == V3
+                    else {"v", "id", "title", "mode", "candidates", "contribution", "sources"})
         missing, extra = expected - spec.keys(), spec.keys() - expected
         if missing:
             problems.append("campos ausentes: " + ", ".join(sorted(missing)))
@@ -961,30 +1181,33 @@ def validate_spec(spec) -> list:
             problems.append(f"{f} não está normalizado (NFC, sem espaços nas pontas)")
     if not isinstance(spec.get("id"), str) or not spec.get("id"):
         problems.append("o ID do sorteio está vazio")
-    cands = spec.get("candidates")
-    if not isinstance(cands, list):
-        problems.append("candidates não é uma lista")
-        cands = []
-    if len(cands) < 2:
-        problems.append("são necessários pelo menos 2 participantes")
-    for i, n in enumerate(cands):
-        if not isinstance(n, str) or not n:
-            problems.append(f"participante {i + 1} vazio ou inválido")
-        elif norm_text(n) != n:
-            problems.append(f"participante {i + 1} não está normalizado (NFC, sem espaços nas pontas)")
-    strs = [n for n in cands if isinstance(n, str)]
-    dups = sorted({n for n in strs if strs.count(n) > 1})
-    if dups:
-        problems.append("nomes repetidos: " + ", ".join(dups))
+    if v == V3:
+        problems.extend(validate_task(spec.get("task")))
+    else:
+        cands = spec.get("candidates")
+        if not isinstance(cands, list):
+            problems.append("candidates não é uma lista")
+            cands = []
+        if len(cands) < 2:
+            problems.append("são necessários pelo menos 2 participantes")
+        for i, n in enumerate(cands):
+            if not isinstance(n, str) or not n:
+                problems.append(f"participante {i + 1} vazio ou inválido")
+            elif norm_text(n) != n:
+                problems.append(f"participante {i + 1} não está normalizado (NFC, sem espaços nas pontas)")
+        strs = [n for n in cands if isinstance(n, str)]
+        dups = sorted({n for n in strs if strs.count(n) > 1})
+        if dups:
+            problems.append("nomes repetidos: " + ", ".join(dups))
     src = spec.get("sources")
     if not isinstance(src, dict) or not src:
         problems.append("sources vazio ou inválido")
         return problems
-    allowed = SOURCE_ORDER if v == V2 else ("eth", "drand")
+    allowed = SOURCE_ORDER if v in (V2, V3) else ("eth", "drand")
     for k in src:
         if k not in allowed:
             problems.append(f"fonte desconhecida: {k}")
-    strict = v == V2
+    strict = v in (V2, V3)
 
     def need(name, obj, fields):
         if not isinstance(obj, dict):
@@ -1012,7 +1235,8 @@ def validate_spec(spec) -> list:
                 problems.append("sources.drand: rodada inválida")
     for g in ("megasena", "federal"):
         if g in src and need(g, src[g], ("contest",)):
-            if not _is_int(src[g].get("contest")) or src[g]["contest"] < 1:
+            c = src[g].get("contest")
+            if (not contest_ok_v3(c)) if v == V3 else (not _is_int(c) or c < 1):
                 problems.append(f"sources.{g}: concurso inválido")
     return problems
 
@@ -1020,6 +1244,11 @@ def validate_spec(spec) -> list:
 # =============================================================================
 # Algoritmo de conferência (SPEC 9), função pura
 # =============================================================================
+
+def _same_list(a, b) -> bool:
+    """Igualdade estrita de listas (em Python, True == 1; aqui não)."""
+    return isinstance(a, list) and len(a) == len(b) and all(type(x) is type(y) and x == y for x, y in zip(a, b))
+
 
 def _fmt_unix(s):
     return ms_to_iso(int(s * 1000))
@@ -1038,16 +1267,21 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
     `tsa_validator(resp_der, token_der, commitment) -> (status|None, detalhe)` valida a
     assinatura RFC 3161 (ex.: openssl_tsa_validator()); None = só lê o token.
 
-    Devolve {"drawId", "version", "checks": [{"id","status","title","detail"}], "verdict", "message", "order"}.
+    Devolve {"drawId", "version", "checks": [{"id","status","title","detail"}], "verdict", "message", "order"}
+    e, para LucentDraw/3, "v3": {"task", "ints", "W", "seed", "picks", "result", "steps"}.
     """
     fetched = fetched or {}
     checks = []
+    v3info = {}
 
     def add(cid, status, title, detail=""):
         checks.append({"id": cid, "status": status, "title": title, "detail": detail})
 
     def result(order=None):
-        return _verdict(cert, checks, lottery_confirmed, order)
+        rep = _verdict(cert, checks, lottery_confirmed, order)
+        if v3info:
+            rep["v3"] = v3info
+        return rep
 
     # 1. Formato
     if not isinstance(cert, dict) or not isinstance(cert.get("spec"), dict):
@@ -1055,7 +1289,7 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         return result()
     spec = cert["spec"]
     v = spec.get("v")
-    if v not in (V1, V2):
+    if v not in (V1, V2, V3):
         add("parse", FAIL, f"Versão de protocolo desconhecida: {v!r}.")
         return result()
     if not isinstance(cert.get("commitment"), str):
@@ -1065,8 +1299,19 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
 
     # 2. Spec bem formado
     problems = validate_spec(spec)
+    task_ok = v == V3 and not validate_task(spec.get("task"))
+    if task_ok:
+        ints, _, W = integer_weights(spec["task"]["weights"])
+        v3info.update({"task": spec["task"], "ints": ints, "W": W, "seed": None, "picks": None, "result": None, "steps": None})
     if problems:
         add("spec", FAIL, "O registro lacrado não está bem formado.", "; ".join(problems))
+    elif v == V3:
+        t = spec["task"]
+        n = len(t["options"])
+        pairs = ", ".join(f"{w} → {i}" for w, i in list(zip(t["weights"], ints))[:12]) + (", …" if n > 12 else "")
+        add("spec", PASS, "Registro lacrado bem formado.",
+            f"{n} opç" + ("ão" if n == 1 else "ões") + f" · W = {W} · {task_summary(t)} · "
+            f"pesos (digitado → inteiro): {pairs}")
     else:
         add("spec", PASS, "Registro lacrado bem formado.",
             f"{len(spec['candidates'])} participantes, nomes únicos e normalizados")
@@ -1086,11 +1331,12 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
     sources = spec.get("sources") if isinstance(spec.get("sources"), dict) else {}
     rand = cert.get("randomness") if isinstance(cert.get("randomness"), dict) else {}
     # Um lacre (SPEC 3.3): sem aleatoriedade, sem semente e sem ordem. Fontes ficam pendentes, não falham.
-    is_seal = not rand and "seed" not in cert and "order" not in cert
+    is_seal = not rand and not any(k in cert for k in ("seed", "order", "result", "picks"))
     missing = UNVERIFIED if is_seal else FAIL
     indep = {}   # valores obtidos de forma independente
     claimed = {}  # valores segundo o certificado
-    rtimes = {}  # momento em que cada aleatoriedade passou a existir (unix s)
+    rtimes = {}  # momento em que cada aleatoriedade passou a existir (unix s), só eth e drand
+    draw_dates = {}  # loteria -> (data do sorteio, "oficial" | "certificado")
 
     # 4a. eth
     if "eth" in sources:
@@ -1182,13 +1428,11 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         contest = sources[game].get("contest")
         ev = rand.get(game) if isinstance(rand.get(game), dict) else None
         link = OFFICIAL_PAGES[game]
-        ok_ev = bool(ev) and ev.get("contest") == contest and (
-            _megasena_numbers_ok(ev.get("numbers")) if game == "megasena" else _federal_prizes_ok(ev.get("prizes")))
+        ok_ev = bool(ev) and ev.get("contest") == contest and lottery_evidence_ok(game, ev, v)
         if ok_ev:
-            claimed[game] = lottery_value(game, contest, ev)
-            t = lottery_draw_time(game, ev.get("drawDate") or "")
-            if t:
-                rtimes[game] = t
+            claimed[game] = lottery_value(game, contest, ev, v)
+            if draw_day_start(ev.get("drawDate")) is not None:
+                draw_dates[game] = (ev["drawDate"], "certificado")
         manual = " (resultado inserido manualmente)" if ev and ev.get("source") == "manual" else ""
         f = fetched.get(game, {"error": "não consultado"})
         if not ok_ev:
@@ -1196,12 +1440,10 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
                 else f"{label}: o certificado não traz um resultado válido do concurso {contest}.")
             continue
         if isinstance(f, dict) and "error" not in f:
-            off = lottery_value(game, contest, f)
+            off = lottery_value(game, contest, f, v)
             indep[game] = off
-            if f.get("drawDate"):
-                t = lottery_draw_time(game, f["drawDate"])
-                if t:
-                    rtimes[game] = t
+            if draw_day_start(f.get("drawDate")) is not None:
+                draw_dates[game] = (f["drawDate"], "oficial")
             if off == claimed[game]:
                 add(game, PASS, f"{label}, concurso {contest}: confere com o resultado oficial{manual}.",
                     f"{off} · {link}")
@@ -1220,7 +1462,33 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
     # Loterias podem vir do certificado (a checagem delas fica "não verificado", conferível a olho).
     all_indep = all(k in indep for k in sources if k not in ("megasena", "federal"))
     computed_order = None
-    if not all(used.get(k) for k in sources):
+    if v == V3:
+        claims = cert.get("result") is not None or cert.get("picks") is not None
+        if not all(used.get(k) for k in sources):
+            add("result", FAIL if claims else UNVERIFIED, "Faltam valores de aleatoriedade para recalcular o resultado.",
+                "um certificado sem aleatoriedade é apenas um lacre")
+        elif not task_ok:
+            add("result", FAIL, "O resultado não pode ser recalculado: a tarefa lacrada (task) é inválida.")
+        else:
+            seed = seed_v3(C, used)
+            picks, steps = select_picks(seed, spec["task"])
+            res = [spec["task"]["options"][i] for i in picks]
+            v3info.update({"seed": seed, "picks": picks, "result": res, "steps": steps})
+            preview = " · ".join(f"{i + 1}. {n}" for i, n in enumerate(res[:5])) + (" …" if len(res) > 5 else "")
+            if cert.get("seed") != seed:
+                add("result", FAIL, "A semente recalculada difere da semente do certificado.",
+                    f"recalculada {seed} · certificado {cert.get('seed')}")
+            elif not _same_list(cert.get("picks"), picks):
+                add("result", FAIL, "Os índices escolhidos (picks) diferem dos recalculados.",
+                    "corretos: " + ", ".join(map(str, picks)) + f" · certificado: {json.dumps(cert.get('picks'))}")
+            elif not _same_list(cert.get("result"), res):
+                add("result", FAIL, "O resultado recalculado difere do resultado do certificado.", "correto: " + preview)
+            elif not all_indep:
+                add("result", UNVERIFIED, "Resultado consistente com os valores do certificado, "
+                    "mas nem todas as fontes foram consultadas.", preview)
+            else:
+                add("result", PASS, "Resultado recalculado, idêntico ao do certificado.", f"semente {seed} · {preview}")
+    elif not all(used.get(k) for k in sources):
         add("order", FAIL if cert.get("order") else UNVERIFIED,
             "Faltam valores de aleatoriedade para recalcular a ordem.",
             "um certificado sem aleatoriedade é apenas um lacre")
@@ -1294,28 +1562,54 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         else:
             add("anchors", PASS, "Carimbos de tempo correspondem a este compromisso.", "; ".join(anchor_notes))
 
-    labels = {"eth": "bloco Ethereum", "drand": "rodada drand", "megasena": "sorteio da Mega-Sena",
-              "federal": "sorteio da Loteria Federal"}
-    missing_t = [k for k in sources if k not in rtimes]
-    deadline = min(rtimes.values()) if rtimes else None
-    if not times:
-        add("timing", WARN, "Atenção: sem carimbo de tempo. Não é possível provar que o lacre veio antes do sorteio.",
-            ("o lacre precisa ter sido divulgado antes de " + _fmt_unix(deadline)) if deadline else "")
-    else:
-        earliest = min(times)
-        parts, ok = [], True
-        for k in sources:
-            if k in rtimes:
-                before = earliest < rtimes[k] * 1000
-                ok = ok and before
-                parts.append(f"{ms_to_iso(earliest)} {'<' if before else '≥'} {labels[k]} {_fmt_unix(rtimes[k])}")
-        if missing_t:
-            add("timing", UNVERIFIED, "Horário de alguma fonte desconhecido; comparação incompleta.",
-                "; ".join(parts + [f"{labels[k]}: horário desconhecido" for k in missing_t]))
-        elif ok:
-            add("timing", PASS, "O carimbo de tempo mais antigo é anterior à aleatoriedade.", "; ".join(parts))
+    labels = {"eth": "bloco Ethereum", "drand": "rodada drand"}
+    live = [k for k in sources if k in labels]
+    if live:
+        missing_t = [k for k in live if k not in rtimes]
+        deadline = min(rtimes.values()) if rtimes else None
+        if not times:
+            add("timing", WARN, "Atenção: sem carimbo de tempo. Não é possível provar que o lacre veio antes do sorteio.",
+                ("o lacre precisa ter sido divulgado antes de " + _fmt_unix(deadline)) if deadline else "")
         else:
-            add("timing", FAIL, "O carimbo de tempo mais antigo não é anterior à aleatoriedade.", "; ".join(parts))
+            earliest = min(times)
+            parts, ok = [], True
+            for k in live:
+                if k in rtimes:
+                    before = earliest < rtimes[k] * 1000
+                    ok = ok and before
+                    parts.append(f"{ms_to_iso(earliest)} {'<' if before else '≥'} {labels[k]} {_fmt_unix(rtimes[k])}")
+            if missing_t:
+                add("timing", UNVERIFIED, "Horário de alguma fonte desconhecido; comparação incompleta.",
+                    "; ".join(parts + [f"{labels[k]}: horário desconhecido" for k in missing_t]))
+            elif ok:
+                add("timing", PASS, "O carimbo de tempo mais antigo é anterior à aleatoriedade.", "; ".join(parts))
+            else:
+                add("timing", FAIL, "O carimbo de tempo mais antigo não é anterior à aleatoriedade.", "; ".join(parts))
+
+    # 6b. Loterias: o carimbo mais antigo precisa ser anterior ao INÍCIO do dia do sorteio (00:00, Brasília).
+    for game, label in (("megasena", "Mega-Sena"), ("federal", "Loteria Federal")):
+        if game not in sources:
+            continue
+        contest = sources[game].get("contest")
+        cid = game + "Timing"
+        if game not in draw_dates:
+            add(cid, UNVERIFIED, f"{label}, concurso {contest}: data do sorteio desconhecida; horário não comparado.",
+                "o resultado ainda não foi registrado" if is_seal else "o certificado não traz uma data de sorteio válida")
+            continue
+        date, origin = draw_dates[game]
+        day0 = draw_day_start(date)
+        det = f"sorteio em {date} (data {origin}); início do dia {_fmt_unix(day0)} (00:00 em Brasília)"
+        if not times:
+            add(cid, UNVERIFIED, f"{label}, concurso {contest}: sem carimbo de tempo; não é possível provar que o lacre "
+                "veio antes do dia do sorteio.",
+                f"lacre declarado em {cert.get('sealedAt')} (declaração do operador, não verificada) · {det}")
+        else:
+            earliest = min(times)
+            cmp = f"carimbo mais antigo {ms_to_iso(earliest)} {'<' if earliest < day0 * 1000 else '≥'} {det}"
+            if earliest < day0 * 1000:
+                add(cid, PASS, f"{label}, concurso {contest}: o carimbo de tempo mais antigo é anterior ao dia do sorteio.", cmp)
+            else:
+                add(cid, FAIL, f"{label}, concurso {contest}: o carimbo de tempo mais antigo não é anterior ao dia do sorteio.", cmp)
 
     return result(computed_order)
 
@@ -1389,9 +1683,11 @@ def fetch_drand(round_: int, chain_hash: str = QUICKNET_HASH, session=None):
     return {"error": "Nenhum servidor drand respondeu" + (f" ({last})" if last else "")}
 
 
-def fetch_lottery(game: str, contest: int, relay: str = None, session=None):
+def fetch_lottery(game: str, contest, relay: str = None, session=None):
+    """contest inteiro: formato LucentDraw/2; texto: LucentDraw/3 (rota /v3/lottery do relay)."""
     rq = session or _requests()
     errors = []
+    v3 = isinstance(contest, str)
     try:
         r = rq.get(CAIXA_API.format(game=game, contest=contest), timeout=20,
                    headers={"accept": "application/json"})
@@ -1406,10 +1702,10 @@ def fetch_lottery(game: str, contest: int, relay: str = None, session=None):
         errors.append(f"Caixa: {e}")
     if relay:
         try:
-            r = rq.get(f"{relay.rstrip('/')}/v1/lottery/{game}/{contest}", timeout=20)
+            r = rq.get(f"{relay.rstrip('/')}/{'v3' if v3 else 'v1'}/lottery/{game}/{contest}", timeout=20)
             if r.status_code == 200:
                 j = r.json()
-                ok = _megasena_numbers_ok(j.get("numbers")) if game == "megasena" else _federal_prizes_ok(j.get("prizes"))
+                ok = isinstance(j, dict) and lottery_evidence_ok(game, j, V3 if v3 else V2)
                 if ok and j.get("contest") == contest:
                     return j
             errors.append(f"relay: HTTP {r.status_code}")
@@ -1428,8 +1724,9 @@ def fetch_all(cert, rpcs=DEFAULT_RPCS, relay=None, session=None):
     if "drand" in src and _is_int(src["drand"].get("round")):
         out["drand"] = fetch_drand(src["drand"]["round"], session=session)
     for g in ("megasena", "federal"):
-        if g in src and _is_int(src[g].get("contest")):
-            out[g] = fetch_lottery(g, src[g]["contest"], relay, session)
+        c = src[g].get("contest") if g in src and isinstance(src[g], dict) else None
+        if _is_int(c) or contest_ok_v3(c):
+            out[g] = fetch_lottery(g, c, relay, session)
     return out
 
 
@@ -1449,13 +1746,27 @@ def format_report(rep: dict) -> str:
         lines.append("Ordem recalculada:")
         for i, n in enumerate(rep["order"], 1):
             lines.append(f"  {i:>3}. {n}")
+    v3 = rep.get("v3")
+    if v3:
+        # SPEC-v3 7: pesos como digitados, pesos inteiros e W, para acompanhar a conta.
+        t, W = v3["task"], v3["W"]
+        lines.append("")
+        lines.append(f"Pesos (W = {W}; {task_summary(t)}):")
+        lines.append(f"  {'opção':<24} {'digitado':>12} {'inteiro':>14} {'chance':>9}")
+        for o, w, i in zip(t["options"], t["weights"], v3["ints"]):
+            lines.append(f"  {o:<24} {w:>12} {i:>14} {share_text(i, W):>9}")
+        if v3.get("result") is not None:
+            lines.append("")
+            lines.append("Resultado recalculado (r = SHA-256 da escolha j; x = floor(r·W/2^256)):")
+            for s in v3["steps"]:
+                lines.append(f"  {s['j'] + 1:>3}. {t['options'][s['index']]}   [índice {s['index']}; x = {s['x']} de W = {s['W']}]")
     lines.append("")
     lines.append(rep["message"])
     return "\n".join(lines)
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="Confere um certificado do Lucent Sorteios (LucentDraw/2 ou /1).")
+    ap = argparse.ArgumentParser(description="Confere um certificado do Lucent Sorteios (LucentDraw/3, /2 ou /1).")
     ap.add_argument("certificate", help="arquivo JSON do certificado (ou - para entrada padrão)")
     ap.add_argument("--rpc", action="append", help="endpoint JSON-RPC Ethereum (pode repetir)")
     ap.add_argument("--relay", help="URL do relay (para resultados de loteria)")
@@ -1483,7 +1794,7 @@ def main(argv=None):
         fetched = fetch_all(cert, tuple(a.rpc) if a.rpc else DEFAULT_RPCS, a.relay)
     validator = None if a.no_tsa_check else openssl_tsa_validator(a.tsa_ca)
     rep = verify_certificate(cert, fetched, lottery_confirmed=a.confirm_lottery, tsa_validator=validator)
-    print(json.dumps(rep, ensure_ascii=False, indent=2) if a.json else format_report(rep))
+    print(json.dumps(rep, ensure_ascii=False, indent=2, default=str) if a.json else format_report(rep))
     return {"confere": 0, "nao_confere": 1, "incompleto": 2}[rep["verdict"]]
 
 
