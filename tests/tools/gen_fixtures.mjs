@@ -11,6 +11,7 @@ import { loadCore, ROOT } from "../core_loader.mjs";
 import { timeStampRequest } from "../../relay/src/der.js";
 import { stamp } from "../../relay/src/ots.js";
 import { tsaReply } from "./tsa_reply.mjs";
+import { addV3 } from "./gen_fixtures_v3.mjs";
 
 const C = await loadCore();
 const FIX = join(ROOT, "tests", "fixtures");
@@ -86,5 +87,6 @@ certs["v2-seal-only"] = await finish({ spec: sealSpec, sealedAt: "2026-11-09T21:
 
 mkdirSync(join(FIX, "certificates"), { recursive: true });
 for (const [name, cert] of Object.entries(certs)) writeFileSync(join(FIX, "certificates", name + ".json"), JSON.stringify(cert, null, 2) + "\n");
+const v3names = await addV3(world, C); // certificados LucentDraw/3 e v3_cross.json
 writeFileSync(join(FIX, "world.json"), JSON.stringify(world, null, 2) + "\n");
-console.log("fixtures:", Object.keys(certs).join(", "));
+console.log("fixtures:", Object.keys(certs).concat(v3names).join(", "));

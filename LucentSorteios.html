@@ -469,6 +469,7 @@ const STR = {
   manualSave: "Usar este resultado",
   manualBadMega: "Digite 6 dezenas diferentes, de 1 a 60.",
   manualBadFederal: "Digite 5 bilhetes de até 5 algarismos, na ordem dos prêmios.",
+  manualBadFederalV3: "Digite 5 bilhetes de até 6 algarismos, na ordem dos prêmios.",
   manualBadDate: "Informe a data do sorteio.",
   manualNoConfirm: "Marque a confirmação de que os números foram conferidos na página oficial.",
   officialPage: "Página oficial de resultados",
@@ -557,6 +558,32 @@ const STR = {
     timingOk: "O carimbo de tempo mais antigo é anterior à aleatoriedade.",
     timingBad: "O carimbo de tempo mais antigo não é anterior à aleatoriedade.",
     labels: { eth: "bloco Ethereum", drand: "rodada drand", megasena: "sorteio da Mega-Sena", federal: "sorteio da Loteria Federal" },
+    specOkV3: (n, W, sum) => n + (n === 1 ? " opção" : " opções") + " · W = " + W + " · " + sum,
+    weightsD: (ws, ints) => "pesos (digitado → inteiro): " + ws.slice(0, 12).map((w, i) => w + " → " + ints[i]).join(", ") + (ws.length > 12 ? ", …" : ""),
+    resultMissing: "Faltam valores de aleatoriedade para recalcular o resultado.",
+    resultNoTask: "O resultado não pode ser recalculado: a tarefa lacrada (task) é inválida.",
+    picksBad: "Os índices escolhidos (picks) diferem dos recalculados.",
+    resultBad: "O resultado recalculado difere do resultado do certificado.",
+    resultPartial: "Resultado consistente com os valores do certificado, mas nem todas as fontes foram consultadas.",
+    resultOk: "Resultado recalculado, idêntico ao do certificado.",
+    task: {
+      notObject: "task não é um objeto",
+      missing: (l) => "task: campos ausentes: " + l,
+      extra: (l) => "task: campos desconhecidos: " + l,
+      preset: "task.preset deve ser \"list\", \"coin\", \"die\" ou \"cards\"",
+      noOptions: "task.options precisa ser uma lista com pelo menos uma opção",
+      optEmpty: (i) => "opção " + i + " vazia ou inválida",
+      optNotNorm: (i) => "opção " + i + " não está normalizada (NFC, sem espaços nas pontas)",
+      dups: (l) => "opções repetidas: " + l,
+      weightsNotList: "task.weights não é uma lista",
+      weightsLen: "task.weights precisa ter um peso para cada opção",
+      weightBad: (i, m) => "peso " + i + ": " + m,
+      weightNotNorm: (i) => "peso " + i + " não está normalizado (NFC, sem espaços nas pontas)",
+      allZero: "pelo menos um peso precisa ser maior que zero",
+      count: "task.count precisa ser um inteiro maior ou igual a 1",
+      replace: "task.replace precisa ser true ou false",
+      countTooBig: "sem reposição, task.count não pode passar do número de opções com peso maior que zero",
+    },
     spec: {
       notObject: "spec não é um objeto",
       bool: (p) => p + ": valor booleano não é permitido",
@@ -583,6 +610,21 @@ const STR = {
       contest: (g) => "sources." + g + ": concurso inválido",
     },
   },
+  // Pesos (SPEC-v3 2)
+  weightErr: {
+    empty: "peso vazio: use 1 para chance normal ou 0 para deixar fora do sorteio",
+    syntax: "use um inteiro (3), um decimal (0,35) ou uma fração (1/7)",
+    negative: "peso negativo não é permitido",
+    zeroDen: "fração com denominador zero",
+  },
+  task: {
+    presetName: { list: "Lista", coin: "Moeda", die: "Dado", cards: "Cartas" },
+    sumCoin: (n) => n + (n === 1 ? " lançamento" : " lançamentos"),
+    sumDie: (n, f, loaded) => n + (n === 1 ? " dado" : " dados") + " de " + f + " faces" + (loaded ? " (dado viciado: pesos diferentes)" : ""),
+    sumShuffle: "embaralhar o baralho (52 cartas, sem reposição)",
+    sumCards: (n) => n + (n === 1 ? " carta" : " cartas") + ", sem reposição",
+    sumList: (o, n, rep) => o + (o === 1 ? " opção" : " opções") + ", " + n + (n === 1 ? " escolha" : " escolhas") + (rep ? ", com reposição" : ", sem reposição"),
+  },
   // Ata do sorteio (SPEC 7.3)
   ata: {
     head: "ATA DO SORTEIO",
@@ -601,6 +643,14 @@ const STR = {
     noAnchors: "Sem carimbo de tempo. A prova de que o lacre veio antes do sorteio depende de onde e quando ele foi divulgado.",
     seed: "Semente",
     order: "Resultado (ordem sorteada)",
+    protocol: "Protocolo",
+    kind: "Sorteio",
+    optionsEqual: (n) => n + (n === 1 ? " opção" : " opções") + ", todas com peso 1 (chances iguais)",
+    options: (n, W) => "Opções lacradas (" + n + "), com peso digitado, peso inteiro e chance; soma W = " + W,
+    weightLine: (w, i, s) => "peso " + w + " → " + i + " (" + s + ")",
+    result: "Resultado (na ordem em que saiu)",
+    pickIndex: (i) => "[índice " + i + "]",
+    howV3: (file) => "Qualquer pessoa pode conferir este sorteio sem confiar em quem o organizou. Abra o Lucent Sorteios, vá à aba Conferir e carregue o certificado (" + file + "); ou rode \"python3 verify_draw.py " + file + "\". A conferência recalcula o lacre, busca de novo os valores nas fontes públicas e refaz cada escolha pela regra publicada (LucentDraw/3: intervalos proporcionais aos pesos). Um segundo lacre com o mesmo ID invalida o sorteio.",
     howTitle: "Como conferir",
     how: (file) => "Qualquer pessoa pode conferir este sorteio sem confiar em quem o organizou. Abra o Lucent Sorteios, vá à aba Conferir e carregue o certificado (" + file + "); ou rode \"python3 verify_draw.py " + file + "\". A conferência recalcula o lacre, busca de novo os valores nas fontes públicas e refaz a ordem pela regra publicada. Um segundo lacre com o mesmo ID invalida o sorteio.",
   },
@@ -608,6 +658,7 @@ const STR = {
 
 const VERSION = "LucentDraw/2";
 const V1 = "LucentDraw/1";
+const V3 = "LucentDraw/3"; // todo lacre novo é LucentDraw/3 (SPEC-v3)
 const SOURCE_ORDER = ["eth", "drand", "megasena", "federal"];
 const STATUS = { PASS: "passou", FAIL: "falhou", UNVERIFIED: "nao_verificado", WARN: "atencao" };
 
@@ -635,9 +686,10 @@ const LOTTERY = {
     megasena: { label: "Mega-Sena", page: "https://loterias.caixa.gov.br/Paginas/Mega-Sena.aspx" },
     federal: { label: "Loteria Federal", page: "https://loterias.caixa.gov.br/Paginas/Federal.aspx" },
   },
+  // Só uma sugestão editável (SPEC-v3 4). wd: dia da semana (0 = domingo), hora de Brasília.
   calendar: {
-    megasena: { weekdays: [2, 4, 6], time: "21:00", ref: null },
-    federal: { weekdays: [3, 6], time: "19:00", ref: null },
+    megasena: { slots: [{ wd: 2, time: "21:00" }, { wd: 4, time: "21:00" }, { wd: 6, time: "21:00" }], ref: null },
+    federal: { slots: [{ wd: 3, time: "20:00" }, { wd: 0, time: "11:00" }], ref: null },
   },
   tzOffsetMin: -180, // horário de Brasília, sem horário de verão desde 2019
 };
@@ -671,22 +723,24 @@ function cmpCodePoints(a, b) {
   }
   return A.length - B.length;
 }
-function checkJsonTypes(v, path = "spec") {
-  if (typeof v === "boolean") throw new Error(STR.ck.spec.bool(path));
+// boolPaths: caminhos onde um booleano é permitido (em LucentDraw/3, só spec.task.replace).
+function checkJsonTypes(v, path = "spec", boolPaths = []) {
+  if (typeof v === "boolean") { if (boolPaths.includes(path)) return; throw new Error(STR.ck.spec.bool(path)); }
   if (typeof v === "number") { if (!Number.isSafeInteger(v)) throw new Error(STR.ck.spec.float(path)); return; }
   if (v === null || typeof v === "string") return;
-  if (Array.isArray(v)) { v.forEach((x, i) => checkJsonTypes(x, path + "[" + i + "]")); return; }
-  if (typeof v === "object") { for (const k of Object.keys(v)) checkJsonTypes(v[k], path + "." + k); return; }
+  if (Array.isArray(v)) { v.forEach((x, i) => checkJsonTypes(x, path + "[" + i + "]", boolPaths)); return; }
+  if (typeof v === "object") { for (const k of Object.keys(v)) checkJsonTypes(v[k], path + "." + k, boolPaths); return; }
   throw new Error(STR.ck.spec.type(path));
 }
+const boolPathsOf = (spec) => (spec && spec.v === V3 ? ["spec.task.replace"] : []);
 // Igual a json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False).
+// Os tipos (inteiros; booleano só onde o protocolo permite) são conferidos antes por checkJsonTypes.
 function canon(v) {
   if (Array.isArray(v)) return "[" + v.map(canon).join(",") + "]";
   if (v && typeof v === "object") {
     return "{" + Object.keys(v).sort(cmpCodePoints).map((k) => JSON.stringify(k) + ":" + canon(v[k])).join(",") + "}";
   }
   if (typeof v === "number" && !Number.isSafeInteger(v)) throw new Error(STR.ck.spec.float("spec"));
-  if (typeof v === "boolean") throw new Error(STR.ck.spec.bool("spec"));
   return JSON.stringify(v);
 }
 const normText = (s) => String(s).normalize("NFC").trim();
@@ -701,7 +755,7 @@ function parseNames(text) {
   });
   return { names, dups: [...new Set(dups)] };
 }
-async function commitmentOf(spec) { checkJsonTypes(spec); return sha256hex(canon(spec)); }
+async function commitmentOf(spec) { checkJsonTypes(spec, "spec", boolPathsOf(spec)); return sha256hex(canon(spec)); }
 
 // ---- order (SPEC 5)
 function seedV2(C, values) {
@@ -723,19 +777,155 @@ async function orderV1(seed, names) {
   return rows;
 }
 
+// ---- LucentDraw/3 (SPEC-v3 2, 3): pesos exatos e escolha por intervalos, só aritmética inteira (BigInt)
+const TASK_PRESETS = ["list", "coin", "die", "cards"];
+const DIE_FACES = [4, 6, 8, 10, 12, 20];
+const COIN = ["Cara", "Coroa"];
+const SUITS = ["♠", "♥", "♦", "♣"];
+const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+const DECK = SUITS.flatMap((s) => RANKS.map((r) => r + s));
+const TWO256 = 1n << 256n;
+const bigGcd = (a, b) => { while (b) [a, b] = [b, a % b]; return a; };
+// Gramática da SPEC-v3 2, depois de NFC, trim e "," -> ".". Só algarismos ASCII; espaço/tab só em volta de "/".
+// Devolve { n, d } (BigInt, fração reduzida) ou { error } com um código de STR.weightErr.
+function parseWeight(w) {
+  if (typeof w !== "string") return { error: "syntax" };
+  const s = normText(w).replaceAll(",", ".");
+  let n, d, m;
+  if (!s) return { error: "empty" };
+  if (/^[0-9]+$/.test(s)) { n = BigInt(s); d = 1n; }
+  else if (/^(?:[0-9]*\.[0-9]+|[0-9]+\.[0-9]*)$/.test(s)) {
+    const [a, b] = s.split(".");
+    n = BigInt((a || "0") + b); d = 10n ** BigInt(b.length);
+  } else if ((m = /^([0-9]+)[ \t]*\/[ \t]*([0-9]+)$/.exec(s))) {
+    n = BigInt(m[1]); d = BigInt(m[2]);
+    if (d === 0n) return { error: "zeroDen" };
+  } else return { error: /^[-−]/.test(s) ? "negative" : "syntax" };
+  const g = bigGcd(n, d);
+  return { n: n / g, d: d / g };
+}
+// Pesos inteiros: w_i = n_i * (L / d_i), L = mmc dos denominadores. Lança erro se algum peso for inválido.
+function integerWeights(weights) {
+  const fr = weights.map((w, i) => { const p = parseWeight(w); if (p.error) throw Object.assign(new Error(STR.weightErr[p.error]), { index: i, code: p.error }); return p; });
+  const L = fr.reduce((acc, f) => (acc / bigGcd(acc, f.d)) * f.d, 1n);
+  const ints = fr.map((f) => f.n * (L / f.d));
+  return { ints, L, W: ints.reduce((a, b) => a + b, 0n) };
+}
+// Porcentagem exata de w/W arredondada a 0,1 (só para exibir).
+function shareText(w, W) {
+  if (!W || w === 0n) return "0 %";
+  if (w === W) return "100 %";
+  const tenths = (w * 2000n + W) / (2n * W);
+  if (tenths === 0n) return "< 0,1 %";
+  if (tenths >= 1000n) return "> 99,9 %";
+  return (tenths / 10n) + "," + (tenths % 10n) + " %";
+}
+const seedV3 = (C, values) => sha256hex([V3, "seed", C].concat(SOURCE_ORDER.map((k) => k + "=" + (values[k] || "-"))).join("\n"));
+const pickHash = (seed, j) => sha256hex(V3 + "\npick\n" + seed + "\n" + j);
+// Escolha (SPEC-v3 3). Devolve os índices e, para cada escolha, r, x, W e o índice (para a barra de intervalos).
+async function selectPicks(seed, task) {
+  const { ints } = integerWeights(task.weights);
+  const alive = [];
+  ints.forEach((w, i) => { if (w > 0n) alive.push(i); });
+  const picks = [], steps = [];
+  for (let j = 0; j < task.count; j++) {
+    const W = alive.reduce((a, i) => a + ints[i], 0n);
+    if (W === 0n) throw new Error(STR.ck.task.countTooBig);
+    const rHex = await pickHash(seed, j);
+    const x = (BigInt("0x" + rHex) * W) / TWO256; // em [0, W)
+    let acc = 0n;
+    for (let k = 0; k < alive.length; k++) {
+      const i = alive[k];
+      acc += ints[i];
+      if (x < acc) {
+        picks.push(i); steps.push({ j, r: rHex, x, W, index: i });
+        if (!task.replace) alive.splice(k, 1);
+        break;
+      }
+    }
+  }
+  return { picks, steps, ints };
+}
+// Modo rápido (SPEC-v3 5.2): semente local de 32 bytes, mesma regra, nenhum certificado.
+async function quickDraw(task, getRandomValues = (b) => crypto.getRandomValues(b)) {
+  const seed = bytesToHex(getRandomValues(new Uint8Array(32)));
+  const { picks, steps, ints } = await selectPicks(seed, task);
+  return { seed, picks, steps, ints, result: picks.map((i) => task.options[i]) };
+}
+// Tarefas prontas (SPEC-v3 2, "Presets").
+function presetTask(preset, { count = 1, faces = 6, options, weights, replace = false } = {}) {
+  if (preset === "coin") return { preset, options: [...COIN], weights: ["1", "1"], count, replace: true };
+  if (preset === "die") {
+    const opts = Array.from({ length: faces }, (_, i) => String(i + 1));
+    return { preset, options: opts, weights: weights && weights.length === faces ? weights.map(normText) : opts.map(() => "1"), count, replace: true };
+  }
+  if (preset === "cards") return { preset, options: [...DECK], weights: DECK.map(() => "1"), count, replace: false };
+  return { preset: "list", options: options.map(normText), weights: weights.map(normText), count, replace };
+}
+// Regras de task (SPEC-v3 2). Lista de problemas, vazia se bem formada.
+function validateTask(task) {
+  const P = STR.ck.task, problems = [];
+  if (!task || typeof task !== "object" || Array.isArray(task)) return [P.notObject];
+  const expected = ["preset", "options", "weights", "count", "replace"], keys = Object.keys(task);
+  const missing = expected.filter((k) => !keys.includes(k)).sort(), extra = keys.filter((k) => !expected.includes(k)).sort();
+  if (missing.length) problems.push(P.missing(missing.join(", ")));
+  if (extra.length) problems.push(P.extra(extra.join(", ")));
+  if (!TASK_PRESETS.includes(task.preset)) problems.push(P.preset);
+  const opts = Array.isArray(task.options) ? task.options : null;
+  if (!opts || !opts.length) problems.push(P.noOptions);
+  (opts || []).forEach((o, i) => {
+    if (typeof o !== "string" || !o) problems.push(P.optEmpty(i + 1));
+    else if (normText(o) !== o) problems.push(P.optNotNorm(i + 1));
+  });
+  const strs = (opts || []).filter((o) => typeof o === "string");
+  const dups = [...new Set(strs.filter((o, i) => strs.indexOf(o) !== i))].sort(cmpCodePoints);
+  if (dups.length) problems.push(P.dups(dups.join(", ")));
+  const ws = Array.isArray(task.weights) ? task.weights : null;
+  let positive = 0, badWeight = false;
+  if (!ws) problems.push(P.weightsNotList);
+  else {
+    if (opts && ws.length !== opts.length) problems.push(P.weightsLen);
+    ws.forEach((w, i) => {
+      if (typeof w !== "string") { badWeight = true; problems.push(P.weightBad(i + 1, STR.weightErr.syntax)); return; }
+      if (normText(w) !== w) problems.push(P.weightNotNorm(i + 1));
+      const p = parseWeight(w);
+      if (p.error) { badWeight = true; problems.push(P.weightBad(i + 1, STR.weightErr[p.error])); }
+      else if (p.n > 0n) positive++;
+    });
+    if (!badWeight && positive === 0) problems.push(P.allZero);
+  }
+  if (!Number.isSafeInteger(task.count) || task.count < 1) problems.push(P.count);
+  if (typeof task.replace !== "boolean") problems.push(P.replace);
+  else if (!task.replace && Number.isSafeInteger(task.count) && ws && task.count > positive && positive > 0) problems.push(P.countTooBig);
+  return problems;
+}
+
 // ---- source value strings (SPEC 4)
 const pad = (n, w) => String(n).padStart(w, "0");
 const megasenaValue = (contest, numbers) => contest + ":" + [...numbers].sort((a, b) => a - b).map((n) => pad(n, 2)).join("-");
 const federalValue = (contest, prizes) => contest + ":" + prizes.join("-");
 const megasenaOk = (n) => Array.isArray(n) && n.length === 6 && n.every((x) => Number.isInteger(x) && x >= 1 && x <= 60) && new Set(n).size === 6;
 const federalOk = (p) => Array.isArray(p) && p.length === 5 && p.every((x) => typeof x === "string" && /^[0-9]{5}$/.test(x));
-const lotteryEvidenceOk = (game, ev) => game === "megasena" ? megasenaOk(ev.numbers) : federalOk(ev.prizes);
-const lotteryValue = (game, contest, ev) => game === "megasena" ? megasenaValue(contest, ev.numbers) : federalValue(contest, ev.prizes);
-function sourceValues(randomness) {
+// LucentDraw/3 (SPEC-v3 4): concurso é texto ("3001", "6054-2"); números inteiros sem zeros à esquerda.
+const CONTEST_RE = /^[1-9][0-9]*(?:-[1-9][0-9]*)?$/;
+const contestOkV3 = (c) => typeof c === "string" && CONTEST_RE.test(c);
+const federalOkV3 = (p) => Array.isArray(p) && p.length === 5 && p.every((x) => Number.isSafeInteger(x) && x >= 0 && x <= 999999);
+// Valores vindos de fora (Caixa, relay, fixtures) podem ser inteiros ou texto com algarismos.
+const toInt = (x) => (typeof x === "string" && /^[0-9]{1,9}$/.test(x) ? parseInt(x, 10) : x);
+const megasenaValueV3 = (contest, numbers) => contest + ":" + numbers.map(toInt).sort((a, b) => a - b).map(String).join("-");
+const federalValueV3 = (contest, prizes) => contest + ":" + prizes.map((x) => String(toInt(x))).join("-");
+const lotteryEvidenceOk = (game, ev, v = VERSION) => v === V3
+  ? (game === "megasena" ? megasenaOk(ev.numbers) : federalOkV3(ev.prizes))
+  : (game === "megasena" ? megasenaOk(ev.numbers) : federalOk(ev.prizes));
+function lotteryValue(game, contest, ev, v = VERSION) {
+  if (v === V3) return game === "megasena" ? megasenaValueV3(contest, ev.numbers) : federalValueV3(contest, ev.prizes);
+  return game === "megasena" ? megasenaValue(contest, ev.numbers) : federalValue(contest, ev.prizes.map((x) => (typeof x === "number" ? pad(x, 5) : x)));
+}
+function sourceValues(randomness, v = VERSION) {
   const r = randomness || {}, out = {};
   if (r.eth) out.eth = normHex(r.eth.hash);
   if (r.drand) out.drand = normHex(r.drand.randomness);
-  for (const g of ["megasena", "federal"]) if (r[g]) out[g] = lotteryValue(g, r[g].contest, r[g]);
+  for (const g of ["megasena", "federal"]) if (r[g]) out[g] = lotteryValue(g, r[g].contest, r[g], v);
   return out;
 }
 
@@ -769,24 +959,38 @@ function brtMs(dateStr, time) {
   return Date.UTC(+m[1], +m[2] - 1, +m[3], +t[1], +t[2]) - tzMs;
 }
 const dateStrOf = (p) => p.y + "-" + pad(p.m, 2) + "-" + pad(p.d, 2);
-function lotteryDrawTime(game, dateStr, calendar = LOTTERY.calendar) { return brtMs(dateStr, calendar[game].time); }
+// Calendário: { slots: [{ wd, time }] } (atual) ou { weekdays, time } (formato antigo, ainda aceito).
+const calSlots = (cal) => (cal && Array.isArray(cal.slots) ? cal.slots : ((cal && cal.weekdays) || []).map((wd) => ({ wd, time: cal.time })));
+function weekdayOf(dateStr) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr || "");
+  return m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay() : null;
+}
+// Hora prevista do sorteio numa data, pelo calendário; null se esse dia da semana não está no calendário.
+function lotteryTimeOf(game, dateStr, calendar = LOTTERY.calendar) {
+  const wd = weekdayOf(dateStr), slot = calSlots(calendar[game]).find((s) => s.wd === wd);
+  return slot ? slot.time : null;
+}
+function lotteryDrawTime(game, dateStr, calendar = LOTTERY.calendar) {
+  const t = lotteryTimeOf(game, dateStr, calendar);
+  return t ? brtMs(dateStr, t) : null;
+}
 // Datas de sorteio a partir de um dia (inclusive), segundo o calendário.
 function* drawDates(game, fromDateStr, calendar = LOTTERY.calendar) {
-  const cal = calendar[game];
+  const days = calSlots(calendar[game]).map((s) => s.wd);
   let ms = brtMs(fromDateStr, "12:00");
   for (let i = 0; i < 3700; i++, ms += 86400000) {
     const p = brtParts(ms);
-    if (cal.weekdays.includes(p.wd)) yield dateStrOf(p);
+    if (days.includes(p.wd)) yield dateStrOf(p);
   }
 }
 // Primeiro sorteio pelo menos 2 h depois do lacre; número do concurso se houver referência.
 function suggestContest(game, sealMs, calendar = LOTTERY.calendar) {
-  const cal = calendar[game], min = sealMs + LEAD_MS.lotteryMin;
+  const min = sealMs + LEAD_MS.lotteryMin;
   let date = null;
   for (const d of drawDates(game, dateStrOf(brtParts(sealMs)), calendar)) {
     if (lotteryDrawTime(game, d, calendar) >= min) { date = d; break; }
   }
-  return { date, drawMs: date && lotteryDrawTime(game, date, calendar), contest: date ? contestForDate(game, date, calendar) : null };
+  return { date, time: date && lotteryTimeOf(game, date, calendar), drawMs: date && lotteryDrawTime(game, date, calendar), contest: date ? contestForDate(game, date, calendar) : null };
 }
 function contestForDate(game, date, calendar = LOTTERY.calendar) {
   const ref = calendar[game].ref;
@@ -829,6 +1033,14 @@ function buildSpec({ id, title, mode, namesText, contribution, preset, sealMs, l
     sources: planSources(preset, sealMs, lottery),
   };
 }
+// LucentDraw/3 (SPEC-v3 2): candidates dá lugar a task; lottery.contest é texto.
+function buildSpecV3({ id, title, mode, contribution, preset, sealMs, lottery, task }) {
+  return {
+    v: V3, id: normText(id), title: normText(title || ""), mode, contribution: normText(contribution || ""),
+    sources: planSources(preset, sealMs, lottery && { ...lottery, contest: normText(String(lottery.contest)) }),
+    task: { preset: task.preset, options: task.options.map(normText), weights: task.weights.map(normText), count: task.count, replace: task.replace },
+  };
+}
 
 // ---- spec well-formed (SPEC 9.2)
 const isInt = (x) => Number.isSafeInteger(x);
@@ -837,9 +1049,9 @@ function validateSpec(spec) {
   const P = STR.ck.spec, problems = [];
   if (!spec || typeof spec !== "object" || Array.isArray(spec)) return [P.notObject];
   const v = spec.v;
-  try { checkJsonTypes(spec); } catch (e) { problems.push(e.message); }
-  if (v === VERSION) {
-    const expected = ["v", "id", "title", "mode", "candidates", "contribution", "sources"];
+  try { checkJsonTypes(spec, "spec", boolPathsOf(spec)); } catch (e) { problems.push(e.message); }
+  if (v === VERSION || v === V3) {
+    const expected = v === V3 ? ["v", "id", "title", "mode", "contribution", "sources", "task"] : ["v", "id", "title", "mode", "candidates", "contribution", "sources"];
     const keys = Object.keys(spec);
     const missing = expected.filter((k) => !keys.includes(k)).sort(), extra = keys.filter((k) => !expected.includes(k)).sort();
     if (missing.length) problems.push(P.missing(missing.join(", ")));
@@ -848,21 +1060,24 @@ function validateSpec(spec) {
   }
   for (const f of ["id", "title", "contribution"]) if (f in spec && !isNormStr(spec[f])) problems.push(P.notNorm(f));
   if (typeof spec.id !== "string" || !spec.id) problems.push(P.emptyId);
-  let cands = spec.candidates;
-  if (!Array.isArray(cands)) { problems.push(P.candsNotList); cands = []; }
-  if (cands.length < 2) problems.push(P.fewCands);
-  cands.forEach((n, i) => {
-    if (typeof n !== "string" || !n) problems.push(P.candEmpty(i + 1));
-    else if (normText(n) !== n) problems.push(P.candNotNorm(i + 1));
-  });
-  const strs = cands.filter((n) => typeof n === "string");
-  const dups = [...new Set(strs.filter((n, i) => strs.indexOf(n) !== i))].sort(cmpCodePoints);
-  if (dups.length) problems.push(P.dups(dups.join(", ")));
+  if (v === V3) problems.push(...validateTask(spec.task));
+  else {
+    let cands = spec.candidates;
+    if (!Array.isArray(cands)) { problems.push(P.candsNotList); cands = []; }
+    if (cands.length < 2) problems.push(P.fewCands);
+    cands.forEach((n, i) => {
+      if (typeof n !== "string" || !n) problems.push(P.candEmpty(i + 1));
+      else if (normText(n) !== n) problems.push(P.candNotNorm(i + 1));
+    });
+    const strs = cands.filter((n) => typeof n === "string");
+    const dups = [...new Set(strs.filter((n, i) => strs.indexOf(n) !== i))].sort(cmpCodePoints);
+    if (dups.length) problems.push(P.dups(dups.join(", ")));
+  }
   const src = spec.sources;
   if (!src || typeof src !== "object" || Array.isArray(src) || !Object.keys(src).length) { problems.push(P.noSources); return problems; }
-  const allowed = v === VERSION ? SOURCE_ORDER : ["eth", "drand"];
+  const allowed = v === VERSION || v === V3 ? SOURCE_ORDER : ["eth", "drand"];
   for (const k of Object.keys(src)) if (!allowed.includes(k)) problems.push(P.unknownSource(k));
-  const strict = v === VERSION;
+  const strict = v === VERSION || v === V3;
   const need = (name, obj, fields) => {
     if (!obj || typeof obj !== "object" || Array.isArray(obj)) { problems.push(P.srcNotObj(name)); return false; }
     if (strict) {
@@ -886,7 +1101,9 @@ function validateSpec(spec) {
     }
   }
   for (const g of ["megasena", "federal"]) {
-    if (g in src && need(g, src[g], ["contest"])) if (!isInt(src[g].contest) || src[g].contest < 1) problems.push(P.contest(g));
+    if (g in src && need(g, src[g], ["contest"])) {
+      if (v === V3 ? !contestOkV3(src[g].contest) : !isInt(src[g].contest) || src[g].contest < 1) problems.push(P.contest(g));
+    }
   }
   return problems;
 }
@@ -985,9 +1202,12 @@ async function fetchVerifiedBeacon(lib, client, round) {
 }
 
 // ---- Loterias (SPEC 4.3–4.5)
+// contest numérico = formato LucentDraw/2 (bilhetes com 5 algarismos, texto);
+// contest texto = LucentDraw/3 (SPEC-v3 4: concurso como publicado, bilhetes inteiros de até 6 algarismos).
 function normalizeCaixa(game, contest, j) {
   if (!j || typeof j !== "object") return null;
-  if (j.numero != null && parseInt(j.numero, 10) !== contest) return null;
+  const v3 = typeof contest === "string";
+  if (j.numero != null && (v3 ? String(j.numero).trim() !== contest : parseInt(j.numero, 10) !== contest)) return null;
   const raw = j.listaDezenas || j.dezenasSorteadasOrdemSorteio || [];
   const dm = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(j.dataApuracao || "");
   const drawDate = dm ? dm[3] + "-" + dm[2] + "-" + dm[1] : null;
@@ -996,23 +1216,28 @@ function normalizeCaixa(game, contest, j) {
     const nums = raw.map((x) => parseInt(x, 10)).sort((a, b) => a - b);
     return megasenaOk(nums) ? { game, contest, numbers: nums, drawDate } : null;
   }
+  if (v3) {
+    const prizes = raw.map((x) => { const d = String(x).trim(); return /^[0-9]{1,6}$/.test(d) ? parseInt(d, 10) : NaN; });
+    return federalOkV3(prizes) ? { game, contest, prizes, drawDate } : null;
+  }
   const prizes = raw.map((x) => { let d = String(x).replace(/\D/g, ""); while (d.length > 5 && d[0] === "0") d = d.slice(1); return d.padStart(5, "0"); });
   return federalOk(prizes) ? { game, contest, prizes, drawDate } : null;
 }
 // Resultado normalizado, null se a fonte respondeu sem resultado, ou erro se nada respondeu.
+// O relay tem uma rota por formato: /v1/lottery (LucentDraw/2) e /v3/lottery (LucentDraw/3).
 async function fetchLottery(fetchJson, game, contest, relayUrl) {
-  const errors = [];
+  const errors = [], v3 = typeof contest === "string", v = v3 ? V3 : VERSION;
   let answered = false;
   try {
-    const n = normalizeCaixa(game, contest, await fetchJson(LOTTERY.api + game + "/" + contest));
+    const n = normalizeCaixa(game, contest, await fetchJson(LOTTERY.api + game + "/" + encodeURIComponent(contest)));
     answered = true;
     if (n) return n;
   } catch (e) { if (e && e.status === 404) answered = true; errors.push("Caixa: " + (e && e.message)); }
   if (relayUrl) {
     try {
-      const j = await fetchJson(relayUrl.replace(/\/+$/, "") + "/v1/lottery/" + game + "/" + contest);
+      const j = await fetchJson(relayUrl.replace(/\/+$/, "") + (v3 ? "/v3/lottery/" : "/v1/lottery/") + game + "/" + encodeURIComponent(contest));
       answered = true;
-      if (j && j.contest === contest && lotteryEvidenceOk(game, j)) {
+      if (j && j.contest === contest && lotteryEvidenceOk(game, j, v)) {
         return game === "megasena" ? { game, contest, numbers: [...j.numbers].sort((a, b) => a - b), drawDate: j.drawDate || null } : { game, contest, prizes: j.prizes, drawDate: j.drawDate || null };
       }
     } catch (e) { if (e && e.status === 404) answered = true; errors.push("relay: " + (e && e.message)); }
@@ -1020,12 +1245,16 @@ async function fetchLottery(fetchJson, game, contest, relayUrl) {
   if (answered) return null;
   throw new Error(errors.join("; ") || "sem fonte");
 }
-function parseManualLottery(game, numsText, dateStr) {
+function parseManualLottery(game, numsText, dateStr, v = VERSION) {
   const parts = String(numsText).split(/[\s,;.\-]+/).filter(Boolean);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr || "")) return { error: STR.manualBadDate };
   if (game === "megasena") {
     const nums = parts.map((x) => (/^\d{1,2}$/.test(x) ? parseInt(x, 10) : NaN)).sort((a, b) => a - b);
     return megasenaOk(nums) ? { numbers: nums, drawDate: dateStr } : { error: STR.manualBadMega };
+  }
+  if (v === V3) {
+    const prizes = parts.map((x) => (/^\d{1,6}$/.test(x) ? parseInt(x, 10) : NaN));
+    return federalOkV3(prizes) ? { prizes, drawDate: dateStr } : { error: STR.manualBadFederalV3 };
   }
   const prizes = parts.map((x) => (/^\d{1,5}$/.test(x) ? x.padStart(5, "0") : ""));
   return federalOk(prizes) ? { prizes, drawDate: dateStr } : { error: STR.manualBadFederal };
@@ -1106,8 +1335,18 @@ const tsaName = (url) => { try { return new URL(url).host; } catch { return Stri
 // ---- certificado e ata (SPEC 3.3, 7.3)
 function certificateOf(state) {
   const c = { spec: state.spec, commitment: state.commitment, sealedAt: state.sealedAt, anchors: state.anchors || [], randomness: state.randomness || {} };
-  if (state.seed && state.order) { c.seed = state.seed; c.order = state.order; }
+  if (state.spec && state.spec.v === V3) { if (state.seed && state.result && state.picks) { c.seed = state.seed; c.result = state.result; c.picks = state.picks; } }
+  else if (state.seed && state.order) { c.seed = state.seed; c.order = state.order; }
   return c;
+}
+const isDone = (state) => !!(state && state.seed && (state.spec && state.spec.v === V3 ? state.result && state.picks : state.order));
+// Resumo legível da task (ata, conferência, tela).
+function taskSummary(task) {
+  const T = STR.task, n = task.count, rep = task.replace;
+  if (task.preset === "coin") return T.sumCoin(n);
+  if (task.preset === "die") return T.sumDie(n, task.options.length, task.weights.some((w) => w !== "1"));
+  if (task.preset === "cards") return n === 52 ? T.sumShuffle : T.sumCards(n);
+  return T.sumList(task.options.length, n, rep);
 }
 const certFileName = (id) => "certificado-sorteio-" + String(id).replace(/[^\p{L}\p{N}._-]+/gu, "_") + ".json";
 const links = {
@@ -1116,13 +1355,22 @@ const links = {
   lottery: (g) => LOTTERY.games[g].page,
 };
 function ataText(cert) {
-  const A = STR.ata, s = cert.spec, r = cert.randomness || {}, L = [];
+  const A = STR.ata, s = cert.spec, r = cert.randomness || {}, L = [], v3 = s.v === V3;
   const sealedMs = Date.parse(cert.sealedAt);
   L.push(A.head, "");
   if (s.title) L.push(A.title + ": " + s.title);
   L.push(A.id + ": " + s.id);
   L.push(A.sealed + ": " + (isNaN(sealedMs) ? cert.sealedAt : fmtBrt(sealedMs) + " · " + cert.sealedAt) + " (" + A.sealedNote + ")");
-  L.push(A.count + ": " + s.candidates.length);
+  if (v3) {
+    const t = s.task, { ints, W } = integerWeights(t.weights);
+    L.push(A.protocol + ": " + V3);
+    L.push(A.kind + ": " + STR.task.presetName[t.preset] + " · " + taskSummary(t));
+    if (t.weights.every((w) => w === "1")) L.push(A.optionsEqual(t.options.length));
+    if (t.preset === "list" || t.weights.some((w) => w !== "1")) {
+      L.push(A.options(t.options.length, String(W)) + ":");
+      t.options.forEach((o, i) => L.push("- " + o + " · " + A.weightLine(t.weights[i], String(ints[i]), shareText(ints[i], W))));
+    }
+  } else L.push(A.count + ": " + s.candidates.length);
   L.push(A.contrib + ": " + (s.contribution ? "\"" + s.contribution + "\"" : A.none), "");
   L.push(A.commit + ":", cert.commitment, "");
   L.push(A.sources + ":");
@@ -1130,7 +1378,7 @@ function ataText(cert) {
   if (r.drand) L.push("- " + A.drand(r.drand.round, r.drand.randomness), A.link + links.drand(r.drand.round));
   for (const g of ["megasena", "federal"]) {
     if (!r[g]) continue;
-    const v = lotteryValue(g, r[g].contest, r[g]).split(":")[1];
+    const v = lotteryValue(g, r[g].contest, r[g], s.v).split(":")[1];
     L.push("- " + A[g](r[g].contest, v, r[g].drawDate || "?"));
     if (r[g].source === "manual") L.push(A.manual);
     L.push(A.link + links.lottery(g));
@@ -1143,8 +1391,11 @@ function ataText(cert) {
     else if (a.type === "ots") L.push("- " + (a.complete ? STR.otsComplete : STR.otsPending));
   }
   if (cert.seed) L.push("", A.seed + ": " + cert.seed);
-  if (cert.order) { L.push("", A.order + ":"); cert.order.forEach((n, i) => L.push((i + 1) + ". " + n)); }
-  L.push("", A.howTitle + ":", A.how(certFileName(s.id)));
+  if (v3 && Array.isArray(cert.result)) {
+    L.push("", A.result + ":");
+    cert.result.forEach((n, i) => L.push((i + 1) + ". " + n + " " + A.pickIndex(cert.picks[i])));
+  } else if (cert.order) { L.push("", A.order + ":"); cert.order.forEach((n, i) => L.push((i + 1) + ". " + n)); }
+  L.push("", A.howTitle + ":", v3 ? A.howV3(certFileName(s.id)) : A.how(certFileName(s.id)));
   return L.join("\n");
 }
 
@@ -1152,15 +1403,22 @@ function ataText(cert) {
 async function verifyCertificate(cert, deps = {}, opts = {}) {
   const K = STR.ck, checks = [];
   const add = (id, status, title, detail = "") => checks.push({ id, status, title, detail });
-  const done = (order = null) => verdictOf(cert, checks, !!opts.lotteryConfirmed, order);
+  let v3info = null; // LucentDraw/3: pesos digitados, inteiros, W, resultado recalculado
+  const done = (order = null) => Object.assign(verdictOf(cert, checks, !!opts.lotteryConfirmed, order), v3info ? { v3: v3info } : {});
   if (!cert || typeof cert !== "object" || !cert.spec || typeof cert.spec !== "object") { add("parse", STATUS.FAIL, K.parseNoSpec); return done(); }
-  const spec = cert.spec, v = spec.v;
-  if (v !== VERSION && v !== V1) { add("parse", STATUS.FAIL, K.parseVersion(JSON.stringify(v))); return done(); }
+  const spec = cert.spec, v = spec.v, isV3 = v === V3;
+  if (v !== VERSION && v !== V1 && v !== V3) { add("parse", STATUS.FAIL, K.parseVersion(JSON.stringify(v))); return done(); }
   if (typeof cert.commitment !== "string") { add("parse", STATUS.FAIL, K.parseNoCommit); return done(); }
   add("parse", STATUS.PASS, K.parseOk(v));
 
   const problems = validateSpec(spec);
+  const taskOk = isV3 && !validateTask(spec.task).length;
+  if (taskOk) {
+    const { ints, W } = integerWeights(spec.task.weights);
+    v3info = { task: spec.task, ints, W, steps: null, result: null, picks: null };
+  }
   if (problems.length) add("spec", STATUS.FAIL, K.specBad, problems.join("; "));
+  else if (isV3) add("spec", STATUS.PASS, K.specOk, K.specOkV3(spec.task.options.length, String(v3info.W), taskSummary(spec.task)) + " · " + K.weightsD(spec.task.weights, v3info.ints));
   else add("spec", STATUS.PASS, K.specOk, K.specOkD(spec.candidates.length));
 
   let C;
@@ -1173,7 +1431,7 @@ async function verifyCertificate(cert, deps = {}, opts = {}) {
   const indep = {}, claimed = {}, rtimes = {};
   const obj = (x) => (x && typeof x === "object" && !Array.isArray(x) ? x : null);
   // Um lacre (SPEC 3.3): sem aleatoriedade, sem semente e sem ordem. Fontes ficam pendentes, não falham.
-  const isSeal = !Object.keys(rand).length && !("seed" in cert) && !("order" in cert);
+  const isSeal = !Object.keys(rand).length && !("seed" in cert) && !("order" in cert) && !("result" in cert) && !("picks" in cert);
   const missing = isSeal ? STATUS.UNVERIFIED : STATUS.FAIL;
 
   if ("eth" in sources) {
@@ -1225,16 +1483,16 @@ async function verifyCertificate(cert, deps = {}, opts = {}) {
   for (const game of ["megasena", "federal"]) {
     if (!(game in sources)) continue;
     const label = LOTTERY.games[game].label, contest = sources[game].contest, ev = obj(rand[game]), link = LOTTERY.games[game].page;
-    const okEv = !!ev && ev.contest === contest && lotteryEvidenceOk(game, ev);
+    const okEv = !!ev && ev.contest === contest && lotteryEvidenceOk(game, ev, v);
     const manual = ev && ev.source === "manual" ? K.lotManual : "";
     if (!okEv) { add(game, missing, isSeal ? K.sealPending(label + ", concurso " + contest) : K.lotMissing(label, contest)); continue; }
-    claimed[game] = lotteryValue(game, contest, ev);
+    claimed[game] = lotteryValue(game, contest, ev, v);
     const t = lotteryDrawTime(game, ev.drawDate || "");
     if (t) rtimes[game] = t / 1000;
     let f = null, err = null;
     try { if (!deps.lottery) throw new Error("não consultado"); f = await deps.lottery(game, contest); } catch (e) { err = e; }
     if (f && !err) {
-      const off = lotteryValue(game, contest, f);
+      const off = lotteryValue(game, contest, f, v);
       indep[game] = off;
       const t2 = f.drawDate && lotteryDrawTime(game, f.drawDate);
       if (t2) rtimes[game] = t2 / 1000;
@@ -1250,7 +1508,24 @@ async function verifyCertificate(cert, deps = {}, opts = {}) {
   for (const k of keys) used[k] = indep[k] || claimed[k];
   const allIndep = keys.filter((k) => k !== "megasena" && k !== "federal").every((k) => k in indep);
   let computed = null;
-  if (!keys.every((k) => used[k])) add("order", cert.order ? STATUS.FAIL : STATUS.UNVERIFIED, K.orderMissing, K.orderMissingD);
+  if (isV3) {
+    const claims = cert.result != null || cert.picks != null;
+    if (!keys.every((k) => used[k])) add("result", claims ? STATUS.FAIL : STATUS.UNVERIFIED, K.resultMissing, K.orderMissingD);
+    else if (!taskOk) add("result", STATUS.FAIL, K.resultNoTask);
+    else {
+      const seed = await seedV3(C, used);
+      const { picks, steps } = await selectPicks(seed, spec.task);
+      const result = picks.map((i) => spec.task.options[i]);
+      Object.assign(v3info, { seed, steps, picks, result });
+      const same = (a, b) => Array.isArray(a) && a.length === b.length && b.every((x, i) => x === a[i]);
+      const preview = result.slice(0, 5).map((n, i) => (i + 1) + ". " + n).join(" · ") + (result.length > 5 ? " …" : "");
+      if (cert.seed !== seed) add("result", STATUS.FAIL, K.seedBad, "recalculada " + seed + " · certificado " + cert.seed);
+      else if (!same(cert.picks, picks)) add("result", STATUS.FAIL, K.picksBad, "corretos: " + picks.join(", ") + " · certificado: " + JSON.stringify(cert.picks));
+      else if (!same(cert.result, result)) add("result", STATUS.FAIL, K.resultBad, "correto: " + preview);
+      else if (!allIndep) add("result", STATUS.UNVERIFIED, K.resultPartial, preview);
+      else add("result", STATUS.PASS, K.resultOk, "semente " + seed + " · " + preview);
+    }
+  } else if (!keys.every((k) => used[k])) add("order", cert.order ? STATUS.FAIL : STATUS.UNVERIFIED, K.orderMissing, K.orderMissingD);
   else {
     const seed = v === VERSION ? await seedV2(C, used) : await seedV1(C, used.eth, used.drand);
     const rows = v === VERSION ? await orderV2(seed, names) : await orderV1(seed, names);
@@ -1314,6 +1589,10 @@ const CORE = Object.freeze({
   findEthTarget, waitEthTarget, makeEthRpc, makeDrandClient, fetchVerifiedBeacon, normalizeCaixa, fetchLottery,
   parseManualLottery, parseTimestampResponse, anchorsFromRelay, tsaName, certificateOf, certFileName, links, ataText,
   verifyCertificate, verdictOf,
+  // LucentDraw/3
+  V3, TASK_PRESETS, DIE_FACES, COIN, DECK, parseWeight, integerWeights, shareText, seedV3, pickHash, selectPicks,
+  quickDraw, presetTask, validateTask, buildSpecV3, contestOkV3, federalOkV3, megasenaValueV3, federalValueV3,
+  lotteryEvidenceOk, calSlots, lotteryTimeOf, isDone, taskSummary, boolPathsOf,
 });
 // ---------------------------------------------------------------- CORE-END
 

@@ -1,0 +1,25 @@
+{
+ "note": "Adulterações de certificados LucentDraw/3. Cada caso: certificado, operações, checagem principal e lista exata de checagens que falham. Usado por tests/v3.test.mjs e tests/test_verify_draw_v3.py.",
+ "cases": [
+  {"name": "option name in spec", "fixture": "v3-live-drand-cards", "ops": [{"op": "set", "path": ["spec", "task", "options", 51], "value": "Rei de paus"}], "main": "commitment", "fails": ["anchors", "commitment", "result"]},
+  {"name": "zero weight made positive", "fixture": "v3-live-eth-weights", "ops": [{"op": "set", "path": ["spec", "task", "weights", 3], "value": "1"}], "main": "commitment", "fails": ["anchors", "commitment", "result"]},
+  {"name": "weight retyped 0,35 -> 0.35 (stored as typed)", "fixture": "v3-live-eth-weights", "ops": [{"op": "set", "path": ["spec", "task", "weights", 1], "value": "0.35"}], "main": "commitment", "fails": ["anchors", "commitment", "result"]},
+  {"name": "invalid weight 1/0", "fixture": "v3-live-eth-weights", "ops": [{"op": "set", "path": ["spec", "task", "weights", 1], "value": "1/0"}], "main": "spec", "fails": ["anchors", "commitment", "result", "spec"]},
+  {"name": "replace flipped", "fixture": "v3-live-drand-cards", "ops": [{"op": "set", "path": ["spec", "task", "replace"], "value": true}], "main": "commitment", "fails": ["anchors", "commitment", "result"]},
+  {"name": "count changed", "fixture": "v3-scheduled-federal-order", "ops": [{"op": "set", "path": ["spec", "task", "count"], "value": 4}], "main": "commitment", "fails": ["anchors", "commitment", "result"]},
+  {"name": "contest as integer (v2 encoding)", "fixture": "v3-scheduled-federal-order", "ops": [{"op": "set", "path": ["spec", "sources", "federal", "contest"], "value": 6120}], "main": "spec", "fails": ["anchors", "commitment", "federal", "result", "spec"]},
+  {"name": "version label changed to LucentDraw/2", "fixture": "v3-scheduled-federal-order", "ops": [{"op": "set", "path": ["spec", "v"], "value": "LucentDraw/2"}], "main": "spec", "fails": ["commitment", "spec"]},
+  {"name": "result order swapped", "fixture": "v3-scheduled-federal-order", "ops": [{"op": "swap01", "path": ["result"]}], "main": "result", "fails": ["result"]},
+  {"name": "one result name edited", "fixture": "v3-live-drand-cards", "ops": [{"op": "set", "path": ["result", 2], "value": "Coringa"}], "main": "result", "fails": ["result"]},
+  {"name": "one pick index edited", "fixture": "v3-live-drand-cards", "ops": [{"op": "set", "path": ["picks", 0], "value": 51}], "main": "result", "fails": ["result"]},
+  {"name": "result and picks replaced by a v2 order", "fixture": "v3-scheduled-federal-order", "ops": [{"op": "delete", "path": ["result"]}, {"op": "delete", "path": ["picks"]}, {"op": "set", "path": ["order"], "value": ["Apto 101", "Apto 102", "Apto 201", "Apto 202", "Apto 301"]}], "main": "result", "fails": ["result"]},
+  {"name": "one hex digit of the seed", "fixture": "v3-live-eth-weights", "ops": [{"op": "flip", "path": ["seed"]}], "main": "result", "fails": ["result"]},
+  {"name": "one hex digit of the commitment", "fixture": "v3-live-drand-cards", "ops": [{"op": "flip", "path": ["commitment"]}], "main": "commitment", "fails": ["commitment"]},
+  {"name": "one hex digit of the drand randomness", "fixture": "v3-live-drand-cards", "ops": [{"op": "flip", "path": ["randomness", "drand", "randomness"]}], "main": "drand", "fails": ["drand"]},
+  {"name": "one hex digit of the eth block hash", "fixture": "v3-live-eth-weights", "ops": [{"op": "flip", "path": ["randomness", "eth", "hash"]}], "main": "eth", "fails": ["eth"]},
+  {"name": "Federal prize changed", "fixture": "v3-scheduled-federal-order", "ops": [{"op": "set", "path": ["randomness", "federal", "prizes", 2], "value": 7768}], "main": "federal", "fails": ["federal"]},
+  {"name": "Federal prizes zero-padded (v2 encoding)", "fixture": "v3-scheduled-federal-order", "ops": [{"op": "set", "path": ["randomness", "federal", "prizes"], "value": ["17469", "81210", "07767", "41317", "79412"]}], "main": "federal", "fails": ["federal", "result"]},
+  {"name": "Mega-Sena number changed (manual entry)", "fixture": "v3-scheduled-megasena-dice-manual", "ops": [{"op": "set", "path": ["randomness", "megasena", "numbers", 0], "value": 2}], "main": "megasena", "fails": ["megasena"]},
+  {"name": "anchor time edited", "fixture": "v3-live-drand-cards", "ops": [{"op": "set", "path": ["anchors", 0, "time"], "value": "2027-01-01T00:00:00Z"}], "main": "anchors", "fails": ["anchors"]}
+ ]
+}

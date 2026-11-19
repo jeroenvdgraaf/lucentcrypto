@@ -2,7 +2,7 @@
   "note": "Simulated network state for offline tests. All values are FAKE; drand beacons use a TEST key.",
   "drandPublicKey": "81203162b82fd1c0ce9687986a4dc858d6ffe70a5e523d03236a8353ae64e7f9cf68487410be5a8928254408fdd485d409b611118601708fa7ef7ecb2d08721ecf32b4af4064c023750476e72520d43050eb3263554d3e623da1f6aae9705dcd",
   "eth": {
-    "head": 23700060,
+    "head": 25000060,
     "blocks": {
       "22999999": {
         "number": 22999999,
@@ -23,6 +23,16 @@
         "number": 23700000,
         "hash": "a5f3d7f4fe85ddd56724cb63a6818cc2aabc4c404fe30d718fc965058605597c",
         "timestamp": 1794260015
+      },
+      "24999999": {
+        "number": 24999999,
+        "hash": "37d10ecc748aba7d6d37bcc47f33bcd0a2be2e5d57cbc820a24ea48174d42279",
+        "timestamp": 1812799991
+      },
+      "25000000": {
+        "number": 25000000,
+        "hash": "6655d39c17a105289f93440df29feaf57b5cda705fdfece0167d4e90609cc64b",
+        "timestamp": 1812800003
       }
     }
   },
@@ -78,6 +88,31 @@
         "97531"
       ],
       "drawDate": "2026-11-11"
+    },
+    "federal/6120": {
+      "game": "federal",
+      "contest": "6120",
+      "prizes": [
+        17469,
+        81210,
+        7767,
+        41317,
+        79412
+      ],
+      "drawDate": "2027-01-20"
+    },
+    "megasena/3010-2": {
+      "game": "megasena",
+      "contest": "3010-2",
+      "numbers": [
+        1,
+        7,
+        13,
+        22,
+        48,
+        60
+      ],
+      "drawDate": "2027-01-21"
     }
   }
 }

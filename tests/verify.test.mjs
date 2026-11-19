@@ -38,7 +38,8 @@ test("manual Federal entry is flagged; no anchors gives 'atenção: sem carimbo 
   assert.equal(st.federal, "passou");
   assert.match(rep.checks.find((x) => x.id === "federal").title, /inserido manualmente/);
   assert.equal(st.timing, "atencao");
-  assert.match(rep.checks.find((x) => x.id === "timing").detail, /antes de 2026-11-11T22:00:00Z/);
+  // Quarta-feira, Loteria Federal às 20:00 de Brasília pelo calendário padrão (SPEC-v3 4) = 23:00Z.
+  assert.match(rep.checks.find((x) => x.id === "timing").detail, /antes de 2026-11-11T23:00:00Z/);
   assert.equal(rep.verdict, "incompleto");
   assert.deepEqual(failing(rep), []);
 });

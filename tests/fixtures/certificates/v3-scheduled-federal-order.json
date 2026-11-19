@@ -1,0 +1,72 @@
+{
+  "spec": {
+    "v": "LucentDraw/3",
+    "id": "ordem-federal-teste",
+    "title": "Ordem das vagas",
+    "mode": "scheduled",
+    "contribution": "",
+    "sources": {
+      "federal": {
+        "contest": "6120"
+      }
+    },
+    "task": {
+      "preset": "list",
+      "options": [
+        "Apto 101",
+        "Apto 102",
+        "Apto 201",
+        "Apto 202",
+        "Apto 301"
+      ],
+      "weights": [
+        "1",
+        "1",
+        "2",
+        "1",
+        "1/2"
+      ],
+      "count": 5,
+      "replace": false
+    }
+  },
+  "commitment": "df09984607cfe134037d3c0fbf407c4f062da57b1557002c4f556d37971a5d2c",
+  "sealedAt": "2027-01-18T12:00:00.000Z",
+  "anchors": [
+    {
+      "type": "rfc3161",
+      "tsa": "https://tsa-test-a.example/tsr",
+      "token": "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",
+      "time": "2026-11-19T14:13:02.640Z"
+    }
+  ],
+  "randomness": {
+    "federal": {
+      "contest": "6120",
+      "prizes": [
+        17469,
+        81210,
+        7767,
+        41317,
+        79412
+      ],
+      "drawDate": "2027-01-20",
+      "source": "caixa-api"
+    }
+  },
+  "seed": "5591f69710867b5cc15bcb75fa93d827b3425097dfd7bc482ff120f90a4970be",
+  "result": [
+    "Apto 102",
+    "Apto 101",
+    "Apto 201",
+    "Apto 301",
+    "Apto 202"
+  ],
+  "picks": [
+    1,
+    0,
+    2,
+    4,
+    3
+  ]
+}

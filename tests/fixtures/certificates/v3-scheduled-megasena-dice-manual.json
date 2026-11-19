@@ -1,0 +1,90 @@
+{
+  "spec": {
+    "v": "LucentDraw/3",
+    "id": "dados-mega-teste",
+    "title": "",
+    "mode": "scheduled",
+    "contribution": "",
+    "sources": {
+      "megasena": {
+        "contest": "3010-2"
+      }
+    },
+    "task": {
+      "preset": "die",
+      "options": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20"
+      ],
+      "weights": [
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1"
+      ],
+      "count": 2,
+      "replace": true
+    }
+  },
+  "commitment": "99f2d352ca2a63ffdfa69ca89d874d9b802b6cec60a918127a4f0b0d5f9d8543",
+  "sealedAt": "2027-01-19T12:00:00.000Z",
+  "anchors": [],
+  "randomness": {
+    "megasena": {
+      "contest": "3010-2",
+      "numbers": [
+        1,
+        7,
+        13,
+        22,
+        48,
+        60
+      ],
+      "drawDate": "2027-01-21",
+      "source": "manual"
+    }
+  },
+  "seed": "18e35b68fc5c2c67f2f941faec76e7eae44c88f0cbf60f0668161f981548f08c",
+  "result": [
+    "17",
+    "9"
+  ],
+  "picks": [
+    16,
+    8
+  ]
+}

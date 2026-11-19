@@ -1,0 +1,33 @@
+{
+  "spec": {
+    "v": "LucentDraw/3",
+    "id": "moeda-lacre",
+    "title": "",
+    "mode": "live",
+    "contribution": "",
+    "sources": {
+      "drand": {
+        "chain": "quicknet",
+        "chainHash": "52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971",
+        "round": 40000000
+      }
+    },
+    "task": {
+      "preset": "coin",
+      "options": [
+        "Cara",
+        "Coroa"
+      ],
+      "weights": [
+        "1",
+        "1"
+      ],
+      "count": 3,
+      "replace": true
+    }
+  },
+  "commitment": "da4a3aac4c5913f0a0603b5a7a99bce63b0493e5604c7fc85758da8c3990a8c2",
+  "sealedAt": "2027-06-14T10:00:00.000Z",
+  "anchors": [],
+  "randomness": {}
+}

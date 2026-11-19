@@ -1,0 +1,60 @@
+{
+  "spec": {
+    "v": "LucentDraw/3",
+    "id": "pesos-teste",
+    "title": "Brinde com pesos",
+    "mode": "live",
+    "contribution": "",
+    "sources": {
+      "eth": {
+        "chain": "ethereum-mainnet",
+        "rule": "first-block-after",
+        "notBefore": 1812800000,
+        "confirmations": 1
+      }
+    },
+    "task": {
+      "preset": "list",
+      "options": [
+        "Ana",
+        "Bruno",
+        "Célia",
+        "Davi"
+      ],
+      "weights": [
+        "3",
+        "0,35",
+        "1/7",
+        "0"
+      ],
+      "count": 1,
+      "replace": false
+    }
+  },
+  "commitment": "c826c54f0c5b3b0eaaeb394ad90346e2b2316e98cfd80da107c94808be2724ea",
+  "sealedAt": "2027-06-12T13:33:20.000Z",
+  "anchors": [
+    {
+      "type": "rfc3161",
+      "tsa": "https://tsa-test-a.example/tsr",
+      "token": "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",
+      "time": "2026-11-19T14:13:02.632Z"
+    }
+  ],
+  "randomness": {
+    "eth": {
+      "number": 25000000,
+      "hash": "6655d39c17a105289f93440df29feaf57b5cda705fdfece0167d4e90609cc64b",
+      "timestamp": 1812800003,
+      "parentTimestamp": 1812799991,
+      "confirmations": 1
+    }
+  },
+  "seed": "c84d83773233d016f5c6d73c65356005d75e5befcb12a366c5326cf913e26703",
+  "result": [
+    "Célia"
+  ],
+  "picks": [
+    2
+  ]
+}
