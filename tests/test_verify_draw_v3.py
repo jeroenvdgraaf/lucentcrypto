@@ -264,3 +264,32 @@ class Tampering(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OwnSeed(unittest.TestCase):
+    """Semente própria (SPEC-v3 5.3): mesmos certificados que o teste Node."""
+
+    def test_canon(self):
+        c = v.canon_own_seed
+        self.assertEqual(c("33 05 12"), {"value": "5-12-33", "reading": "int"})
+        self.assertEqual(c(" 5 -12\n\t033 "), {"value": "5-12-33", "reading": "int"})
+        self.assertEqual(c("100 99 1000000000000000000000")["value"], "99-100-1000000000000000000000")
+        self.assertEqual(c("12.345"), {"value": "12.345", "reading": "text"})
+        self.assertEqual(c("  abc def \r\n"), {"value": "abc def", "reading": "text"})
+        self.assertEqual(c("ação"), {"error": "ascii"})
+        self.assertEqual(c("  \n "), {"error": "empty"})
+        self.assertIsNone(v.own_format_error("megasena", c("5 12 33 41 47 58")))
+        self.assertEqual(v.own_format_error("megasena", c("5 5 33 41 47 58")), "megasena")
+        self.assertEqual(v.own_format_error("federal", c("1234567 1 2 3 4")), "federal")
+
+    def test_certificates(self):
+        for case in w.load("v3_own.json")["cases"]:
+            cert = case["cert"]
+            self.assertEqual(v.canon_own_seed(case["typed"])["value"], cert["randomness"]["own"]["value"])
+            rep = v.verify_certificate(cert, {})
+            self.assertEqual(rep["verdict"], "incompleto", rep["checks"])
+            self.assertTrue(rep["message"].startswith("Confere, desde que a lista"))
+            self.assertEqual([c["id"] for c in rep["checks"] if c["status"] != v.PASS], ["own"])
+            bad = copy.deepcopy(cert)
+            bad["randomness"]["own"]["value"] += " "
+            self.assertEqual(v.verify_certificate(bad, {})["verdict"], "nao_confere")

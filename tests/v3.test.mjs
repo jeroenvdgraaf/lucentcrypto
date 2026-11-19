@@ -307,3 +307,42 @@ function applyPatch(c, t) {
     else o[last] = op.value;
   }
 }
+
+// ---- semente própria (SPEC-v3 5.3)
+test("semente própria · leitura canônica", () => {
+  const c = (t) => C.canonOwnSeed(t);
+  assert.deepEqual(c("33 05 12"), { value: "5-12-33", reading: "int" });
+  assert.deepEqual(c(" 5 -12\n\t033 "), { value: "5-12-33", reading: "int" });
+  assert.deepEqual(c("05-12-33"), c("5 12 33"));
+  assert.deepEqual(c("0 00 7"), { value: "0-0-7", reading: "int" });
+  assert.deepEqual(c("100 99 1000000000000000000000"), { value: "99-100-1000000000000000000000", reading: "int" });
+  assert.deepEqual(c("12.345"), { value: "12.345", reading: "text" });
+  assert.deepEqual(c("  abc def \r\n"), { value: "abc def", reading: "text" });
+  assert.notDeepEqual(c("abc def"), c("abc-def"));
+  assert.deepEqual(c("ação"), { error: "ascii" });
+  assert.deepEqual(c("  \n "), { error: "empty" });
+  assert.deepEqual(c("---"), { value: "---", reading: "text" });
+  assert.equal(C.ownFormatError("megasena", c("5 12 33 41 47 58")), null);
+  assert.equal(C.ownFormatError("megasena", c("5 12 33 41 47 61")), "megasena");
+  assert.equal(C.ownFormatError("megasena", c("5 5 33 41 47 58")), "megasena");
+  assert.equal(C.ownFormatError("federal", c("012345 99999 1 2 3")), null);
+  assert.equal(C.ownFormatError("federal", c("1234567 1 2 3 4")), "federal");
+  assert.equal(C.ownFormatError("outro", c("qualquer coisa")), null);
+});
+test("semente própria · rápido = verificável, e independe do título e do ID", async () => {
+  const OWN = JSON.parse(readFileSync(join(ROOT, "tests", "fixtures", "v3_own.json"), "utf8")).cases;
+  for (const { typed, cert: c } of OWN) {
+    const q = await C.quickDrawOwn(c.spec.task, C.canonOwnSeed(typed).value);
+    assert.deepEqual(q.result, c.result);
+    const rep = await verify(c);
+    assert.equal(rep.verdict, "incompleto", JSON.stringify(rep.checks.filter((x) => x.status !== C.STATUS.PASS)));
+    assert.match(rep.message, /^Confere, desde que a lista/);
+    assert.deepEqual(rep.checks.filter((x) => x.status !== C.STATUS.PASS).map((x) => x.id), ["own"]);
+    const t = clone(c); t.spec.title = "outro título"; t.spec.id = "x"; t.commitment = await C.commitmentOf(t.spec);
+    assert.equal((await verify(t)).verdict, "incompleto", "título/ID não mudam o resultado");
+    const bad = clone(c); bad.randomness.own.value = bad.randomness.own.value + " ";
+    assert.equal((await verify(bad)).verdict, "nao_confere", "não canônica");
+    const other = clone(c); other.spec.sources.eth = { chain: "ethereum-mainnet", rule: "first-block-after", notBefore: 1, confirmations: 1 }; other.commitment = await C.commitmentOf(other.spec);
+    assert.equal((await verify(other)).verdict, "nao_confere", "não combina com outras fontes");
+  }
+});

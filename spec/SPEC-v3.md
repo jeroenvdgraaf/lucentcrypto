@@ -98,9 +98,37 @@ Exactly the LucentDraw/2 flow: prepare, seal (the whole `spec`, including `task`
 
 ### 5.2 Rápido
 - seed = 32 bytes from `crypto.getRandomValues`, as lowercase hex; then the selection rule of section 3, with the same code.
+- If the operator types a semente própria, seed = SHA-256("LucentDraw/3\nown\n" + canonical value) as in 5.3 (no format check needed, no label), so the result equals the verifiable one.
 - **No seal, no certificate, no ata.** The result screen says plainly: "Modo rápido: resultado instantâneo, mas ninguém pode conferir depois. Para um sorteio que vale perante outras pessoas, use o modo verificável."
 - Works offline, and from a local file.
 - Optionally shows the seed under Detalhes técnicos.
+
+### 5.3 Semente própria (source `own`)
+
+A seed the participants agreed on beforehand: the result of a past or present lottery contest, dice thrown in the room, any text. Nothing to wait for. On the free page it is the first and default source; the scheduled lottery mode (`megasena`/`federal` as sources) is no longer offered there, but certificates that use it still verify.
+
+**Sealed spec:** `sources = { "own": { "format": "megasena" | "federal" | "outro", "label": "<normalized text>" } }`. `own` is the only source (MUST NOT be combined). For `megasena`/`federal` the UI builds the label as "Mega-Sena, concurso N" / "Loteria Federal, concurso N"; for `outro` the operator types it (required in the verifiable mode). `mode` is `"live"`, `contribution` is `""`.
+
+**Canonical reading (MUST, identical in HTML and Python):**
+
+1. Replace CRLF and CR by LF. Every character must be in U+0020–U+007E, TAB or LF; otherwise refuse (only ASCII: no accents).
+2. Remove spaces, tabs and line breaks at both ends. Empty: refuse.
+3. If what remains has only digits, spaces, tabs, line breaks and hyphens (and at least one digit), it is read **as integers**: split at runs of space/tab/LF/hyphen, drop leading zeros of each piece ("007" → "7", "000" → "0"), sort ascending numerically (by length, then lexicographically), join with a single "-". Example: `" 33 05-12\n58 047 41 "` → `5-12-33-41-47-58`. reading = `"int"`.
+4. Otherwise the text is used **exactly** as it stands after step 2 (no other change; "abc def" and "abc-def" differ). reading = `"text"`.
+
+**Format checks:** `megasena`: reading int, exactly 6 distinct numbers, each 1–60. `federal`: reading int, exactly 5 numbers, each at most 6 digits (0–999999). `outro`: none.
+
+**Randomness and seed:** `randomness.own = { "value": <canonical>, "reading": "int" | "text" }` and
+
+```
+seed = SHA-256( "LucentDraw/3\nown\n" + value )
+```
+
+The seed does **not** depend on C (title, ID, time): the result depends only on the task (options in their order, weights, count, replace) and the canonical seed. So the rápido mode with the same seed gives the same result, anyone can reproduce it, and the organizer has no free field to retry. No timestamp is requested: with a seed that may already be public it would prove nothing.
+
+**Verification:** `value` must equal its own canonical reading with the same `reading`, and pass the format check; otherwise FAIL. The origin of the seed cannot be checked automatically, so check `own` is UNVERIFIED and there is no timing check. If it is the only open item, verdict `incompleto` (exit code 2) with the message "Confere, desde que a lista (nesta ordem) e a semente (<label>) tenham sido combinadas antes. As contas estão certas; confira a semente na fonte indicada."
+
+**What remains a matter of trust:** if the list, its order or the seed's source was settled after the seed was known, the organizer could have arranged the outcome. The certificate says so; no page can prevent it.
 
 ## 6. Interface (pt-BR)
 

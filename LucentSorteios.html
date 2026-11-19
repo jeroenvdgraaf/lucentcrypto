@@ -292,8 +292,26 @@ footer a { color: var(--accent); }
             <div class="row"><button class="btn" id="shuffleBtn" type="button" data-s="shuffleBtn"></button></div>
           </div>
 
+          <div id="ownBox" class="col" style="gap:8px">
+            <div class="seg" role="radiogroup" data-s-aria="ownFormatAria">
+              <label><input type="radio" name="ownFormat" value="megasena"><span data-s="ownMega"></span></label>
+              <label><input type="radio" name="ownFormat" value="federal"><span data-s="ownFederal"></span></label>
+              <label><input type="radio" name="ownFormat" value="outro" checked><span data-s="ownOther"></span></label>
+            </div>
+            <label class="f" id="ownContestWrap" for="ownContest"><span data-s="fOwnContest"></span>
+              <input type="text" id="ownContest" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2890">
+            </label>
+            <label class="f" id="ownDescWrap" for="ownDesc"><span><span data-s="fOwnDesc"></span> <small data-s="fOwnDescHint"></small></span>
+              <input type="text" id="ownDesc" autocomplete="off">
+            </label>
+            <label class="f" for="ownSeed"><span><span id="ownSeedLabel"></span> <small id="ownSeedHint"></small></span>
+              <textarea id="ownSeed" class="short" spellcheck="false" autocomplete="off"></textarea>
+            </label>
+            <p class="hint" id="ownReading" aria-live="polite"></p>
+          </div>
+
           <div id="verifBox" class="col" style="gap:14px">
-            <div class="seg" role="radiogroup" data-s-aria="modeAria">
+            <div class="seg" role="radiogroup" data-s-aria="modeAria" hidden>
               <label><input type="radio" name="mode" value="live" checked><span data-s="modeLive"></span></label>
               <label><input type="radio" name="mode" value="scheduled"><span data-s="modeScheduled"></span></label>
             </div>
@@ -315,7 +333,7 @@ footer a { color: var(--accent); }
               </label>
               <p class="hint"><span data-s="contestHint"></span> <a id="caixaLink" target="_blank" rel="noopener noreferrer" data-s="caixaLink"></a></p>
             </div>
-            <label class="f" for="contrib"><span><span data-s="fContrib"></span> <small data-s="fContribHint"></small></span>
+            <label class="f" for="contrib" hidden><span><span data-s="fContrib"></span> <small data-s="fContribHint"></small></span>
               <input type="text" id="contrib" autocomplete="off" data-s-ph="fContribPh">
             </label>
             <details id="techPrep">
@@ -551,9 +569,25 @@ const STR = {
   sealLockHint: "Depois de lacrar, as opções ficam travadas.",
   quickBtn: "Sortear agora", againBtn: "Sortear de novo",
   quickHint: "Resultado instantâneo neste aparelho, sem lacre e sem certificado.",
+  ownFormatAria: "Formato da semente", ownMega: "Mega-Sena", ownFederal: "Loteria Federal", ownOther: "Outro",
+  fOwnContest: "Concurso", fOwnDesc: "Origem da semente", fOwnDescHint: "por exemplo: Quina, concurso 6612; dados lançados na reunião",
+  ownSeedLabel: { megasena: "As 6 dezenas", federal: "Os 5 bilhetes premiados", outro: "Semente" },
+  ownSeedHintQuick: "opcional; vazio: o aparelho sorteia. A mesma semente dá sempre o mesmo resultado.",
+  ownSeedHint: "números separados por espaço ou hífen, ou um texto",
+  ownSeedHintNums: "separados por espaço ou hífen, em qualquer ordem",
+  ownReadInt: (v) => "Lido como inteiros: " + v,
+  ownReadText: (v) => "Lido como texto exato: «" + v + "»",
+  ownErrAscii: "Use só caracteres ASCII: letras sem acento, números e sinais simples.",
+  ownErrEmpty: "Digite a semente.",
+  ownErrMega: "A Mega-Sena tem 6 dezenas diferentes, de 1 a 60.",
+  ownErrFederal: "A Loteria Federal tem 5 bilhetes, cada um de 0 a 999999.",
+  ownErrDesc: "Informe a origem da semente (por exemplo: Quina, concurso 6612).",
+  ownLabel: (g, c) => (g === "megasena" ? "Mega-Sena" : "Loteria Federal") + ", concurso " + c,
+  factOwn: "Semente própria", factQuickOwn: "Semente própria (lida)",
   quickNote: "Modo rápido: resultado instantâneo, mas ninguém pode conferir depois. Para um sorteio que vale perante outras pessoas, use o modo verificável.",
   otherIdBtn: "Novo sorteio com outro ID",
   presets: {
+    own: ["Semente própria", "Números ou texto combinados antes: o resultado de uma loteria, dados lançados na sala… Resultado imediato."],
     eth: ["Bloco público Ethereum", "Hash do primeiro bloco após o lacre, com 1 confirmação. Cerca de 15–30 s."],
     drand: ["Farol drand", "Valor aleatório com assinatura BLS verificada aqui. Cerca de 6–9 s."],
     "eth+drand": ["Bloco Ethereum + farol drand", "Primeiro o bloco, depois uma rodada drand. Nenhuma fonte sozinha decide. Cerca de 40 s."],
@@ -653,6 +687,7 @@ const STR = {
   verdictOk: "Este sorteio confere.",
   verdictBad: (list) => "Este sorteio não confere: " + list,
   verdictIncomplete: (list) => "Conferência incompleta: nenhum item falhou, mas estes não puderam ser confirmados: " + list,
+  verdictOwn: (label) => "Confere, desde que a lista (nesta ordem) e a semente (" + label + ") tenham sido combinadas antes. As contas estão certas; confira a semente na fonte indicada.",
   verdictNoStamp: "Confere, menos o momento do lacre. As contas estão certas, mas sem carimbo de tempo não dá para provar que o lacre veio antes do valor aleatório. Se você viu o lacre antes (na reunião, no grupo), o sorteio confere.",
   orderTitle: "Ordem recalculada",
   vTaskTitle: "Pesos lacrados: como digitados, inteiros e chance",
@@ -730,7 +765,12 @@ const STR = {
     lotTimeD: (d, o, t) => "sorteio em " + d + " (data " + o + "); início do dia " + t + " (00:00 em Brasília)",
     lotTimeCmp: (e, before) => "carimbo mais antigo " + e + (before ? " <" : " ≥"),
     timingBad: "O carimbo de tempo mais antigo não é anterior à aleatoriedade.",
-    labels: { eth: "bloco Ethereum", drand: "rodada drand", megasena: "sorteio da Mega-Sena", federal: "sorteio da Loteria Federal" },
+    ownMissing: "A semente própria não está no certificado.",
+    ownNotCanon: "A semente própria não está na forma canônica.",
+    ownBadFormat: (m) => "A semente própria não tem o formato declarado: " + m,
+    ownOpen: (label, v) => "Semente própria (" + label + "): " + v,
+    ownOpenD: "informada pelo organizador; a origem não pode ser conferida automaticamente. Confira-a na fonte indicada.",
+    labels: { own: "semente própria", eth: "bloco Ethereum", drand: "rodada drand", megasena: "sorteio da Mega-Sena", federal: "sorteio da Loteria Federal" },
     specOkV3: (n, W, sum) => n + (n === 1 ? " opção" : " opções") + " · W = " + W + " · " + sum,
     weightsD: (ws, ints) => "pesos (digitado → inteiro): " + ws.slice(0, 12).map((w, i) => w + " → " + ints[i]).join(", ") + (ws.length > 12 ? ", …" : ""),
     resultMissing: "Faltam valores de aleatoriedade para recalcular o resultado.",
@@ -773,7 +813,9 @@ const STR = {
       candNotNorm: (i) => "participante " + i + " não está normalizado (NFC, sem espaços nas pontas)",
       dups: (l) => "nomes repetidos: " + l,
       noSources: "sources vazio ou inválido",
-      unknownSource: (k) => "fonte desconhecida: " + k,
+      ownAlone: "a semente própria não se combina com outras fontes",
+    ownFormat: "formato da semente própria desconhecido (megasena, federal ou outro)",
+    unknownSource: (k) => "fonte desconhecida: " + k,
       srcNotObj: (k) => "sources." + k + " não é um objeto",
       srcFields: (k, f) => "sources." + k + " deve ter exatamente os campos " + f,
       ethChain: "sources.eth: chain/rule inesperados",
@@ -813,6 +855,8 @@ const STR = {
     link: "  Conferência: ",
     anchors: "Carimbos de tempo",
     anchorLine: (tsa, t) => tsa + ": " + t + " (o token carimba este lacre; assinatura da TSA não validada pela página)",
+    own: (label, v, reading) => "Semente própria (" + label + "): " + v + (reading === "int" ? " (lida como inteiros, em ordem crescente)" : " (texto exato)"),
+    ownNote: "  A semente foi informada pelo organizador. O resultado depende só da lista (nesta ordem), dos pesos e da semente; confira a semente na fonte indicada.",
     noAnchors: "Sem carimbo de tempo. A prova de que o lacre veio antes do sorteio depende de onde e quando ele foi divulgado.",
     seed: "Semente",
     order: "Resultado (ordem sorteada)",
@@ -990,6 +1034,29 @@ function shareText(w, W) {
   if (tenths >= 1000n) return "> 99,9 %";
   return (tenths / 10n) + "," + (tenths % 10n) + " %";
 }
+// Semente própria (SPEC-v3 5.3). Só ASCII; espaço, tab, quebra de linha e hífen separam.
+// Só inteiros: zeros à esquerda caem, ordem crescente, unidos por "-". Qualquer outra coisa: o texto exato (sem espaços nas pontas).
+const OWN_FORMATS = ["megasena", "federal", "outro"];
+function canonOwnSeed(text) {
+  const t = String(text).replace(/\r\n?/g, "\n");
+  if (!/^[\x20-\x7e\t\n]*$/.test(t)) return { error: "ascii" };
+  const v = t.replace(/^[ \t\n]+|[ \t\n]+$/g, "");
+  if (!v) return { error: "empty" };
+  if (/^[0-9 \t\n-]+$/.test(v) && /[0-9]/.test(v)) {
+    const nums = v.split(/[ \t\n-]+/).filter(Boolean).map((x) => x.replace(/^0+(?=[0-9])/, ""));
+    nums.sort((a, b) => a.length - b.length || (a < b ? -1 : a > b ? 1 : 0));
+    return { value: nums.join("-"), reading: "int" };
+  }
+  return { value: v, reading: "text" };
+}
+function ownFormatError(format, c) {
+  if (format === "outro") return null;
+  const nums = c.reading === "int" ? c.value.split("-") : [];
+  if (format === "megasena") return nums.length === 6 && new Set(nums).size === 6 && nums.every((x) => x.length <= 2 && +x >= 1 && +x <= 60) ? null : "megasena";
+  if (format === "federal") return nums.length === 5 && nums.every((x) => x.length <= 6) ? null : "federal";
+  return "format";
+}
+const seedOwn = (value) => sha256hex([V3, "own", value].join("\n"));
 const seedV3 = (C, values) => sha256hex([V3, "seed", C].concat(SOURCE_ORDER.map((k) => k + "=" + (values[k] || "-"))).join("\n"));
 const pickHash = (seed, j) => sha256hex(V3 + "\npick\n" + seed + "\n" + j);
 // Escolha (SPEC-v3 3). Devolve os índices e, para cada escolha, r, x, W e o índice (para a barra de intervalos).
@@ -1019,6 +1086,12 @@ async function selectPicks(seed, task) {
 // Modo rápido (SPEC-v3 5.2): semente local de 32 bytes, mesma regra, nenhum certificado.
 async function quickDraw(task, getRandomValues = (b) => crypto.getRandomValues(b)) {
   const seed = bytesToHex(getRandomValues(new Uint8Array(32)));
+  const { picks, steps, ints } = await selectPicks(seed, task);
+  return { seed, picks, steps, ints, result: picks.map((i) => task.options[i]) };
+}
+// Semente própria no modo rápido: mesma regra, mesmo resultado que no verificável.
+async function quickDrawOwn(task, value) {
+  const seed = await seedOwn(value);
   const { picks, steps, ints } = await selectPicks(seed, task);
   return { seed, picks, steps, ints, result: picks.map((i) => task.options[i]) };
 }
@@ -1134,7 +1207,7 @@ const drawDayStart = (dateStr) => brtMs(dateStr, "00:00");
 
 // ---- montagem do spec no lacre (SPEC 3.2, 4)
 const PRESETS = {
-  live: ["eth", "drand", "eth+drand"],
+  live: ["own", "eth", "drand"],
   scheduled: ["federal", "megasena"],
 };
 function planSources(preset, sealMs, lottery) {
@@ -1160,10 +1233,10 @@ function buildSpec({ id, title, mode, namesText, contribution, preset, sealMs, l
   };
 }
 // LucentDraw/3 (SPEC-v3 2): candidates dá lugar a task; lottery.contest é texto.
-function buildSpecV3({ id, title, mode, contribution, preset, sealMs, lottery, task }) {
+function buildSpecV3({ id, title, mode, contribution, preset, sealMs, lottery, task, own }) {
   return {
     v: V3, id: normText(id), title: normText(title || ""), mode, contribution: normText(contribution || ""),
-    sources: planSources(preset, sealMs, lottery && { ...lottery, contest: normText(String(lottery.contest)) }),
+    sources: own ? { own: { format: own.format, label: normText(own.label) } } : planSources(preset, sealMs, lottery && { ...lottery, contest: normText(String(lottery.contest)) }),
     task: { preset: task.preset, options: task.options.map(normText), weights: task.weights.map(normText), count: task.count, replace: task.replace },
   };
 }
@@ -1201,7 +1274,7 @@ function validateSpec(spec) {
   }
   const src = spec.sources;
   if (!src || typeof src !== "object" || Array.isArray(src) || !Object.keys(src).length) { problems.push(P.noSources); return problems; }
-  const allowed = v === VERSION || v === V3 ? SOURCE_ORDER : ["eth", "drand"];
+  const allowed = v === V3 ? [...SOURCE_ORDER, "own"] : v === VERSION ? SOURCE_ORDER : ["eth", "drand"];
   for (const k of Object.keys(src)) if (!allowed.includes(k)) problems.push(P.unknownSource(k));
   const strict = v === VERSION || v === V3;
   const need = (name, obj, fields) => {
@@ -1224,6 +1297,13 @@ function validateSpec(spec) {
     if (need("drand", d, ["chain", "chainHash", "round"])) {
       if (d.chainHash !== QUICKNET.hash || (strict && d.chain !== "quicknet")) problems.push(P.drandChain);
       if (!isInt(d.round) || d.round < 1) problems.push(P.drandRound);
+    }
+  }
+  if ("own" in src) {
+    if (Object.keys(src).length !== 1) problems.push(P.ownAlone);
+    if (need("own", src.own, ["format", "label"])) {
+      if (!OWN_FORMATS.includes(src.own.format)) problems.push(P.ownFormat);
+      if (!isNormStr(src.own.label)) problems.push(P.notNorm("sources.own.label"));
     }
   }
   for (const g of ["megasena", "federal"]) {
@@ -1497,9 +1577,11 @@ function ataText(cert) {
       t.options.forEach((o, i) => L.push("- " + o + " · " + A.weightLine(t.weights[i], String(ints[i]), shareText(ints[i], W))));
     }
   } else L.push(A.count + ": " + s.candidates.length);
-  L.push(A.contrib + ": " + (s.contribution ? "\"" + s.contribution + "\"" : A.none), "");
+  if (s.contribution || !v3) L.push(A.contrib + ": " + (s.contribution ? "\"" + s.contribution + "\"" : A.none));
+  L.push("");
   L.push(A.commit + ":", cert.commitment, "");
   L.push(A.sources + ":");
+  if (s.sources && s.sources.own && r.own) L.push("- " + A.own(s.sources.own.label, r.own.value, r.own.reading), A.ownNote);
   if (r.eth) L.push("- " + A.eth(r.eth.number, r.eth.hash, fmtUnix(r.eth.timestamp)), A.link + links.eth(r.eth.number));
   if (r.drand) L.push("- " + A.drand(r.drand.round, r.drand.randomness), A.link + links.drand(r.drand.round));
   for (const g of ["megasena", "federal"]) {
@@ -1509,9 +1591,9 @@ function ataText(cert) {
     if (r[g].source === "manual") L.push(A.manual);
     L.push(A.link + links.lottery(g));
   }
-  L.push("", A.anchors + ":");
-  const anchors = (cert.anchors || []);
-  if (!anchors.length) L.push(A.noAnchors);
+  const anchors = (cert.anchors || []), ownSrc = s.sources && s.sources.own;
+  if (!ownSrc) L.push("", A.anchors + ":");
+  if (!anchors.length && !ownSrc) L.push(A.noAnchors);
   for (const a of anchors) {
     if (a.type === "rfc3161") L.push("- " + A.anchorLine(tsaName(a.tsa), a.time));
     else if (a.type === "ots") L.push("- " + (a.complete ? STR.otsComplete : STR.otsPending));
@@ -1559,6 +1641,17 @@ async function verifyCertificate(cert, deps = {}, opts = {}) {
   // Um lacre (SPEC 3.3): sem aleatoriedade, sem semente e sem ordem. Fontes ficam pendentes, não falham.
   const isSeal = !Object.keys(rand).length && !("seed" in cert) && !("order" in cert) && !("result" in cert) && !("picks" in cert);
   const missing = isSeal ? STATUS.UNVERIFIED : STATUS.FAIL;
+
+  if ("own" in sources) {
+    const s = obj(sources.own) || {}, ev = obj(rand.own);
+    if (!ev || typeof ev.value !== "string") add("own", missing, isSeal ? K.sealPending(K.labels.own) : K.ownMissing);
+    else {
+      const c = canonOwnSeed(ev.value);
+      if (c.error || c.value !== ev.value || c.reading !== ev.reading) add("own", STATUS.FAIL, K.ownNotCanon, JSON.stringify(ev.value));
+      else if (ownFormatError(s.format, c)) add("own", STATUS.FAIL, K.ownBadFormat(s.format), c.value);
+      else { claimed.own = c.value; add("own", STATUS.UNVERIFIED, K.ownOpen(s.label, c.value), K.ownOpenD); }
+    }
+  }
 
   if ("eth" in sources) {
     const s = sources.eth, ev = obj(rand.eth), nb = isInt(s.notBefore) ? s.notBefore : null;
@@ -1630,14 +1723,14 @@ async function verifyCertificate(cert, deps = {}, opts = {}) {
   const names = Array.isArray(spec.candidates) ? spec.candidates : [];
   const keys = Object.keys(sources), used = {};
   for (const k of keys) used[k] = indep[k] || claimed[k];
-  const allIndep = keys.filter((k) => k !== "megasena" && k !== "federal").every((k) => k in indep);
+  const allIndep = keys.filter((k) => k !== "megasena" && k !== "federal" && k !== "own").every((k) => k in indep);
   let computed = null;
   if (isV3) {
     const claims = cert.result != null || cert.picks != null;
     if (!keys.every((k) => used[k])) add("result", claims ? STATUS.FAIL : STATUS.UNVERIFIED, K.resultMissing, K.orderMissingD);
     else if (!taskOk) add("result", STATUS.FAIL, K.resultNoTask);
     else {
-      const seed = await seedV3(C, used);
+      const seed = "own" in sources ? await seedOwn(used.own) : await seedV3(C, used);
       const { picks, steps } = await selectPicks(seed, spec.task);
       const result = picks.map((i) => spec.task.options[i]);
       Object.assign(v3info, { seed, steps, picks, result });
@@ -1716,7 +1809,9 @@ function verdictOf(cert, checks, lotteryConfirmed, order) {
     verdict = "incompleto";
     // Only the timing is open because there is no timestamp: say so plainly (verdict stays "incompleto").
     const onlyStamp = !(cert && Array.isArray(cert.anchors) && cert.anchors.length) && open.every((c) => c.id === "timing" || /Timing$/.test(c.id));
-    message = onlyStamp ? STR.verdictNoStamp : STR.verdictIncomplete(open.map((c) => c.title).join("; "));
+    const ownSrc = cert && cert.spec && cert.spec.sources && cert.spec.sources.own;
+    message = ownSrc && open.every((c) => c.id === "own") ? STR.verdictOwn(ownSrc.label)
+      : onlyStamp ? STR.verdictNoStamp : STR.verdictIncomplete(open.map((c) => c.title).join("; "));
   }
   else { verdict = "confere"; message = STR.verdictOk; }
   const spec = cert && cert.spec && typeof cert.spec === "object" ? cert.spec : {};
@@ -1734,6 +1829,7 @@ const CORE = Object.freeze({
   verifyCertificate, verdictOf,
   // LucentDraw/3
   V3, TASK_PRESETS, DIE_FACES, COIN, DECK, parseWeight, integerWeights, shareText, seedV3, pickHash, selectPicks,
+  canonOwnSeed, ownFormatError, seedOwn, OWN_FORMATS, buildSpecV3, quickDrawOwn,
   quickDraw, presetTask, validateTask, buildSpecV3, contestOkV3, federalOkV3, megasenaValueV3, federalValueV3,
   lotteryEvidenceOk, isDone, taskSummary, boolPathsOf,
 });
@@ -1901,6 +1997,7 @@ function applyDrawMode() {
   $("verifBox").hidden = q; $("rail").hidden = q; $("runGrid").classList.toggle("single", q);
   $("sealBtn").textContent = q ? STR.quickBtn : STR.sealBtn;
   $("sealHint").textContent = q ? STR.quickHint : STR.sealLockHint;
+  refreshOwn();
   showMsg($("sealErr"), "");
   if (q) { $("sealPanel").hidden = true; if (!quick) hideResult(); else renderQuick(); }
   else { quick = null; hideResult(); }
@@ -2063,7 +2160,42 @@ function renderPresets(selected) {
   refreshLottery();
 }
 document.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener("change", () => renderPresets()));
-function refreshLottery() { $("lotteryBox").hidden = !presetGame(preset()); }
+function refreshLottery() { $("lotteryBox").hidden = !presetGame(preset()); refreshOwn(); if (!current) renderTimeline(); }
+// ---- Semente própria (verificável e rápido)
+const ownFormat = () => document.querySelector('input[name="ownFormat"]:checked').value;
+function refreshOwn() {
+  const q = isQuick(), f = ownFormat(), box = $("ownBox");
+  if (q) $("verifBox").before(box); else $("presetBox").parentElement.after(box);
+  box.hidden = !q && preset() !== "own";
+  $("ownContestWrap").hidden = q || f === "outro";
+  $("ownDescWrap").hidden = q || f !== "outro";
+  $("ownSeedLabel").textContent = STR.ownSeedLabel[f];
+  $("ownSeedHint").textContent = q ? STR.ownSeedHintQuick : f === "outro" ? STR.ownSeedHint : STR.ownSeedHintNums;
+  showOwnReading();
+}
+function showOwnReading() {
+  const raw = $("ownSeed").value, out = $("ownReading");
+  if (!raw.trim()) { out.textContent = ""; return; }
+  const c = canonOwnSeed(raw);
+  out.textContent = c.error === "ascii" ? STR.ownErrAscii : c.error ? "" : c.reading === "int" ? STR.ownReadInt(c.value) : STR.ownReadText(c.value);
+}
+// Lê a semente própria. needLabel: no verificável, a origem é obrigatória.
+function ownFromUI(needLabel) {
+  const f = ownFormat(), raw = $("ownSeed").value;
+  if (!needLabel && !raw.trim()) return { empty: true };
+  const c = canonOwnSeed(raw);
+  if (c.error) return { error: c.error === "ascii" ? STR.ownErrAscii : STR.ownErrEmpty };
+  const fe = ownFormatError(f, c);
+  if (fe) return { error: fe === "megasena" ? STR.ownErrMega : STR.ownErrFederal };
+  let label = "";
+  if (needLabel) {
+    if (f === "outro") { label = normText($("ownDesc").value); if (!label) return { error: STR.ownErrDesc }; }
+    else { const k = normText($("ownContest").value); if (!contestOkV3(k)) return { error: STR.errContest }; label = STR.ownLabel(f, k); }
+  }
+  return { format: f, label, value: c.value, reading: c.reading };
+}
+document.querySelectorAll('input[name="ownFormat"]').forEach((r) => r.addEventListener("change", refreshOwn));
+$("ownSeed").addEventListener("input", showOwnReading);
 
 function lockForm(on) {
   locked = on;
@@ -2104,6 +2236,8 @@ function renderTimeline() {
   for (const k of TL) {
     if (["eth", "drand", "megasena", "federal"].includes(k) && current && !used.includes(k)) continue;
     if (["megasena", "federal"].includes(k) && !current) continue;
+    const ownNow = used.includes("own") || (!current && preset() === "own" && !isQuick());
+    if (["anchor", "eth", "drand"].includes(k) && ownNow) continue;
     ol.append(el("li", { id: "tl-" + k }, el("span", { className: "dot" }), el("div", {}, el("div", { className: "t", textContent: names[k][0] }), el("div", { className: "d", textContent: names[k][1] }))));
     $("tl-" + k).dataset.s = k === "prep" ? "active" : "idle";
   }
@@ -2120,8 +2254,10 @@ async function runQuick() {
   showMsg($("sealErr"), "");
   const { task, error } = taskFromUI();
   if (error) return showMsg($("sealErr"), error);
-  const q = await quickDraw(task);
-  quick = { task, ...q };
+  const own = ownFromUI(false);
+  if (own.error) return showMsg($("sealErr"), own.error);
+  const q = own.empty ? await quickDraw(task) : await quickDrawOwn(task, own.value);
+  quick = { task, own: own.empty ? null : own, ...q };
   renderQuick(true);
 }
 
@@ -2133,6 +2269,7 @@ async function seal() {
   if (!normText($("drawId").value)) $("drawId").value = suggestId();
   const id = normText($("drawId").value), p = preset(), g = presetGame(p);
   if (LS.get("sealedIds", []).includes(id) || id in draws()) { $("otherIdBtn").hidden = false; return showMsg($("sealErr"), STR.errIdUsed(id)); }
+  if (p === "own") return sealOwn(task, id);
   let contest = null;
   if (g) { contest = normText($("contest").value); if (!contestOkV3(contest)) return showMsg($("sealErr"), STR.errContest); }
   lockForm(true);
@@ -2163,6 +2300,22 @@ async function seal() {
   } finally { $("sealBtn").textContent = isQuick() ? STR.quickBtn : STR.sealBtn; }
 }
 
+// Semente própria: nada a esperar. Lacre, semente e resultado de uma vez; sem carimbo (não provaria nada).
+async function sealOwn(task, id) {
+  const own = ownFromUI(true);
+  if (own.error) return showMsg($("sealErr"), own.error);
+  const now = Date.now();
+  const spec = buildSpecV3({ id, title: $("title").value, mode: "live", contribution: "", preset: "own", sealMs: now, task, own });
+  const problems = validateSpec(spec);
+  if (problems.length) return showMsg($("sealErr"), problems.join("; "));
+  lockForm(true);
+  current = { spec, commitment: await commitmentOf(spec), sealedAt: new Date(now).toISOString(), anchors: [], randomness: { own: { value: own.value, reading: own.reading } }, meta: { preset: "own" } };
+  LS.set("sealedIds", [...new Set([...LS.get("sealedIds", []), id])]);
+  persist();
+  renderTimeline(); setStep("prep", "done", taskSummary(spec.task)); setStep("seal", "done", current.commitment.slice(0, 16) + "…");
+  $("resultPanel").hidden = false; $("newDraw").hidden = false;
+  await finish();
+}
 function showSeal() {
   const { spec, commitment, sealedAt } = current;
   $("sealPanel").hidden = false; $("resultPanel").hidden = false; $("againBtn").hidden = true; $("newDraw").hidden = false;
@@ -2359,7 +2512,7 @@ async function finish() {
   clearInterval(ticker); $("cdWrap").hidden = true;
   const v = current.spec.v;
   if (v === V3) {
-    current.seed = await seedV3(current.commitment, sourceValues(current.randomness, V3));
+    current.seed = current.spec.sources.own ? await seedOwn(current.randomness.own.value) : await seedV3(current.commitment, sourceValues(current.randomness, V3));
     current.picks = (await selectPicks(current.seed, current.spec.task)).picks;
     current.result = current.picks.map((i) => current.spec.task.options[i]);
   } else { // sorteio LucentDraw/2 lacrado antes da atualização: termina pela regra dele
@@ -2509,7 +2662,8 @@ async function renderQuick(scroll) {
   $("resultPanel").hidden = false; $("doneBox").hidden = false; $("pendingBox").hidden = true; $("manualBox").hidden = true;
   $("resultTitle").textContent = STR.quickTitle;
   $("quickNote").hidden = false; $("certRow").hidden = true; $("ataBox").hidden = true; $("resultFacts").hidden = true;
-  $("quickTech").hidden = false; kv($("quickFacts"), [[STR.factQuickSeed, q.seed]]);
+  $("quickTech").hidden = false;
+  kv($("quickFacts"), q.own ? [[STR.factQuickOwn, q.own.value], [STR.factSeed, q.seed]] : [[STR.factQuickSeed, q.seed]]);
   $("againBtn").hidden = false; $("newDraw").hidden = true;
   renderOutcome(q.task, q.picks, q.steps, q.ints);
   if (scroll && !reduceMotion()) $("resultPanel").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2534,6 +2688,7 @@ async function renderDone() {
     rows.forEach((row, i) => body.append(el("tr", {}, el("td", { className: "pos", textContent: String(i + 1) }), el("td", { className: "name", textContent: row.name }), el("td", { className: "key", textContent: row.key.slice(0, 12) + "…", title: row.key }))));
   }
   const facts = [[STR.factCommit, current.commitment]];
+  if (r.own) facts.push([STR.factOwn, spec.sources.own.label + ": " + r.own.value]);
   if (r.eth) facts.push([STR.factEth, "#" + r.eth.number + " · " + r.eth.hash, links.eth(r.eth.number)]);
   if (r.drand) facts.push([STR.factDrand, "#" + r.drand.round + " · " + r.drand.randomness, links.drand(r.drand.round)]);
   for (const g of ["megasena", "federal"]) if (r[g]) facts.push([LOTTERY.games[g].label, lotteryValue(g, r[g].contest, r[g], spec.v) + (r[g].drawDate ? " · " + r[g].drawDate : "") + (r[g].source === "manual" ? " · inserido manualmente" : ""), links.lottery(g)]);
@@ -2568,9 +2723,16 @@ function openDraw(state) {
   else { kind = "list"; setListRows(state.spec.candidates.map((c) => ({ opt: c, w: "1" }))); }
   document.querySelector('input[name="mode"][value="' + (state.spec.mode === "scheduled" ? "scheduled" : "live") + '"]').checked = true;
   renderPresets(state.meta.preset);
-  const g = presetGame(state.meta.preset);
+  const g = presetGame(state.meta.preset), own = state.spec.sources.own;
   if (g) $("contest").value = state.spec.sources[g].contest;
-  lockForm(true); selectTab(kind); renderTimeline(); showSeal(); renderSaved();
+  if (own) {
+    document.querySelector('input[name="ownFormat"][value="' + own.format + '"]').checked = true;
+    if (own.format === "outro") $("ownDesc").value = own.label; else $("ownContest").value = own.label.replace(/^.*concurso /, "");
+    $("ownSeed").value = (state.randomness.own && state.randomness.own.value) || ""; refreshOwn();
+  }
+  lockForm(true); selectTab(kind); renderTimeline();
+  if (own) { $("resultPanel").hidden = false; $("sealPanel").hidden = true; $("newDraw").hidden = false; } else showSeal();
+  renderSaved();
   if (isDone(state)) { finish(); return; }
   const ots = current.anchors.find((x) => x.type === "ots"); if (ots && !ots.complete) upgradeOts();
   waitAndDraw();

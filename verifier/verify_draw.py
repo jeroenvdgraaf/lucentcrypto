@@ -237,6 +237,43 @@ def seed_v3(C: str, values: dict) -> str:
     return H("\n".join([V3, "seed", C] + [f"{k}={values.get(k) or '-'}" for k in SOURCE_ORDER]))
 
 
+# Semente própria (SPEC-v3 5.3): só ASCII; espaço, tab, quebra de linha e hífen separam.
+# Só inteiros -> sem zeros à esquerda, ordem crescente, unidos por "-". Senão, o texto exato sem espaços nas pontas.
+OWN_FORMATS = ("megasena", "federal", "outro")
+_OWN_ASCII = re.compile(r"^[\x20-\x7e\t\n]*$")
+_OWN_INTS = re.compile(r"^[0-9 \t\n-]+$")
+
+
+def canon_own_seed(text):
+    t = re.sub(r"\r\n?", "\n", str(text))
+    if not _OWN_ASCII.match(t):
+        return {"error": "ascii"}
+    v = re.sub(r"^[ \t\n]+|[ \t\n]+$", "", t)
+    if not v:
+        return {"error": "empty"}
+    if _OWN_INTS.match(v) and re.search(r"[0-9]", v):
+        nums = [re.sub(r"^0+(?=[0-9])", "", x) for x in re.split(r"[ \t\n-]+", v) if x]
+        nums.sort(key=lambda x: (len(x), x))
+        return {"value": "-".join(nums), "reading": "int"}
+    return {"value": v, "reading": "text"}
+
+
+def own_format_error(fmt, c):
+    if fmt == "outro":
+        return None
+    nums = c["value"].split("-") if c.get("reading") == "int" else []
+    if fmt == "megasena":
+        ok = len(nums) == 6 and len(set(nums)) == 6 and all(len(x) <= 2 and 1 <= int(x) <= 60 for x in nums)
+        return None if ok else "megasena"
+    if fmt == "federal":
+        return None if len(nums) == 5 and all(len(x) <= 6 for x in nums) else "federal"
+    return "format"
+
+
+def seed_own(value: str) -> str:
+    return H("\n".join([V3, "own", value]))
+
+
 def pick_hash(seed: str, j: int) -> str:
     return H(V3 + "\npick\n" + seed + "\n" + str(j))
 
@@ -1203,7 +1240,7 @@ def validate_spec(spec) -> list:
     if not isinstance(src, dict) or not src:
         problems.append("sources vazio ou inválido")
         return problems
-    allowed = SOURCE_ORDER if v in (V2, V3) else ("eth", "drand")
+    allowed = SOURCE_ORDER + ("own",) if v == V3 else SOURCE_ORDER if v == V2 else ("eth", "drand")
     for k in src:
         if k not in allowed:
             problems.append(f"fonte desconhecida: {k}")
@@ -1233,6 +1270,14 @@ def validate_spec(spec) -> list:
                 problems.append("sources.drand: a cadeia não é a quicknet")
             if not _is_int(d.get("round")) or d.get("round", 0) < 1:
                 problems.append("sources.drand: rodada inválida")
+    if "own" in src:
+        if len(src) != 1:
+            problems.append("a semente própria não se combina com outras fontes")
+        if need("own", src["own"], ("format", "label")):
+            if src["own"].get("format") not in OWN_FORMATS:
+                problems.append("formato da semente própria desconhecido (megasena, federal ou outro)")
+            if not _is_norm_str(src["own"].get("label")):
+                problems.append("sources.own.label não está normalizado (NFC, sem espaços nas pontas)")
     for g in ("megasena", "federal"):
         if g in src and need(g, src[g], ("contest",)):
             c = src[g].get("contest")
@@ -1337,6 +1382,25 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
     claimed = {}  # valores segundo o certificado
     rtimes = {}  # momento em que cada aleatoriedade passou a existir (unix s), só eth e drand
     draw_dates = {}  # loteria -> (data do sorteio, "oficial" | "certificado")
+
+    # 4. semente própria: a forma canônica e o formato se conferem; a origem, não (fica "não verificado")
+    if "own" in sources:
+        so = sources["own"] if isinstance(sources["own"], dict) else {}
+        ev = rand.get("own") if isinstance(rand.get("own"), dict) else None
+        if not ev or not isinstance(ev.get("value"), str):
+            add("own", missing, "Lacre: a semente própria ainda não foi registrada." if is_seal
+                else "A semente própria não está no certificado.")
+        else:
+            c = canon_own_seed(ev["value"])
+            if "error" in c or c["value"] != ev["value"] or c["reading"] != ev.get("reading"):
+                add("own", FAIL, "A semente própria não está na forma canônica.", json.dumps(ev["value"], ensure_ascii=False))
+            elif own_format_error(so.get("format"), c):
+                add("own", FAIL, f"A semente própria não tem o formato declarado: {so.get('format')}", c["value"])
+            else:
+                claimed["own"] = c["value"]
+                add("own", UNVERIFIED, f"Semente própria ({so.get('label')}): {c['value']}",
+                    "informada pelo organizador; a origem não pode ser conferida automaticamente. "
+                    "Confira-a na fonte indicada.")
 
     # 4a. eth
     if "eth" in sources:
@@ -1460,7 +1524,7 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
     names = spec.get("candidates") if isinstance(spec.get("candidates"), list) else []
     used = {k: indep.get(k, claimed.get(k)) for k in sources}
     # Loterias podem vir do certificado (a checagem delas fica "não verificado", conferível a olho).
-    all_indep = all(k in indep for k in sources if k not in ("megasena", "federal"))
+    all_indep = all(k in indep for k in sources if k not in ("megasena", "federal", "own"))
     computed_order = None
     if v == V3:
         claims = cert.get("result") is not None or cert.get("picks") is not None
@@ -1470,7 +1534,7 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         elif not task_ok:
             add("result", FAIL, "O resultado não pode ser recalculado: a tarefa lacrada (task) é inválida.")
         else:
-            seed = seed_v3(C, used)
+            seed = seed_own(used["own"]) if "own" in sources else seed_v3(C, used)
             picks, steps = select_picks(seed, spec["task"])
             res = [spec["task"]["options"][i] for i in picks]
             v3info.update({"seed": seed, "picks": picks, "result": res, "steps": steps})
@@ -1626,7 +1690,12 @@ def _verdict(cert, checks, lottery_confirmed, order):
         anchors = cert.get("anchors") if isinstance(cert, dict) else None
         only_stamp = not (isinstance(anchors, list) and anchors) and all(
             c["id"] == "timing" or c["id"].endswith("Timing") for c in open_)
-        if only_stamp:
+        src = cert.get("spec", {}).get("sources") if isinstance(cert.get("spec"), dict) else None
+        own = src.get("own") if isinstance(src, dict) and isinstance(src.get("own"), dict) else None
+        if own and all(c["id"] == "own" for c in open_):
+            msg = (f"Confere, desde que a lista (nesta ordem) e a semente ({own.get('label')}) tenham sido combinadas "
+                   "antes. As contas estão certas; confira a semente na fonte indicada.")
+        elif only_stamp:
             msg = ("Confere, menos o momento do lacre. As contas estão certas, mas sem carimbo de tempo não dá "
                    "para provar que o lacre veio antes do valor aleatório. Se você viu o lacre antes (na reunião, "
                    "no grupo), o sorteio confere.")
