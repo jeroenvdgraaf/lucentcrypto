@@ -572,19 +572,20 @@ const STR = {
   ownFormatAria: "Formato da semente", ownMega: "Mega-Sena", ownFederal: "Loteria Federal", ownOther: "Outro",
   fOwnContest: "Concurso", fOwnDesc: "Origem da semente", fOwnDescHint: "por exemplo: Quina, concurso 6612; dados lançados na reunião",
   ownSeedLabel: { megasena: "As 6 dezenas", federal: "Os 5 bilhetes premiados", outro: "Semente" },
-  ownSeedHintQuick: "opcional; vazio: o aparelho sorteia. A mesma semente dá sempre o mesmo resultado.",
-  ownSeedHint: "números separados por espaço ou hífen, ou um texto",
+  ownSeedHintQuick: "opcional; vazio: o navegador sorteia. A mesma semente dá sempre o mesmo resultado. Com palavras, a ordem conta.",
+  ownSeedHint: "números ou palavras; maiúsculas, acentos e pontuação não contam. Com palavras, a ordem conta.",
   ownSeedHintNums: "separados por espaço ou hífen, em qualquer ordem",
-  ownReadInt: (v) => "Lido como inteiros: " + v,
-  ownReadText: (v) => "Lido como texto exato: «" + v + "»",
-  ownErrAscii: "Use só caracteres ASCII: letras sem acento, números e sinais simples.",
+  ownReadInt: (v) => "Semente lida (números, em ordem crescente): " + v,
+  ownReadText: (v) => "Semente lida (palavras, na ordem digitada): " + v,
+  ownErrAscii: "Há caracteres que não dá para usar (por exemplo, emoji). Use letras, números e sinais simples.",
   ownErrEmpty: "Digite a semente.",
   ownErrMega: "A Mega-Sena tem 6 dezenas diferentes, de 1 a 60.",
   ownErrFederal: "A Loteria Federal tem 5 bilhetes, cada um de 0 a 999999.",
   ownErrDesc: "Informe a origem da semente (por exemplo: Quina, concurso 6612).",
   ownLabel: (g, c) => (g === "megasena" ? "Mega-Sena" : "Loteria Federal") + ", concurso " + c,
   factOwn: "Semente própria", factQuickOwn: "Semente própria (lida)",
-  quickNote: "Modo rápido: resultado instantâneo, mas ninguém pode conferir depois. Para um sorteio que vale perante outras pessoas, use o modo verificável.",
+  quickNote: "Modo rápido: resultado na hora, sorteado pelo navegador, e não é possível conferir depois. Para que outras pessoas possam conferir, combinem antes uma semente (o resultado de uma loteria, ou uma palavra de cada participante) ou use o modo verificável.",
+  quickNoteOwn: (v) => "Modo rápido com a semente " + v + ": com a mesma lista e a mesma semente, qualquer pessoa refaz o sorteio e chega a este resultado.",
   otherIdBtn: "Novo sorteio com outro ID",
   presets: {
     own: ["Semente própria", "Números ou texto combinados antes: o resultado de uma loteria, dados lançados na sala… Resultado imediato."],
@@ -665,6 +666,13 @@ const STR = {
   barsIntroOne: "A barra mostra todas as opções, cada uma com espaço proporcional ao seu peso. A marca vermelha é onde caiu o número aleatório.",
   barCaption: (j, n, opt, chance) => "Posição " + j + ": " + opt + " (entre " + n + (n === 1 ? " restante" : " restantes") + "; chance nesta rodada: " + chance + ")",
   barCaptionMany: (j, opt, chance) => "Sorteio " + j + ": " + opt + " (chance: " + chance + ")",
+  barCaptionLast: (j, opt) => "Posição " + j + ": " + opt + " (o último que restou)",
+  barsTitleThrow: "Como saiu cada lançamento",
+  barsIntroThrow: "Cada barra mostra as faces possíveis, todas com o mesmo espaço. A marca vermelha é onde caiu o número aleatório.",
+  barCaptionThrow: (j, opt, chance) => "Lançamento " + j + ": " + opt + " (chance: " + chance + ")",
+  barsTitleCards: "Como saiu cada carta",
+  barsIntroCards: "Cada barra mostra as cartas que ainda estavam no baralho. A marca vermelha é onde caiu o número aleatório; a carta sorteada sai da barra seguinte.",
+  barCaptionCard: (j, opt, n) => "Carta " + j + ": " + opt + (n === 1 ? " (a última que restou)" : " (entre " + n + " restantes)"),
   needleTech: (x, W) => "x = " + x + " de W = " + W + " (x = ⌊r · W / 2²⁵⁶⌋)",
   barsMore: (n) => "Mostrar todas as " + n + " barras",
   dlCert: "Baixar certificado", copyCert: "Copiar certificado", copyAta: "Copiar ata",
@@ -855,7 +863,7 @@ const STR = {
     link: "  Conferência: ",
     anchors: "Carimbos de tempo",
     anchorLine: (tsa, t) => tsa + ": " + t + " (o token carimba este lacre; assinatura da TSA não validada pela página)",
-    own: (label, v, reading) => "Semente própria (" + label + "): " + v + (reading === "int" ? " (lida como inteiros, em ordem crescente)" : " (texto exato)"),
+    own: (label, v, reading) => "Semente própria (" + label + "): " + v + (reading === "int" ? " (lida como números, em ordem crescente)" : " (lida como palavras, na ordem digitada)"),
     ownNote: "  A semente foi informada pelo organizador. O resultado depende só da lista (nesta ordem), dos pesos e da semente; confira a semente na fonte indicada.",
     noAnchors: "Sem carimbo de tempo. A prova de que o lacre veio antes do sorteio depende de onde e quando ele foi divulgado.",
     seed: "Semente",
@@ -1034,20 +1042,19 @@ function shareText(w, W) {
   if (tenths >= 1000n) return "> 99,9 %";
   return (tenths / 10n) + "," + (tenths % 10n) + " %";
 }
-// Semente própria (SPEC-v3 5.3). Só ASCII; espaço, tab, quebra de linha e hífen separam.
-// Só inteiros: zeros à esquerda caem, ordem crescente, unidos por "-". Qualquer outra coisa: o texto exato (sem espaços nas pontas).
+// Semente própria (SPEC-v3 5.3). Sem acentos (NFKD), maiúsculas; só A-Z e 0-9 contam, o resto separa.
+// Números perdem zeros à esquerda. Só números: ordem crescente. Com palavras: ordem digitada. Unidos por "-".
 const OWN_FORMATS = ["megasena", "federal", "outro"];
 function canonOwnSeed(text) {
-  const t = String(text).replace(/\r\n?/g, "\n");
-  if (!/^[\x20-\x7e\t\n]*$/.test(t)) return { error: "ascii" };
-  const v = t.replace(/^[ \t\n]+|[ \t\n]+$/g, "");
-  if (!v) return { error: "empty" };
-  if (/^[0-9 \t\n-]+$/.test(v) && /[0-9]/.test(v)) {
-    const nums = v.split(/[ \t\n-]+/).filter(Boolean).map((x) => x.replace(/^0+(?=[0-9])/, ""));
-    nums.sort((a, b) => a.length - b.length || (a < b ? -1 : a > b ? 1 : 0));
-    return { value: nums.join("-"), reading: "int" };
+  const t = String(text).normalize("NFKD").replace(/\p{M}/gu, "");
+  if (!/^[\x20-\x7e\t\n\r]*$/.test(t)) return { error: "ascii" };
+  const parts = (t.toUpperCase().match(/[A-Z0-9]+/g) || []).map((x) => /^[0-9]+$/.test(x) ? x.replace(/^0+(?=[0-9])/, "") : x);
+  if (!parts.length) return { error: "empty" };
+  if (parts.every((x) => /^[0-9]+$/.test(x))) {
+    parts.sort((a, b) => a.length - b.length || (a < b ? -1 : a > b ? 1 : 0));
+    return { value: parts.join("-"), reading: "int" };
   }
-  return { value: v, reading: "text" };
+  return { value: parts.join("-"), reading: "text" };
 }
 function ownFormatError(format, c) {
   if (format === "outro") return null;
@@ -2599,6 +2606,7 @@ function renderBars(box, task, ints, steps) {
       b.append(seg);
     });
     marks.forEach((m) => {
+      if (ints[m.index] === W) return; // 100 %: nada a sortear, sem agulha
       const n = el("div", { className: "needle", title: STR.needleTech(String(m.x), String(W)) });
       // Draw at the hash's real position r/2^256 (first 53 bits), not at x/W: x = floor((r/2^256)·W),
       // so this point always lies inside the winner's interval, at the true spot.
@@ -2609,13 +2617,19 @@ function renderBars(box, task, ints, steps) {
     return b;
   };
   // Plain caption: who got the position and what their chance was at that step (not the needle position).
-  const capOne = (m, W, n) => task.replace ? STR.barCaptionMany(m.j + 1, task.options[m.index], shareText(ints[m.index], W))
-    : STR.barCaption(m.j + 1, n, task.options[m.index], shareText(ints[m.index], W));
+  const kind = task.preset === "coin" || task.preset === "die" ? "throw" : task.preset === "cards" ? "cards" : "list";
+  const capOne = (m, W, n) => {
+    const o = task.options[m.index], ch = shareText(ints[m.index], W);
+    if (kind === "throw") return STR.barCaptionThrow(m.j + 1, o, ch);
+    if (kind === "cards") return STR.barCaptionCard(m.j + 1, o, n);
+    if (task.replace) return STR.barCaptionMany(m.j + 1, o, ch);
+    return n === 1 ? STR.barCaptionLast(m.j + 1, o) : STR.barCaption(m.j + 1, n, o, ch);
+  };
   function capText(marks, W, n) { return marks.slice(0, 20).map((m) => capOne(m, W, n)).join(" · ") + (marks.length > 20 ? " · …" : ""); }
   const caps = (marks, W, n) => capText(marks, W, n);
   const one = !task.replace && steps.length === 1;
-  $("barsTitleEl").textContent = one ? STR.barsTitleOne : STR.barsTitle;
-  $("barsIntroEl").textContent = one ? STR.barsIntroOne : STR.barsIntro;
+  $("barsTitleEl").textContent = kind === "throw" ? STR.barsTitleThrow : kind === "cards" ? STR.barsTitleCards : one ? STR.barsTitleOne : STR.barsTitle;
+  $("barsIntroEl").textContent = kind === "throw" ? STR.barsIntroThrow : kind === "cards" ? STR.barsIntroCards : one ? STR.barsIntroOne : STR.barsIntro;
   if (task.replace) {
     const alive = ints.map((w, i) => i).filter((i) => ints[i] > 0n), W = steps.length ? steps[0].W : 0n;
     box.append(bar(alive, W, steps), el("p", { className: "bar-cap", textContent: caps(steps, W, alive.length) }));
@@ -2661,6 +2675,7 @@ async function renderQuick(scroll) {
   const q = quick; if (!q) return;
   $("resultPanel").hidden = false; $("doneBox").hidden = false; $("pendingBox").hidden = true; $("manualBox").hidden = true;
   $("resultTitle").textContent = STR.quickTitle;
+  $("quickNote").textContent = quick.own ? STR.quickNoteOwn(quick.own.value) : STR.quickNote;
   $("quickNote").hidden = false; $("certRow").hidden = true; $("ataBox").hidden = true; $("resultFacts").hidden = true;
   $("quickTech").hidden = false;
   kv($("quickFacts"), q.own ? [[STR.factQuickOwn, q.own.value], [STR.factSeed, q.seed]] : [[STR.factQuickSeed, q.seed]]);

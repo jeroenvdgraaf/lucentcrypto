@@ -111,10 +111,12 @@ A seed the participants agreed on beforehand: the result of a past or present lo
 
 **Canonical reading (MUST, identical in HTML and Python):**
 
-1. Replace CRLF and CR by LF. Every character must be in U+0020–U+007E, TAB or LF; otherwise refuse (only ASCII: no accents).
-2. Remove spaces, tabs and line breaks at both ends. Empty: refuse.
-3. If what remains has only digits, spaces, tabs, line breaks and hyphens (and at least one digit), it is read **as integers**: split at runs of space/tab/LF/hyphen, drop leading zeros of each piece ("007" → "7", "000" → "0"), sort ascending numerically (by length, then lexicographically), join with a single "-". Example: `" 33 05-12\n58 047 41 "` → `5-12-33-41-47-58`. reading = `"int"`.
-4. Otherwise the text is used **exactly** as it stands after step 2 (no other change; "abc def" and "abc-def" differ). reading = `"text"`.
+1. Unicode NFKD, then remove every combining mark (general category M): accents disappear ("maçã" → "maca", "nº" → "no").
+2. Every remaining character must be in U+0020–U+007E, TAB, LF or CR; otherwise refuse (e.g. emoji).
+3. Uppercase (ASCII). The pieces are the maximal runs of `A–Z0–9`; everything else only separates (space, hyphen, comma, full stop, slash, line break…). A piece made only of digits loses its leading zeros ("007" → "7", "000" → "0"). No pieces: refuse.
+4. If every piece is a number, sort ascending numerically (by length, then lexicographically); reading = `"int"`. Example: `" 33 05-12\n58 047 41 "` → `5-12-33-41-47-58`.
+5. Otherwise keep the pieces in the typed order; reading = `"text"`. "ana, gato" and "Ána  Gato." → `ANA-GATO`, but "gato ana" → `GATO-ANA`. Numbers among words stay where they are: "Quina 06612" → `QUINA-6612`.
+6. value = the pieces joined with "-".
 
 **Format checks:** `megasena`: reading int, exactly 6 distinct numbers, each 1–60. `federal`: reading int, exactly 5 numbers, each at most 6 digits (0–999999). `outro`: none.
 

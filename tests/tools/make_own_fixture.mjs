@@ -13,7 +13,7 @@ async function make(id, format, label, typed) {
 }
 const cases = [
   await make("own-mega", "megasena", "Mega-Sena, concurso 2890", " 33 05-12\n58 047 41 "),
-  await make("own-text", "outro", "Combinado na assembleia", "Assembleia de 19/11, ata n. 7"),
+  await make("own-text", "outro", "Combinado na assembleia", "Assembleia de 19/11, ata nº 7"),
 ];
 writeFileSync(join(ROOT, "tests", "fixtures", "v3_own.json"), JSON.stringify({ cases }, null, 2) + "\n");
 console.log(cases.map((x) => x.cert.randomness.own.value + " -> " + x.cert.result.join(", ")).join("\n"));

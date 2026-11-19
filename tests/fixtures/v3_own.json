@@ -62,7 +62,7 @@
       }
     },
     {
-      "typed": "Assembleia de 19/11, ata n. 7",
+      "typed": "Assembleia de 19/11, ata nº 7",
       "cert": {
         "spec": {
           "v": "LucentDraw/3",
@@ -101,24 +101,24 @@
         "anchors": [],
         "randomness": {
           "own": {
-            "value": "Assembleia de 19/11, ata n. 7",
+            "value": "ASSEMBLEIA-DE-19-11-ATA-NO-7",
             "reading": "text"
           }
         },
-        "seed": "a254080a1a44007fe50ecfc86e93183e06d8e4e0f355ff590fe70eaf5a97dde6",
+        "seed": "a1a8195f44561d340c66ca60d34444b37b7a5f236f4221069a4b2b068fd8e090",
         "result": [
-          "Apto 301",
           "Apto 201",
           "Apto 202",
-          "Apto 101",
-          "Apto 102"
+          "Apto 301",
+          "Apto 102",
+          "Apto 101"
         ],
         "picks": [
-          4,
           2,
           3,
-          0,
-          1
+          4,
+          1,
+          0
         ]
       }
     }

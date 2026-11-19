@@ -237,25 +237,23 @@ def seed_v3(C: str, values: dict) -> str:
     return H("\n".join([V3, "seed", C] + [f"{k}={values.get(k) or '-'}" for k in SOURCE_ORDER]))
 
 
-# Semente própria (SPEC-v3 5.3): só ASCII; espaço, tab, quebra de linha e hífen separam.
-# Só inteiros -> sem zeros à esquerda, ordem crescente, unidos por "-". Senão, o texto exato sem espaços nas pontas.
+# Semente própria (SPEC-v3 5.3): sem acentos (NFKD), maiúsculas; só A-Z e 0-9 contam, o resto separa.
+# Números sem zeros à esquerda. Só números: ordem crescente. Com palavras: ordem digitada. Unidos por "-".
 OWN_FORMATS = ("megasena", "federal", "outro")
-_OWN_ASCII = re.compile(r"^[\x20-\x7e\t\n]*$")
-_OWN_INTS = re.compile(r"^[0-9 \t\n-]+$")
+_OWN_ASCII = re.compile(r"^[\x20-\x7e\t\n\r]*$")
 
 
 def canon_own_seed(text):
-    t = re.sub(r"\r\n?", "\n", str(text))
-    if not _OWN_ASCII.match(t):
+    d = "".join(ch for ch in unicodedata.normalize("NFKD", str(text)) if not unicodedata.category(ch).startswith("M"))
+    if not _OWN_ASCII.match(d):
         return {"error": "ascii"}
-    v = re.sub(r"^[ \t\n]+|[ \t\n]+$", "", t)
-    if not v:
+    parts = [re.sub(r"^0+(?=[0-9])", "", x) if x.isdigit() else x for x in re.findall(r"[A-Z0-9]+", d.upper())]
+    if not parts:
         return {"error": "empty"}
-    if _OWN_INTS.match(v) and re.search(r"[0-9]", v):
-        nums = [re.sub(r"^0+(?=[0-9])", "", x) for x in re.split(r"[ \t\n-]+", v) if x]
-        nums.sort(key=lambda x: (len(x), x))
-        return {"value": "-".join(nums), "reading": "int"}
-    return {"value": v, "reading": "text"}
+    if all(x.isdigit() for x in parts):
+        parts.sort(key=lambda x: (len(x), x))
+        return {"value": "-".join(parts), "reading": "int"}
+    return {"value": "-".join(parts), "reading": "text"}
 
 
 def own_format_error(fmt, c):
