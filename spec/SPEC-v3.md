@@ -118,6 +118,8 @@ A seed the participants agreed on beforehand: the result of a past or present lo
 5. Otherwise keep the pieces in the typed order; reading = `"text"`. "ana, gato" and "Ána  Gato." → `ANA-GATO`, but "gato ana" → `GATO-ANA`. Numbers among words stay where they are: "Quina 06612" → `QUINA-6612`.
 6. value = the pieces joined with "-".
 
+**Input (UI only, does not change the value):** the three formats have separate fields. The Mega-Sena and Federal fields accept only digits and separators (space, hyphen, comma, semicolon, full stop); in the Federal field the full stop is a thousands separator ("12.345" = 12345). The typed numbers are then read with the canonical rule above, so the stored value is the same as in the free field.
+
 **Format checks:** `megasena`: reading int, exactly 6 distinct numbers, each 1–60. `federal`: reading int, exactly 5 numbers, each at most 6 digits (0–999999). `outro`: none.
 
 **Randomness and seed:** `randomness.own = { "value": <canonical>, "reading": "int" | "text" }` and

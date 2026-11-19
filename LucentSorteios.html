@@ -88,11 +88,17 @@ input:disabled, textarea:disabled, select:disabled { opacity: .7; }
 .src b { font-size: 14px; }
 .src span { color: var(--muted); font-size: 12.5px; }
 .src:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.src.soon { border-style: dashed; background: transparent; text-align: left; font: inherit; color: inherit; }
+.src.soon[aria-expanded="true"] { border-color: var(--accent); }
+.src .tag { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 600; vertical-align: 1px; }
+.teaser { margin-top: 10px; border: 1px dashed var(--accent); background: var(--accent-soft); color: var(--ink); }
+.teaser p { margin: 0 0 8px; } .teaser p:last-child { margin: 0; }
 .src:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 .src:has(input:disabled) { cursor: default; }
 .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-button.btn, label.btn { font: 600 14px var(--body); border-radius: 10px; padding: 9px 15px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
-button.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button.btn, label.btn, a.btn { font: 600 14px var(--body); border-radius: 10px; padding: 9px 15px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+a.btn { display: inline-block; text-decoration: none; }
+button.btn.primary, a.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 button.btn:disabled { opacity: .45; cursor: not-allowed; }
 button.btn.quiet { background: transparent; }
 label.btn:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -304,7 +310,13 @@ footer a { color: var(--accent); }
             <label class="f" id="ownDescWrap" for="ownDesc"><span><span data-s="fOwnDesc"></span> <small data-s="fOwnDescHint"></small></span>
               <input type="text" id="ownDesc" autocomplete="off">
             </label>
-            <label class="f" for="ownSeed"><span><span id="ownSeedLabel"></span> <small id="ownSeedHint"></small></span>
+            <label class="f" id="ownMegaWrap" for="ownMegaNums"><span><span data-s="fOwnMega"></span> <small id="ownMegaHint"></small></span>
+              <input type="text" id="ownMegaNums" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="05 12 33 41 47 58">
+            </label>
+            <label class="f" id="ownFedWrap" for="ownFedNums"><span><span data-s="fOwnFed"></span> <small id="ownFedHint"></small></span>
+              <input type="text" id="ownFedNums" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="12.345 67.890 …">
+            </label>
+            <label class="f" id="ownFreeWrap" for="ownSeed"><span><span data-s="fOwnFree"></span> <small id="ownSeedHint"></small></span>
               <textarea id="ownSeed" class="short" spellcheck="false" autocomplete="off"></textarea>
             </label>
             <p class="hint" id="ownReading" aria-live="polite"></p>
@@ -326,6 +338,10 @@ footer a { color: var(--accent); }
             <div class="f">
               <span data-s="fSource"></span>
               <div class="sources" role="radiogroup" id="presetBox" data-s-aria="fSource"></div>
+              <div class="msg teaser" id="teaserBox" hidden>
+                <p data-s="teaserText"></p>
+                <p><a class="btn primary" id="teaserLink" href="mailto:info@lucentcrypto.org?subject=Or%C3%A7amento%3A%20sorteio%20com%20valor%20jur%C3%ADdico" data-s="teaserBtn"></a></p>
+              </div>
             </div>
             <div id="lotteryBox" class="col" style="gap:6px" hidden>
               <label class="f" for="contest"><span data-s="fContest"></span>
@@ -569,12 +585,25 @@ const STR = {
   sealLockHint: "Depois de lacrar, as opções ficam travadas.",
   quickBtn: "Sortear agora", againBtn: "Sortear de novo",
   quickHint: "Resultado instantâneo neste aparelho, sem lacre e sem certificado.",
-  ownFormatAria: "Formato da semente", ownMega: "Mega-Sena", ownFederal: "Loteria Federal", ownOther: "Outro",
+  ownFormatAria: "Formato da semente", ownMega: "Mega-Sena", ownFederal: "Loteria Federal", ownOther: "Formato livre",
   fOwnContest: "Concurso", fOwnDesc: "Origem da semente", fOwnDescHint: "por exemplo: Quina, concurso 6612; dados lançados na reunião",
-  ownSeedLabel: { megasena: "As 6 dezenas", federal: "Os 5 bilhetes premiados", outro: "Semente" },
+  fOwnMega: "Dezenas sorteadas", fOwnFed: "Bilhetes premiados (1º ao 5º prêmio)", fOwnFree: "Semente",
+  ownMegaHint: "6 dezenas, em qualquer ordem", ownFedHint: "5 números; o ponto de milhar pode ficar",
+  ownOptional: " · opcional: vazio, o navegador sorteia",
+  ownOnlyNums: "Só números aqui (separados por espaço, hífen ou vírgula).",
+  ownMegaOk: (v) => "6 dezenas: " + v + " ✓",
+  ownMegaCount: (n) => n < 6 ? (6 - n === 1 ? "Falta 1 dezena." : "Faltam " + (6 - n) + " dezenas.") : (n - 6 === 1 ? "Sobra 1 dezena." : "Sobram " + (n - 6) + " dezenas."),
+  ownMegaRange: (x) => x + " está fora de 1 a 60.",
+  ownMegaDup: (x) => x + " está repetida.",
+  ownFedOk: (v) => "5 bilhetes (em ordem crescente): " + v + " ✓",
+  ownFedCount: (n) => n < 5 ? (5 - n === 1 ? "Falta 1 bilhete." : "Faltam " + (5 - n) + " bilhetes.") : (n - 5 === 1 ? "Sobra 1 bilhete." : "Sobram " + (n - 5) + " bilhetes."),
+  ownFedRange: (x) => x + " tem mais de 6 dígitos.",
   ownSeedHintQuick: "opcional; vazio: o navegador sorteia. A mesma semente dá sempre o mesmo resultado. Com palavras, a ordem conta.",
   ownSeedHint: "números ou palavras; maiúsculas, acentos e pontuação não contam. Com palavras, a ordem conta.",
-  ownSeedHintNums: "separados por espaço ou hífen, em qualquer ordem",
+  teaserTitle: "Sorteio com valor jurídico", teaserTag: "em breve",
+  teaserDesc: "Lacre com carimbo do tempo ICP-Brasil, antes de um concurso futuro da Loteria Federal. Para condomínios, cooperativas, consórcios e editais.",
+  teaserText: "Neste formato, a lista é lacrada e recebe um carimbo do tempo ICP-Brasil antes do concurso. Assim, ninguém pode alegar que a lista foi ajustada depois de conhecido o resultado. Inclui ata assinada e, se necessário, apoio técnico em caso de contestação.",
+  teaserBtn: "Pedir orçamento",
   ownReadInt: (v) => "Semente lida (números, em ordem crescente): " + v,
   ownReadText: (v) => "Semente lida (palavras, na ordem digitada): " + v,
   ownErrAscii: "Há caracteres que não dá para usar (por exemplo, emoji). Use letras, números e sinais simples.",
@@ -708,7 +737,7 @@ const STR = {
   passMeans1: "O resultado decorre das opções e pesos lacrados e de valores aleatórios públicos que ninguém podia escolher depois de ver o lacre.",
   passMeans2: "O que o programa não prova sozinho: que o lacre foi divulgado antes da aleatoriedade. Os carimbos de tempo servem de prova; sem eles, confira onde e quando o lacre foi publicado. Para loterias, o carimbo precisa ser anterior ao dia do sorteio.",
   passMeans3: "O valor drand é conferido com a chave pública da quicknet. Para o bloco Ethereum, a página confere que ele é o primeiro após o lacre e que continua na cadeia canônica, usando os servidores listados; para independência total, use o seu próprio nó.",
-  footer: "Lucent Sorteios · protocolo LucentDraw/3 · parte da família LucentCrypto. Funciona no seu navegador, sem chaves, sem cadastro e sem estatísticas de uso. A página só faz pedidos às fontes de aleatoriedade (servidores Ethereum listados, drand, Caixa), à biblioteca drand-client fixada por hash e ao relay, se você configurar um. O modo rápido não faz nenhum pedido.",
+  footer: "Lucent Sorteios · protocolo LucentDraw/3 · parte da família LucentCrypto. Tudo é calculado no seu navegador, sem cadastro e sem estatísticas de uso. Com semente própria ou no modo rápido, a página não se conecta a nada. Com Ethereum ou drand, ela só busca o valor aleatório público e o carimbo de tempo do lacre.",
   footerHome: "LucentCrypto", footerSpec: "Especificação", footerVerifier: "Verificador em Python",
   // Conferência (SPEC 9)
   ck: {
@@ -2164,10 +2193,15 @@ function renderPresets(selected) {
     input.addEventListener("change", refreshLottery);
     box.append(el("label", { className: "src" }, input, el("b", { textContent: STR.presets[p][0] }), el("span", { textContent: STR.presets[p][1] })));
   });
+  // Teaser: formato pago, ainda não disponível aqui.
+  const soon = el("button", { type: "button", className: "src soon" }, el("b", {}, STR.teaserTitle, el("span", { className: "tag", textContent: STR.teaserTag })), el("span", { textContent: STR.teaserDesc }));
+  soon.setAttribute("aria-expanded", "false"); soon.setAttribute("aria-controls", "teaserBox");
+  soon.addEventListener("click", () => { const open = $("teaserBox").hidden; $("teaserBox").hidden = !open; soon.setAttribute("aria-expanded", String(open)); });
+  box.append(soon); $("teaserBox").hidden = true;
   refreshLottery();
 }
 document.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener("change", () => renderPresets()));
-function refreshLottery() { $("lotteryBox").hidden = !presetGame(preset()); refreshOwn(); if (!current) renderTimeline(); }
+function refreshLottery() { $("lotteryBox").hidden = !presetGame(preset()); refreshOwn(); }
 // ---- Semente própria (verificável e rápido)
 const ownFormat = () => document.querySelector('input[name="ownFormat"]:checked').value;
 function refreshOwn() {
@@ -2176,33 +2210,59 @@ function refreshOwn() {
   box.hidden = !q && preset() !== "own";
   $("ownContestWrap").hidden = q || f === "outro";
   $("ownDescWrap").hidden = q || f !== "outro";
-  $("ownSeedLabel").textContent = STR.ownSeedLabel[f];
-  $("ownSeedHint").textContent = q ? STR.ownSeedHintQuick : f === "outro" ? STR.ownSeedHint : STR.ownSeedHintNums;
+  $("ownMegaWrap").hidden = f !== "megasena";
+  $("ownFedWrap").hidden = f !== "federal";
+  $("ownFreeWrap").hidden = f !== "outro";
+  const opt = q ? STR.ownOptional : "";
+  $("ownMegaHint").textContent = STR.ownMegaHint + opt;
+  $("ownFedHint").textContent = STR.ownFedHint + opt;
+  $("ownSeedHint").textContent = q ? STR.ownSeedHintQuick : STR.ownSeedHint;
   showOwnReading();
+  if (!current) renderTimeline();
+}
+const OWN_FIELD = { megasena: "ownMegaNums", federal: "ownFedNums", outro: "ownSeed" };
+// Lê o campo do formato escolhido. Devolve { empty } | { error } | { value, reading, show }.
+// Loterias: só números (o ponto separa na Mega-Sena; na Federal é ponto de milhar). O valor canônico é o da regra geral.
+function readOwnField(f) {
+  const raw = $(OWN_FIELD[f]).value;
+  if (!raw.trim()) return { empty: true };
+  if (f === "outro") {
+    const c = canonOwnSeed(raw);
+    if (c.error) return { error: c.error === "ascii" ? STR.ownErrAscii : STR.ownErrEmpty };
+    return { ...c, show: c.reading === "int" ? STR.ownReadInt(c.value) : STR.ownReadText(c.value) };
+  }
+  if (!/^[0-9\s.,;-]+$/.test(raw)) return { error: STR.ownOnlyNums };
+  const nums = (f === "federal" ? raw.replace(/\./g, "") : raw).split(/[\s.,;-]+/).filter(Boolean).map((x) => x.replace(/^0+(?=[0-9])/, ""));
+  if (f === "megasena") {
+    if (nums.length !== 6) return { error: STR.ownMegaCount(nums.length) };
+    const bad = nums.find((x) => x.length > 2 || +x < 1 || +x > 60); if (bad) return { error: STR.ownMegaRange(bad) };
+    const dup = nums.find((x, i) => nums.indexOf(x) !== i); if (dup) return { error: STR.ownMegaDup(dup.padStart(2, "0")) };
+  } else {
+    if (nums.length !== 5) return { error: STR.ownFedCount(nums.length) };
+    const bad = nums.find((x) => x.length > 6); if (bad) return { error: STR.ownFedRange(bad) };
+  }
+  const c = canonOwnSeed(nums.join(" "));
+  const shown = c.value.split("-").map((x) => f === "megasena" ? x.padStart(2, "0") : x).join(f === "megasena" ? " " : " · ");
+  return { ...c, show: f === "megasena" ? STR.ownMegaOk(shown) : STR.ownFedOk(shown) };
 }
 function showOwnReading() {
-  const raw = $("ownSeed").value, out = $("ownReading");
-  if (!raw.trim()) { out.textContent = ""; return; }
-  const c = canonOwnSeed(raw);
-  out.textContent = c.error === "ascii" ? STR.ownErrAscii : c.error ? "" : c.reading === "int" ? STR.ownReadInt(c.value) : STR.ownReadText(c.value);
+  const r = readOwnField(ownFormat());
+  $("ownReading").textContent = r.empty ? "" : r.error || r.show;
 }
 // Lê a semente própria. needLabel: no verificável, a origem é obrigatória.
 function ownFromUI(needLabel) {
-  const f = ownFormat(), raw = $("ownSeed").value;
-  if (!needLabel && !raw.trim()) return { empty: true };
-  const c = canonOwnSeed(raw);
-  if (c.error) return { error: c.error === "ascii" ? STR.ownErrAscii : STR.ownErrEmpty };
-  const fe = ownFormatError(f, c);
-  if (fe) return { error: fe === "megasena" ? STR.ownErrMega : STR.ownErrFederal };
+  const f = ownFormat(), r = readOwnField(f);
+  if (r.empty) return needLabel ? { error: STR.ownErrEmpty } : { empty: true };
+  if (r.error) return { error: r.error };
   let label = "";
   if (needLabel) {
     if (f === "outro") { label = normText($("ownDesc").value); if (!label) return { error: STR.ownErrDesc }; }
     else { const k = normText($("ownContest").value); if (!contestOkV3(k)) return { error: STR.errContest }; label = STR.ownLabel(f, k); }
   }
-  return { format: f, label, value: c.value, reading: c.reading };
+  return { format: f, label, value: r.value, reading: r.reading };
 }
 document.querySelectorAll('input[name="ownFormat"]').forEach((r) => r.addEventListener("change", refreshOwn));
-$("ownSeed").addEventListener("input", showOwnReading);
+["ownSeed", "ownMegaNums", "ownFedNums"].forEach((id) => $(id).addEventListener("input", showOwnReading));
 
 function lockForm(on) {
   locked = on;
@@ -2743,7 +2803,8 @@ function openDraw(state) {
   if (own) {
     document.querySelector('input[name="ownFormat"][value="' + own.format + '"]').checked = true;
     if (own.format === "outro") $("ownDesc").value = own.label; else $("ownContest").value = own.label.replace(/^.*concurso /, "");
-    $("ownSeed").value = (state.randomness.own && state.randomness.own.value) || ""; refreshOwn();
+    const v = (state.randomness.own && state.randomness.own.value) || "";
+    $(OWN_FIELD[own.format]).value = own.format === "outro" ? v : v.split("-").join(" "); refreshOwn();
   }
   lockForm(true); selectTab(kind); renderTimeline();
   if (own) { $("resultPanel").hidden = false; $("sealPanel").hidden = true; $("newDraw").hidden = false; } else showSeal();
