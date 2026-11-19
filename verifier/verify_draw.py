@@ -1623,8 +1623,16 @@ def _verdict(cert, checks, lottery_confirmed, order):
         verdict, msg = "nao_confere", "Este sorteio não confere: " + "; ".join(c["title"] for c in fails)
     elif open_:
         verdict = "incompleto"
-        msg = ("Conferência incompleta: nenhum item falhou, mas estes não puderam ser confirmados: "
-               + "; ".join(c["title"] for c in open_))
+        anchors = cert.get("anchors") if isinstance(cert, dict) else None
+        only_stamp = not (isinstance(anchors, list) and anchors) and all(
+            c["id"] == "timing" or c["id"].endswith("Timing") for c in open_)
+        if only_stamp:
+            msg = ("Confere, menos o momento do lacre. As contas estão certas, mas sem carimbo de tempo não dá "
+                   "para provar que o lacre veio antes do valor aleatório. Se você viu o lacre antes (na reunião, "
+                   "no grupo), o sorteio confere.")
+        else:
+            msg = ("Conferência incompleta: nenhum item falhou, mas estes não puderam ser confirmados: "
+                   + "; ".join(c["title"] for c in open_))
     else:
         verdict, msg = "confere", "Este sorteio confere."
     spec = cert.get("spec") if isinstance(cert, dict) and isinstance(cert.get("spec"), dict) else {}

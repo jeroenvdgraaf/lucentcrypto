@@ -185,11 +185,13 @@ footer a { color: var(--accent); }
 .coin-edge { fill: var(--coin-edge); } .coin-face { fill: var(--coin); } .coin-mark { fill: var(--coin-ink); }
 .die-body { fill: var(--die); stroke: var(--die-ink); stroke-width: 3; } .die-pip { fill: var(--die-ink); }
 .die-num { fill: var(--die-ink); font: 800 30px var(--display); text-anchor: middle; dominant-baseline: central; }
-.pcard { width: 62px; height: 88px; border-radius: 8px; background: var(--card); color: #13232b; border: 1px solid var(--line); box-shadow: 0 1px 3px rgba(0,0,0,.15); position: relative; display: grid; place-items: center; font-family: var(--display); }
+.pcard { width: 70px; height: 98px; border-radius: 9px; background: var(--card); color: #1b2128; border: 1px solid var(--line); box-shadow: 0 1px 3px rgba(0,0,0,.15); position: relative; display: grid; place-items: center; }
 .pcard.red { color: var(--card-red); }
-.pcard .r1, .pcard .r2 { position: absolute; font: 700 14px/1 var(--display); }
-.pcard .r1 { top: 6px; left: 6px; } .pcard .r2 { bottom: 6px; right: 6px; transform: rotate(180deg); }
-.pcard .s { font-size: 30px; line-height: 1; }
+.pcard .corner { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 2px; width: 16px; }
+.pcard .corner .rk { font: 700 14px/1 Georgia, "Times New Roman", serif; letter-spacing: -0.04em; }
+.pcard .corner .cs { width: 11px; height: 11px; }
+.pcard .c1 { top: 6px; left: 5px; } .pcard .c2 { bottom: 6px; right: 5px; transform: rotate(180deg); }
+.pcard .big { width: 32px; height: 32px; }
 .vmore { font: 600 13px var(--body); color: var(--muted); align-self: center; }
 @media (prefers-reduced-motion: no-preference) {
   .pop { animation: pop .42s cubic-bezier(.2,.9,.3,1.3) both; }
@@ -261,14 +263,9 @@ footer a { color: var(--accent); }
             <div class="msg bad" id="candErr" role="alert" hidden></div>
             <div class="seg" role="radiogroup" data-s-aria="listChoiceAria">
               <label><input type="radio" name="listChoice" value="all" checked><span data-s="listAll"></span></label>
-              <label><input type="radio" name="listChoice" value="pick"><span data-s="listPick"></span></label>
+              <label><input type="radio" name="listChoice" value="one"><span data-s="listPick"></span></label>
             </div>
-            <div class="fields" id="pickBox" hidden>
-              <label class="f" for="listCount"><span data-s="listCount"></span>
-                <input type="number" id="listCount" min="1" step="1" value="1" inputmode="numeric">
-              </label>
-              <label class="check-inline"><input type="checkbox" id="listReplace"><span data-s="listReplace"></span></label>
-            </div>
+            <p class="hint" data-s="listAllHint"></p>
           </div>
 
           <div id="kind-coin" class="kind" hidden>
@@ -528,8 +525,8 @@ const STR = {
   pasteTitle: "Colar uma lista",
   pasteHint: "Uma opção por linha. Para dar um peso, escreva-o depois de um ponto e vírgula ou de um Tab (ex.: Ana; 2). A lista atual será substituída.",
   pasteApply: "Usar esta lista",
-  listChoiceAria: "O que sortear", listAll: "Ordenar todos", listPick: "Escolher N",
-  listCount: "Quantos escolher", listReplace: "Com reposição (a mesma opção pode sair mais de uma vez)",
+  listChoiceAria: "O que sortear", listAll: "Sortear a ordem da lista toda", listPick: "Escolher um da lista",
+  listAllHint: "Para vários ganhadores (por exemplo, vagas de garagem), sorteie a ordem e use as primeiras posições.",
   coinCount: "Número de lançamentos",
   dieFaces: "Faces do dado", dieCount: "Número de dados",
   dieLoaded: "Detalhes: dado viciado", dieLoadedHint: "Mude o peso de uma face para ela sair mais (ou menos). Todas com peso 1 = dado honesto.",
@@ -539,7 +536,6 @@ const STR = {
   errWeightAt: (name, m) => "Peso de \"" + name + "\": " + m + ".",
   errAllZero: "Pelo menos um peso precisa ser maior que zero.",
   errCount: (min, max) => "Informe um número inteiro de " + min + " a " + max + ".",
-  errPickTooMany: (p) => "Sem reposição, dá para escolher no máximo " + p + " (as opções com peso maior que zero).",
   // Fontes e lacre
   fSource: "Fonte de aleatoriedade",
   fContest: "Concurso (como aparece no site da Caixa)",
@@ -653,6 +649,7 @@ const STR = {
   verdictOk: "Este sorteio confere.",
   verdictBad: (list) => "Este sorteio não confere: " + list,
   verdictIncomplete: (list) => "Conferência incompleta: nenhum item falhou, mas estes não puderam ser confirmados: " + list,
+  verdictNoStamp: "Confere, menos o momento do lacre. As contas estão certas, mas sem carimbo de tempo não dá para provar que o lacre veio antes do valor aleatório. Se você viu o lacre antes (na reunião, no grupo), o sorteio confere.",
   orderTitle: "Ordem recalculada",
   vTaskTitle: "Pesos lacrados: como digitados, inteiros e chance",
   vW: (W, L) => "W = " + W + " (soma dos pesos inteiros; denominador comum L = " + L + ")",
@@ -1711,7 +1708,12 @@ function verdictOf(cert, checks, lotteryConfirmed, order) {
   const open = checks.filter((c) => (c.status === STATUS.UNVERIFIED || c.status === STATUS.WARN) && !(lotteryConfirmed && (c.id === "megasena" || c.id === "federal") && c.status === STATUS.UNVERIFIED));
   let verdict, message;
   if (fails.length) { verdict = "nao_confere"; message = STR.verdictBad(fails.map((c) => c.title).join("; ")); }
-  else if (open.length) { verdict = "incompleto"; message = STR.verdictIncomplete(open.map((c) => c.title).join("; ")); }
+  else if (open.length) {
+    verdict = "incompleto";
+    // Only the timing is open because there is no timestamp: say so plainly (verdict stays "incompleto").
+    const onlyStamp = !(cert && Array.isArray(cert.anchors) && cert.anchors.length) && open.every((c) => c.id === "timing" || /Timing$/.test(c.id));
+    message = onlyStamp ? STR.verdictNoStamp : STR.verdictIncomplete(open.map((c) => c.title).join("; "));
+  }
   else { verdict = "confere"; message = STR.verdictOk; }
   const spec = cert && cert.spec && typeof cert.spec === "object" ? cert.spec : {};
   return { drawId: spec.id, version: spec.v, checks, verdict, message, order };
@@ -1953,7 +1955,7 @@ function weightTable(box, rows, { names, onChange }) {
 }
 
 // ---- Lista
-const defaultList = () => Array.from({ length: 8 }, (_, i) => ({ opt: "Opção " + (i + 1), w: "1" }));
+const defaultList = () => ["Apto 101 · Souza", "Apto 102 · Oliveira", "Apto 201 · Pereira", "Apto 202 · Lima", "Apto 301 · Carvalho", "Apto 302 · Ribeiro", "Apto 401 · Almeida", "Apto 402 · Costa"].map((opt) => ({ opt, w: "1" }));
 let listRows = defaultList();
 const listTable = weightTable($("listTable"), listRows, { names: "edit", onChange: () => refreshCounts() });
 $("addOpt").addEventListener("click", () => { listRows.push({ opt: "", w: "1" }); listTable.render(); const ins = $("listTable").querySelectorAll(".wrow input[type=text]:not(.wval)"); if (ins.length) ins[ins.length - 1].focus(); });
@@ -1969,7 +1971,7 @@ function setListRows(rows) { listRows.splice(0, listRows.length, ...rows); listT
 $("pasteApply").addEventListener("click", () => { const rows = parsePasted($("cands").value); if (rows.length) setListRows(rows); $("pasteBox").open = false; });
 $("cands").addEventListener("input", () => { const rows = parsePasted($("cands").value); const dups = dupNames(rows.map((r) => r.opt)); showMsg($("candErr"), dups.length ? STR.errDupsOpt(dups.join(", ")) : ""); });
 const listChoice = () => document.querySelector('input[name="listChoice"]:checked').value;
-document.querySelectorAll('input[name="listChoice"]').forEach((r) => r.addEventListener("change", () => { $("pickBox").hidden = listChoice() !== "pick"; refreshCounts(); }));
+document.querySelectorAll('input[name="listChoice"]').forEach((r) => r.addEventListener("change", () => { refreshCounts(); }));
 function dupNames(names) { const seen = new Set(), d = new Set(); for (const n of names) { if (!n) continue; if (seen.has(n)) d.add(n); seen.add(n); } return [...d]; }
 function refreshCounts() {
   const named = listRows.filter((r) => normText(r.opt));
@@ -2022,13 +2024,8 @@ function taskFromUI() {
     for (const r of rows) { const p = parseWeight(r.w); if (p.error) return { error: STR.errWeightAt(r.opt, STR.weightErr[p.error]) }; }
     const positive = rows.filter((r) => parseWeight(r.w).n > 0n).length;
     if (!positive) return { error: STR.errAllZero };
-    let count = positive, replace = false;
-    if (listChoice() === "pick") {
-      replace = $("listReplace").checked;
-      const max = replace ? MAXN : positive;
-      count = intIn("listCount", 1, max);
-      if (count === null) return { error: replace ? STR.errCount(1, MAXN) : STR.errPickTooMany(positive) };
-    }
+    // Two choices only: the whole order, or one item. One item = position 1 of the order (same hashes).
+    const count = listChoice() === "one" ? 1 : positive, replace = false;
     task = presetTask("list", { options: rows.map((r) => r.opt), weights: rows.map((r) => r.w), count, replace });
   }
   const problems = validateTask(task);
@@ -2043,9 +2040,8 @@ function taskToUI(t) {
   else {
     setListRows(t.options.map((o, i) => ({ opt: o, w: t.weights[i] })));
     const positive = t.weights.filter((w) => parseWeight(w).n > 0n).length;
-    const all = !t.replace && t.count === positive;
-    document.querySelector('input[name="listChoice"][value="' + (all ? "all" : "pick") + '"]').checked = true;
-    $("pickBox").hidden = all; $("listCount").value = t.count; $("listReplace").checked = t.replace;
+    const all = !t.replace && t.count === positive;   // older seals with other counts reopen as "one"
+    document.querySelector('input[name="listChoice"][value="' + (all ? "all" : "one") + '"]').checked = true;
   }
 }
 
@@ -2394,10 +2390,22 @@ function dieFig(face, faces, i) {
   }
   return fig(s, "d" + faces + ": " + face, i, "pop");
 }
+// Suits drawn as SVG shapes (viewBox 0 0 100 100), so they look the same on every device.
+const SUIT_SHAPES = {
+  "♥": [["path", { d: "M50 90 C22 68 6 50 6 31 C6 16 18 6 31 6 C40 6 47 11 50 20 C53 11 60 6 69 6 C82 6 94 16 94 31 C94 50 78 68 50 90 Z" }]],
+  "♦": [["path", { d: "M50 4 C60 22 74 38 90 50 C74 62 60 78 50 96 C40 78 26 62 10 50 C26 38 40 22 50 4 Z" }]],
+  "♠": [["path", { d: "M50 4 C74 26 94 42 94 60 C94 73 84 81 72 81 C64 81 57 77 54 70 C55 82 60 90 68 96 L32 96 C40 90 45 82 46 70 C43 77 36 81 28 81 C16 81 6 73 6 60 C6 42 26 26 50 4 Z" }]],
+  "♣": [["circle", { cx: 50, cy: 27, r: 20 }], ["circle", { cx: 26, cy: 58, r: 20 }], ["circle", { cx: 74, cy: 58, r: 20 }],
+        ["path", { d: "M45 52 L55 52 C55 74 60 87 68 96 L32 96 C40 87 45 74 45 52 Z" }]],
+};
+function suitSvg(suit, cls) {
+  return sv("svg", { viewBox: "0 0 100 100", class: cls, "aria-hidden": "true", focusable: "false" }, ...SUIT_SHAPES[suit].map(([t, a]) => sv(t, { ...a, fill: "currentColor" })));
+}
 function cardFig(card, i) {
-  const rank = card.slice(0, -1), suit = card.slice(-1), shown = suit + "\uFE0E"; // U+FE0E: naipe como texto, não emoji (só na tela)
-  const c = el("div", { className: "pcard" + (suit === "♥" || suit === "♦" ? " red" : "") },
-    el("span", { className: "r1", textContent: rank + shown }), el("span", { className: "s", textContent: shown }), el("span", { className: "r2", textContent: rank + shown }));
+  const rank = card.slice(0, -1), suit = card.slice(-1);
+  const corner = (cls) => el("span", { className: "corner " + cls }, el("span", { className: "rk", textContent: rank }), suitSvg(suit, "cs"));
+  const c = el("div", { className: "pcard" + (suit === "♥" || suit === "♦" ? " red" : "") }, corner("c1"), suitSvg(suit, "big"), corner("c2"));
+  c.setAttribute("role", "img"); c.setAttribute("aria-label", card);
   return fig(c, card, i, "pop", false);
 }
 function fig(node, label, i, anim, caption = true) {
