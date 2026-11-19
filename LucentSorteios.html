@@ -300,9 +300,9 @@ footer a { color: var(--accent); }
 
           <div id="ownBox" class="col" style="gap:8px">
             <div class="seg" role="radiogroup" data-s-aria="ownFormatAria">
-              <label><input type="radio" name="ownFormat" value="megasena"><span data-s="ownMega"></span></label>
-              <label><input type="radio" name="ownFormat" value="federal"><span data-s="ownFederal"></span></label>
-              <label><input type="radio" name="ownFormat" value="outro" checked><span data-s="ownOther"></span></label>
+              <label><input type="radio" name="ownFormat" value="outro" checked autocomplete="off"><span data-s="ownOther"></span></label>
+              <label><input type="radio" name="ownFormat" value="megasena" autocomplete="off"><span data-s="ownMega"></span></label>
+              <label><input type="radio" name="ownFormat" value="federal" autocomplete="off"><span data-s="ownFederal"></span></label>
             </div>
             <label class="f" id="ownContestWrap" for="ownContest"><span data-s="fOwnContest"></span>
               <input type="text" id="ownContest" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="2890">
@@ -589,7 +589,6 @@ const STR = {
   fOwnContest: "Concurso", fOwnDesc: "Origem da semente", fOwnDescHint: "por exemplo: Quina, concurso 6612; dados lançados na reunião",
   fOwnMega: "Dezenas sorteadas", fOwnFed: "Bilhetes premiados (1º ao 5º prêmio)", fOwnFree: "Semente",
   ownMegaHint: "6 dezenas, em qualquer ordem", ownFedHint: "5 números; o ponto de milhar pode ficar",
-  ownOptional: " · opcional: vazio, o navegador sorteia",
   ownOnlyNums: "Só números aqui (separados por espaço, hífen ou vírgula).",
   ownMegaOk: (v) => "6 dezenas: " + v + " ✓",
   ownMegaCount: (n) => n < 6 ? (6 - n === 1 ? "Falta 1 dezena." : "Faltam " + (6 - n) + " dezenas.") : (n - 6 === 1 ? "Sobra 1 dezena." : "Sobram " + (n - 6) + " dezenas."),
@@ -598,14 +597,15 @@ const STR = {
   ownFedOk: (v) => "5 bilhetes (em ordem crescente): " + v + " ✓",
   ownFedCount: (n) => n < 5 ? (5 - n === 1 ? "Falta 1 bilhete." : "Faltam " + (5 - n) + " bilhetes.") : (n - 5 === 1 ? "Sobra 1 bilhete." : "Sobram " + (n - 5) + " bilhetes."),
   ownFedRange: (x) => x + " tem mais de 6 dígitos.",
-  ownSeedHintQuick: "opcional; vazio: o navegador sorteia. A mesma semente dá sempre o mesmo resultado. Com palavras, a ordem conta.",
-  ownSeedHint: "números ou palavras; maiúsculas, acentos e pontuação não contam. Com palavras, a ordem conta.",
+  ownSeedHintQuick: "Em branco, o navegador sorteia. Com semente, pode-se refazer o sorteio com o mesmo resultado.",
+  ownSeedHint: "números ou palavras",
   teaserTitle: "Sorteio com valor jurídico", teaserTag: "em breve",
   teaserDesc: "Lacre com carimbo do tempo ICP-Brasil, antes de um concurso futuro da Loteria Federal. Para condomínios, cooperativas, consórcios e editais.",
   teaserText: "Neste formato, a lista é lacrada e recebe um carimbo do tempo ICP-Brasil antes do concurso. Assim, ninguém pode alegar que a lista foi ajustada depois de conhecido o resultado. Inclui ata assinada e, se necessário, apoio técnico em caso de contestação.",
   teaserBtn: "Pedir orçamento",
-  ownReadInt: (v) => "Semente lida (números, em ordem crescente): " + v,
-  ownReadText: (v) => "Semente lida (palavras, na ordem digitada): " + v,
+  ownReadInt: (v) => "Semente lida: " + v,
+  ownReadText: (v) => "Semente lida: " + v,
+  ownMegaEmpty: "Digite as 6 dezenas.", ownFedEmpty: "Digite os 5 bilhetes.",
   ownErrAscii: "Há caracteres que não dá para usar (por exemplo, emoji). Use letras, números e sinais simples.",
   ownErrEmpty: "Digite a semente.",
   ownErrMega: "A Mega-Sena tem 6 dezenas diferentes, de 1 a 60.",
@@ -2213,9 +2213,8 @@ function refreshOwn() {
   $("ownMegaWrap").hidden = f !== "megasena";
   $("ownFedWrap").hidden = f !== "federal";
   $("ownFreeWrap").hidden = f !== "outro";
-  const opt = q ? STR.ownOptional : "";
-  $("ownMegaHint").textContent = STR.ownMegaHint + opt;
-  $("ownFedHint").textContent = STR.ownFedHint + opt;
+  $("ownMegaHint").textContent = STR.ownMegaHint;
+  $("ownFedHint").textContent = STR.ownFedHint;
   $("ownSeedHint").textContent = q ? STR.ownSeedHintQuick : STR.ownSeedHint;
   showOwnReading();
   if (!current) renderTimeline();
@@ -2252,6 +2251,8 @@ function showOwnReading() {
 // Lê a semente própria. needLabel: no verificável, a origem é obrigatória.
 function ownFromUI(needLabel) {
   const f = ownFormat(), r = readOwnField(f);
+  if (r.empty && f === "megasena") return { error: STR.ownMegaEmpty };
+  if (r.empty && f === "federal") return { error: STR.ownFedEmpty };
   if (r.empty) return needLabel ? { error: STR.ownErrEmpty } : { empty: true };
   if (r.error) return { error: r.error };
   let label = "";
@@ -2263,6 +2264,7 @@ function ownFromUI(needLabel) {
 }
 document.querySelectorAll('input[name="ownFormat"]').forEach((r) => r.addEventListener("change", refreshOwn));
 ["ownSeed", "ownMegaNums", "ownFedNums"].forEach((id) => $(id).addEventListener("input", showOwnReading));
+document.querySelector('input[name="ownFormat"][value="outro"]').checked = true; // sempre abre em Formato livre (o navegador não restaura)
 
 function lockForm(on) {
   locked = on;
