@@ -5,10 +5,11 @@
 //
 //   POST /v1/timestamp        { "hash": "<64 hex>" } -> { rfc3161: [{tsa, token}], ots, errors? }
 //   POST /v1/ots/upgrade      { "ots": "<base64>" }  -> { ots, complete }
-//   GET  /v1/lottery/<megasena|federal>/<contest>     -> resultado normalizado ou 404
+//   GET  /v1/lottery/<megasena|federal>/<contest>     -> resultado normalizado (LucentDraw/2) ou 404
+//   GET  /v3/lottery/<megasena|federal>/<contest>     -> resultado no formato LucentDraw/3 (SPEC-v3 4) ou 404
 import { timeStampRequest, inspectTimeStampResp } from "./der.js";
 import { stamp, upgrade } from "./ots.js";
-import { normalizeCaixa } from "./lottery.js";
+import { normalizeCaixa, normalizeCaixaV3 } from "./lottery.js";
 
 export const DEFAULT_CONFIG = {
   // Duas TSAs gratuitas de organizações diferentes; ICP-Brasil presente mas DESLIGADA (SPEC 6.1).
@@ -103,9 +104,10 @@ async function upgradeHandler(req, cfg, fetchFn) {
   } catch (e) { return json(req, cfg, 400, { error: e.message }); }
 }
 
-async function lotteryHandler(req, cfg, fetchFn, game, contestStr) {
-  const contest = parseInt(contestStr, 10);
-  if (!/^[1-9][0-9]{0,6}$/.test(contestStr)) return json(req, cfg, 400, { error: "invalid contest" });
+async function lotteryHandler(req, cfg, fetchFn, game, contestStr, v3 = false) {
+  // v3: concurso como texto, com sufixo opcional ("6054-2"); v1: número.
+  if (!(v3 ? /^[1-9][0-9]{0,6}(?:-[1-9][0-9]{0,2})?$/ : /^[1-9][0-9]{0,6}$/).test(contestStr)) return json(req, cfg, 400, { error: "invalid contest" });
+  const contest = v3 ? contestStr : parseInt(contestStr, 10);
   let r;
   try { r = await fetchFn(cfg.caixaApi + game + "/" + contest, { headers: { accept: "application/json" } }); }
   catch (e) { return json(req, cfg, 502, { error: "upstream unreachable: " + e.message }); }
@@ -113,8 +115,8 @@ async function lotteryHandler(req, cfg, fetchFn, game, contestStr) {
   if (!r.ok) return json(req, cfg, 502, { error: "upstream HTTP " + r.status });
   let j;
   try { j = await r.json(); } catch { return json(req, cfg, 502, { error: "upstream sent invalid JSON" }); }
-  const n = normalizeCaixa(game, contest, j);
-  console.log(JSON.stringify({ path: "/v1/lottery", game, contest, found: !!n }));
+  const n = v3 ? normalizeCaixaV3(game, contest, j) : normalizeCaixa(game, contest, j);
+  console.log(JSON.stringify({ path: v3 ? "/v3/lottery" : "/v1/lottery", game, contest, found: !!n }));
   if (!n) return json(req, cfg, 404, { error: "no result for this contest yet" });
   return json(req, cfg, 200, n, { "cache-control": "public, max-age=3600" });
 }
@@ -128,9 +130,9 @@ export async function handle(req, env = {}, fetchFn = fetch) {
   try {
     if (req.method === "POST" && url.pathname === "/v1/timestamp") return await timestampHandler(req, cfg, f);
     if (req.method === "POST" && url.pathname === "/v1/ots/upgrade") return await upgradeHandler(req, cfg, f);
-    const m = /^\/v1\/lottery\/(megasena|federal)\/([^/]+)$/.exec(url.pathname);
-    if (req.method === "GET" && m) return await lotteryHandler(req, cfg, f, m[1], m[2]);
-    if (req.method === "GET" && url.pathname === "/") return json(req, cfg, 200, { service: "Lucent Sorteios timestamp relay", endpoints: ["POST /v1/timestamp", "POST /v1/ots/upgrade", "GET /v1/lottery/<megasena|federal>/<contest>"] });
+    const m = /^\/(v1|v3)\/lottery\/(megasena|federal)\/([^/]+)$/.exec(url.pathname);
+    if (req.method === "GET" && m) return await lotteryHandler(req, cfg, f, m[2], m[3], m[1] === "v3");
+    if (req.method === "GET" && url.pathname === "/") return json(req, cfg, 200, { service: "Lucent Sorteios timestamp relay", endpoints: ["POST /v1/timestamp", "POST /v1/ots/upgrade", "GET /v1/lottery/<megasena|federal>/<contest>", "GET /v3/lottery/<megasena|federal>/<contest>"] });
     return json(req, cfg, 404, { error: "not found" });
   } catch (e) {
     return json(req, cfg, e.status || 500, { error: e.status ? e.message : "internal error" });

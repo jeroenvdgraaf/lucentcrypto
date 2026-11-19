@@ -159,6 +159,29 @@ test("GET /v1/lottery: normalized result, 404 when not drawn, 502 upstream error
   await assert.rejects(C.fetchLottery(fetchJson, "megasena", 3001, ""));
 });
 
+test("GET /v3/lottery: SPEC-v3 4 format (contest as text, integer tickets), suffixed contests", async () => {
+  const net = mockNet([
+    [/federal\/6120$/, () => Response.json({ numero: 6120, dataApuracao: "20/01/2027", listaDezenas: ["017469", "081210", "007767", "041317", "079412"] })],
+    [/megasena\/3010-2$/, () => Response.json({ numero: "3010-2", dataApuracao: "21/01/2027", listaDezenas: ["60", "01", "07", "13", "22", "48"] })],
+    [/federal\/6121$/, () => Response.json({ numero: 6121, listaDezenas: [] })],
+  ]);
+  const get = (p) => handle(new Request("https://relay.test" + p), {}, net.fetchFn);
+  let r = await get("/v3/lottery/federal/6120");
+  assert.equal(r.status, 200);
+  assert.deepEqual(await r.json(), { game: "federal", contest: "6120", prizes: [17469, 81210, 7767, 41317, 79412], drawDate: "2027-01-20" });
+  r = await get("/v3/lottery/megasena/3010-2");
+  assert.deepEqual(await r.json(), { game: "megasena", contest: "3010-2", numbers: [1, 7, 13, 22, 48, 60], drawDate: "2027-01-21" });
+  assert.equal((await get("/v3/lottery/federal/6121")).status, 404);
+  for (const bad of ["06120", "6120-", "6120-2-1", "6120%2F..", "x"]) assert.equal((await get("/v3/lottery/federal/" + bad)).status, 400, bad);
+  assert.equal((await get("/v1/lottery/federal/6054-2")).status, 400); // a rota v1 continua só numérica
+  // a página usa a rota v3 quando a Caixa recusa o navegador
+  const fetchJson = async (url) => {
+    if (url.startsWith(C.LOTTERY.api)) throw new TypeError("Failed to fetch (CORS)");
+    const res = await get(new URL(url).pathname); if (!res.ok) throw Object.assign(new Error("HTTP " + res.status), { status: res.status }); return res.json();
+  };
+  assert.deepEqual((await C.fetchLottery(fetchJson, "federal", "6120", "https://relay.test")).prizes, [17469, 81210, 7767, 41317, 79412]);
+});
+
 test("CORS preflight and restricted origins", async () => {
   let r = await handle(new Request("https://relay.test/v1/timestamp", { method: "OPTIONS", headers: { origin: "null" } }), {}, async () => { throw new Error(); });
   assert.equal(r.status, 204);

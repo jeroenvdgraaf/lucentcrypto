@@ -10,6 +10,7 @@ guarda estado além dos logs da plataforma.
 | `POST /v1/timestamp` | `{ "hash": "<64 hex>" }` | `{ "rfc3161": [{ "tsa", "token" }], "ots": "<base64>", "errors"?: [...] }` |
 | `POST /v1/ots/upgrade` | `{ "ots": "<base64>" }` | `{ "ots": "<base64>", "complete": true \| false }` |
 | `GET /v1/lottery/<megasena\|federal>/<concurso>` | | resultado normalizado, ou 404 |
+| `GET /v3/lottery/<megasena\|federal>/<concurso>` | | resultado no formato LucentDraw/3, ou 404 |
 
 - `token` é o `TimeStampResp` DER completo, em base64. O relay confere que a TSA carimbou o hash pedido
   antes de devolver o token; a página e o `verify_draw.py` conferem de novo.
@@ -18,7 +19,10 @@ guarda estado além dos logs da plataforma.
   marca `complete: true` quando há um atestado Bitcoin.
 - `errors` (opcional) lista serviços que falharam; a resposta é 200 se pelo menos um serviço respondeu.
 - O resultado de loteria é `{ game, contest, numbers | prizes, drawDate }`, a partir do endpoint
-  não oficial da Caixa (a confirmar; ver `DECISIONS.md`).
+  não oficial da Caixa (a confirmar; ver `DECISIONS.md`). Em `/v1` (LucentDraw/2) o concurso é número e
+  os bilhetes da Federal são texto com 5 algarismos. Em `/v3` (LucentDraw/3, SPEC-v3 4) o concurso é texto,
+  como pedido (`6120`, `6054-2`), e os números são inteiros: Mega-Sena em ordem crescente, Federal com até
+  6 algarismos, na ordem dos prêmios. `drawDate` é a data oficial do sorteio, gravada no certificado.
 
 ## Configuração (`wrangler.toml`, seção `[vars]`)
 
