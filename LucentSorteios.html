@@ -208,7 +208,7 @@ footer a { color: var(--accent); }
 .ibar .sg.pick { background: var(--seg-pick); }
 .ibar .needle { position: absolute; top: -2px; bottom: -2px; width: 2px; margin-left: -1px; background: var(--needle); pointer-events: none; }
 .ibar .needle span { position: absolute; top: 1px; left: 3px; font: 700 10px/1 var(--mono); color: var(--needle); background: var(--surface); padding: 1px 2px; border-radius: 3px; }
-.bar-cap { font: 12.5px var(--mono); color: var(--muted); margin: 4px 0 0; overflow-wrap: anywhere; }
+.bar-cap { font-size: 13.5px; color: var(--muted); margin: 4px 0 0; overflow-wrap: anywhere; }
 .vresult { margin: 0; padding-left: 1.6em; display: grid; gap: 2px; }
 </style>
 </head>
@@ -402,8 +402,8 @@ footer a { color: var(--accent); }
               </table>
             </div>
             <section class="bars-wrap" id="barsWrap">
-              <h3 data-s="barsTitle"></h3>
-              <p class="hint" data-s="barsIntro"></p>
+              <h3 id="barsTitleEl" data-s="barsTitle"></h3>
+              <p class="hint" id="barsIntroEl" data-s="barsIntro"></p>
               <div id="bars" class="bars"></div>
             </section>
             <dl class="kv" id="resultFacts"></dl>
@@ -625,9 +625,13 @@ const STR = {
   sumCoin: (a, b) => "Cara: " + a + " · Coroa: " + b,
   sumDice: (s) => "Soma: " + s,
   visualMore: (n) => "e mais " + n,
-  barsTitle: "Onde caiu cada escolha",
-  barsIntro: "Cada barra é o intervalo [0, 2²⁵⁶) dividido em partes proporcionais aos pesos inteiros. A agulha marca onde caiu o hash de cada escolha: x = ⌊r · W / 2²⁵⁶⌋. Sem reposição, a parte escolhida sai da barra seguinte.",
-  barCaption: (j, x, W, pct, opt) => "Escolha " + j + ": x = " + x + " de W = " + W + " (" + pct + ") → " + opt,
+  barsTitle: "Como saiu cada posição",
+  barsTitleOne: "Onde caiu a escolha",
+  barsIntro: "Cada barra mostra quem ainda estava no sorteio, cada um com espaço proporcional ao seu peso. A marca vermelha é onde caiu o número aleatório: quem está ali fica com a posição e sai da barra seguinte.",
+  barsIntroOne: "A barra mostra todas as opções, cada uma com espaço proporcional ao seu peso. A marca vermelha é onde caiu o número aleatório.",
+  barCaption: (j, n, opt, chance) => "Posição " + j + ": " + opt + " (entre " + n + (n === 1 ? " restante" : " restantes") + "; chance nesta rodada: " + chance + ")",
+  barCaptionMany: (j, opt, chance) => "Sorteio " + j + ": " + opt + " (chance: " + chance + ")",
+  needleTech: (x, W) => "x = " + x + " de W = " + W + " (x = ⌊r · W / 2²⁵⁶⌋)",
   barsMore: (n) => "Mostrar todas as " + n + " barras",
   dlCert: "Baixar certificado", copyCert: "Copiar certificado", copyAta: "Copiar ata",
   ataTitle: "Ata do sorteio",
@@ -2431,7 +2435,7 @@ function renderBars(box, task, ints, steps) {
   const bar = (alive, W, marks) => {
     const b = el("div", { className: "ibar" });
     b.setAttribute("role", "img");
-    b.setAttribute("aria-label", marks.map((m) => STR.barCaption(m.j + 1, String(m.x), String(W), shareText(m.x, W), task.options[m.index])).join("; "));
+    b.setAttribute("aria-label", capText(marks, W, alive.length));
     const picked = new Set(marks.map((m) => m.index));
     alive.forEach((i, k) => {
       const seg = el("div", { className: "sg" + (k % 2 ? " alt" : "") + (picked.has(i) ? " pick" : "") });
@@ -2442,22 +2446,29 @@ function renderBars(box, task, ints, steps) {
       b.append(seg);
     });
     marks.forEach((m) => {
-      const n = el("div", { className: "needle" });
+      const n = el("div", { className: "needle", title: STR.needleTech(String(m.x), String(W)) });
       n.style.left = pctOf(m.x, W) + "%";
       if (marks.length <= 20) n.append(el("span", { textContent: String(m.j + 1) }));
       b.append(n);
     });
     return b;
   };
-  const caps = (marks, W) => marks.slice(0, 20).map((m) => STR.barCaption(m.j + 1, String(m.x), String(W), shareText(m.x, W), task.options[m.index])).join(" · ") + (marks.length > 20 ? " · …" : "");
+  // Plain caption: who got the position and what their chance was at that step (not the needle position).
+  const capOne = (m, W, n) => task.replace ? STR.barCaptionMany(m.j + 1, task.options[m.index], shareText(ints[m.index], W))
+    : STR.barCaption(m.j + 1, n, task.options[m.index], shareText(ints[m.index], W));
+  function capText(marks, W, n) { return marks.slice(0, 20).map((m) => capOne(m, W, n)).join(" · ") + (marks.length > 20 ? " · …" : ""); }
+  const caps = (marks, W, n) => capText(marks, W, n);
+  const one = !task.replace && steps.length === 1;
+  $("barsTitleEl").textContent = one ? STR.barsTitleOne : STR.barsTitle;
+  $("barsIntroEl").textContent = one ? STR.barsIntroOne : STR.barsIntro;
   if (task.replace) {
     const alive = ints.map((w, i) => i).filter((i) => ints[i] > 0n), W = steps.length ? steps[0].W : 0n;
-    box.append(bar(alive, W, steps), el("p", { className: "bar-cap", textContent: caps(steps, W) }));
+    box.append(bar(alive, W, steps), el("p", { className: "bar-cap", textContent: caps(steps, W, alive.length) }));
     return;
   }
   const alive = ints.map((w, i) => i).filter((i) => ints[i] > 0n), items = [];
   for (const st of steps) {
-    items.push(el("div", {}, bar([...alive], st.W, [st]), el("p", { className: "bar-cap", textContent: caps([st], st.W) })));
+    items.push(el("div", {}, bar([...alive], st.W, [st]), el("p", { className: "bar-cap", textContent: caps([st], st.W, alive.length) })));
     alive.splice(alive.indexOf(st.index), 1);
   }
   const first = 8;
@@ -2483,9 +2494,10 @@ function renderOutcome(task, picks, steps, ints) {
   $("resultTableWrap").hidden = !isList;
   const W = ints.reduce((a, b) => a + b, 0n);
   if (isList) {
-    $("resultHead").replaceChildren(el("th", { textContent: STR.thPos }), el("th", { textContent: STR.thOpt }), el("th", { textContent: STR.thShare }));
+    const single = picks.length === 1;
+    $("resultHead").replaceChildren(el("th", { textContent: STR.thPos }), el("th", { textContent: STR.thOpt }), el("th", { textContent: single ? STR.thShare : STR.thWeight }));
     const body = $("orderBody"); body.replaceChildren();
-    picks.forEach((i, k) => body.append(el("tr", {}, el("td", { className: "pos", textContent: String(k + 1) }), el("td", { className: "name", textContent: task.options[i] }), el("td", { className: "key", textContent: shareText(ints[i], W) }))));
+    picks.forEach((i, k) => body.append(el("tr", {}, el("td", { className: "pos", textContent: String(k + 1) }), el("td", { className: "name", textContent: task.options[i] }), el("td", { className: "key", textContent: single ? shareText(ints[i], W) : task.weights[i] }))));
   }
   $("barsWrap").hidden = false;
   renderBars($("bars"), task, ints, steps);
