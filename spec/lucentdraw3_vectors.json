@@ -1,0 +1,109 @@
+[
+ {
+  "name": "1 · moeda, 3 lançamentos",
+  "canonical": "{\"contribution\":\"\",\"id\":\"moeda-1\",\"mode\":\"live\",\"sources\":{\"drand\":{\"chain\":\"quicknet\",\"chainHash\":\"52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971\",\"round\":33900000}},\"task\":{\"count\":3,\"options\":[\"Cara\",\"Coroa\"],\"preset\":\"coin\",\"replace\":true,\"weights\":[\"1\",\"1\"]},\"title\":\"\",\"v\":\"LucentDraw/3\"}",
+  "C": "327d428b5c557beee22212842d3066c5f638a9fdccf4818aee049e7a15779fea",
+  "values": {
+   "drand": "0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c"
+  },
+  "seed": "f4e297eb85fbf4341b4fe1c57b8ec891075a27be747052b7eaf3bafefc967b06",
+  "picks": [
+   0,
+   1,
+   1
+  ],
+  "result": [
+   "Cara",
+   "Coroa",
+   "Coroa"
+  ],
+  "W": 2,
+  "firstR": "5324c0d0f5c366d9bcb77b8880531106e7c510cc9ec4094164c2a736705ffff9"
+ },
+ {
+  "name": "2 · 2 dados de 20 faces",
+  "canonical": "{\"contribution\":\"\",\"id\":\"d20-1\",\"mode\":\"live\",\"sources\":{\"drand\":{\"chain\":\"quicknet\",\"chainHash\":\"52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971\",\"round\":33900000}},\"task\":{\"count\":2,\"options\":[\"1\",\"2\",\"3\",\"4\",\"5\",\"6\",\"7\",\"8\",\"9\",\"10\",\"11\",\"12\",\"13\",\"14\",\"15\",\"16\",\"17\",\"18\",\"19\",\"20\"],\"preset\":\"die\",\"replace\":true,\"weights\":[\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\"]},\"title\":\"\",\"v\":\"LucentDraw/3\"}",
+  "C": "970fa2b3932a148d4928ffa6ec47470f563c94859c2fffe631c1ca9a78cdb9b0",
+  "values": {
+   "drand": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+  },
+  "seed": "5fc220f5813af597aba9929a174e6311d4fbef2db82b43a3a0134f5a00f1682d",
+  "picks": [
+   17,
+   7
+  ],
+  "result": [
+   "18",
+   "8"
+  ],
+  "W": 20,
+  "firstR": "daa90aab13a217f1817bcf54d6bce9f8c72149b051860a7ba5e4d529659d890a"
+ },
+ {
+  "name": "3 · 5 cartas sem reposição",
+  "canonical": "{\"contribution\":\"\",\"id\":\"cartas-1\",\"mode\":\"live\",\"sources\":{\"drand\":{\"chain\":\"quicknet\",\"chainHash\":\"52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971\",\"round\":33900000}},\"task\":{\"count\":5,\"options\":[\"A♠\",\"2♠\",\"3♠\",\"4♠\",\"5♠\",\"6♠\",\"7♠\",\"8♠\",\"9♠\",\"10♠\",\"J♠\",\"Q♠\",\"K♠\",\"A♥\",\"2♥\",\"3♥\",\"4♥\",\"5♥\",\"6♥\",\"7♥\",\"8♥\",\"9♥\",\"10♥\",\"J♥\",\"Q♥\",\"K♥\",\"A♦\",\"2♦\",\"3♦\",\"4♦\",\"5♦\",\"6♦\",\"7♦\",\"8♦\",\"9♦\",\"10♦\",\"J♦\",\"Q♦\",\"K♦\",\"A♣\",\"2♣\",\"3♣\",\"4♣\",\"5♣\",\"6♣\",\"7♣\",\"8♣\",\"9♣\",\"10♣\",\"J♣\",\"Q♣\",\"K♣\"],\"preset\":\"cards\",\"replace\":false,\"weights\":[\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\"]},\"title\":\"\",\"v\":\"LucentDraw/3\"}",
+  "C": "a0ec97f49b03a7e2b57e4ae2e25dc8906c085806a3131186f9f9a8755987fd3f",
+  "values": {
+   "drand": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e"
+  },
+  "seed": "e3cc7eb4f6e85228ec12b078667d75975ed3962ed29f9a67567a9b6da9a7f6c5",
+  "picks": [
+   32,
+   31,
+   39,
+   8,
+   17
+  ],
+  "result": [
+   "7♦",
+   "6♦",
+   "A♣",
+   "9♠",
+   "5♥"
+  ],
+  "W": 52,
+  "firstR": "9d9bad83c70c12b4b50c7fe329c62e1a3d6c82478cd27ad54d7ef96f60ba119e"
+ },
+ {
+  "name": "4 · lista com pesos, 1 escolha",
+  "canonical": "{\"contribution\":\"\",\"id\":\"pesos-1\",\"mode\":\"live\",\"sources\":{\"eth\":{\"chain\":\"ethereum-mainnet\",\"confirmations\":1,\"notBefore\":1794260000,\"rule\":\"first-block-after\"}},\"task\":{\"count\":1,\"options\":[\"Ana\",\"Bruno\",\"Célia\",\"Davi\"],\"preset\":\"list\",\"replace\":false,\"weights\":[\"3\",\"0,35\",\"1/7\",\"0\"]},\"title\":\"\",\"v\":\"LucentDraw/3\"}",
+  "C": "13842746d38d3a3945c8bba3e0639659762315ca162600f03cbaa172675b0385",
+  "values": {
+   "eth": "1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f"
+  },
+  "seed": "83c1fd178b76128b9a7a60723767985c90f495454924d44c4bbe8fb125df7c45",
+  "picks": [
+   1
+  ],
+  "result": [
+   "Bruno"
+  ],
+  "W": 489,
+  "firstR": "e31df37e63bbb12420d325b2411f5e2abff9c8197aee14402a9aa0f7296a3262"
+ },
+ {
+  "name": "5 · ordem completa com pesos (Lista)",
+  "canonical": "{\"contribution\":\"\",\"id\":\"ordem-1\",\"mode\":\"scheduled\",\"sources\":{\"federal\":{\"contest\":\"6120\"}},\"task\":{\"count\":5,\"options\":[\"Apto 101\",\"Apto 102\",\"Apto 201\",\"Apto 202\",\"Apto 301\"],\"preset\":\"list\",\"replace\":false,\"weights\":[\"1\",\"1\",\"2\",\"1\",\"1/2\"]},\"title\":\"\",\"v\":\"LucentDraw/3\"}",
+  "C": "64496148ed57046aea4992c21876fe89bfaf1e558325152365626a35c24ac5fe",
+  "values": {
+   "federal": "6120:17469-81210-7767-41317-79412"
+  },
+  "seed": "5c138764dea4eb0500345803e0added93450bb88df8645924e2ec9b7c1403d68",
+  "picks": [
+   3,
+   2,
+   0,
+   1,
+   4
+  ],
+  "result": [
+   "Apto 202",
+   "Apto 201",
+   "Apto 101",
+   "Apto 102",
+   "Apto 301"
+  ],
+  "W": 11,
+  "firstR": "dfa6fb6cc19b3518bafd22b18114bba3217550f0622a9df2de29012a6751b7b0"
+ }
+]
