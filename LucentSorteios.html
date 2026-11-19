@@ -2447,7 +2447,9 @@ function renderBars(box, task, ints, steps) {
     });
     marks.forEach((m) => {
       const n = el("div", { className: "needle", title: STR.needleTech(String(m.x), String(W)) });
-      n.style.left = pctOf(m.x, W) + "%";
+      // Draw at the hash's real position r/2^256 (first 53 bits), not at x/W: x = floor((r/2^256)·W),
+      // so this point always lies inside the winner's interval, at the true spot.
+      n.style.left = (Number(BigInt("0x" + String(m.r).replace(/^0x/, "")) >> 203n) / 2 ** 53 * 100) + "%";
       if (marks.length <= 20) n.append(el("span", { textContent: String(m.j + 1) }));
       b.append(n);
     });
