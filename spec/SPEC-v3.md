@@ -85,7 +85,11 @@ Checking current Caixa practice showed two problems with the LucentDraw/2 encodi
 - **Value strings:** `"<contest>:" + numbers joined by "-"`, each number written as a **plain decimal integer without leading zeros**.
   - Mega-Sena: the six numbers in ascending order, e.g. `"3001:4-12-23-35-41-58"`.
   - Loteria Federal: the five prizes in prize order (1st to 5th), e.g. `"6120:17469-81210-7767-41317-79412"`.
-- **Draw calendar:** the agent's assumed calendar is outdated. Reported in 2026: Federal on Wednesday at 20:00 and Sunday at 11:00; Mega-Sena with occasional extra draws on other days and delays of hours. The calendar is only a suggestion the operator can edit, and the operator confirms the contest identifier from Caixa's site. **The owner confirms the current calendar before release.**
+- **No draw calendar (owner decision, 2026-11-19).** Draw days and times change (Federal on Wednesday 20:00 and Sunday 11:00 in 2026, Mega-Sena with extra draws and delays of hours), so the app keeps no calendar and suggests neither a contest nor a date. This replaces the calendar and contest suggestion of SPEC.md 4.5.
+  - The operator types the contest identifier as shown on Caixa's site, next to a link to `https://loterias.caixa.gov.br` and the hint: "Use o número do PRÓXIMO concurso, anunciado no site da Caixa. Um concurso já sorteado não serve: o resultado já seria conhecido."
+  - At seal time, if Caixa or the relay already returns a result for that contest, the app refuses to seal ("Este concurso já foi sorteado"). This is best effort only; the timing check of section 7 is the real protection.
+  - No countdown for lottery sources. Because no draw time is known, the "lottery + drand" presets of SPEC.md 4.6 are not offered (the drand round must follow the draw); the verifier still accepts such certificates.
+- **Evidence (MUST):** `randomness.megasena` = `{ "contest", "numbers": [int × 6], "drawDate": "YYYY-MM-DD", "source" }`, `randomness.federal` = `{ "contest", "prizes": [int × 5, each 0–999999], "drawDate", "source" }`, with `contest` equal to the sealed string. `drawDate` is the official draw date, from the Caixa / relay result or typed by the operator with the numbers in manual mode (`"source": "manual"`).
 
 ## 5. Modes
 
@@ -115,6 +119,7 @@ As SPEC.md section 9, with these changes for `v: "LucentDraw/3"`:
 - **Values:** lottery values use the section 4 encoding.
 - **Result:** recompute seed and picks; `result` and `picks` must equal the certificate's.
 - **Display:** show the weights as typed, the integer weights and W, so a reader can follow the arithmetic.
+- **Lottery timing (MUST, all versions, owner decision):** for each `megasena` / `federal` source, a separate check compares the earliest valid anchor time with the **start of the draw day**, 00:00 in America/Sao_Paulo (UTC−3), of the draw date: the official one when the verifier fetched the result, otherwise the certificate's `drawDate`. Earliest anchor before that instant: *passou*; at or after: *falhou*. No anchors: *não verificado*, and the detail shows the operator's `sealedAt` claim next to the draw date so a person can judge. No valid draw date: *não verificado*. The general timing check of SPEC.md 6.4 then covers only `eth` and `drand`.
 
 ## 8. Test vectors (MUST pass in HTML and Python)
 

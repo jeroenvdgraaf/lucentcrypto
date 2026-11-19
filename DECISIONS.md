@@ -1,82 +1,103 @@
 # Decisões de implementação
 
-Pontos em que a SPEC era ambígua, contraditória ou dependia de fatos externos. Em cada caso foi
-escolhida a leitura mais conservadora. Nenhuma decisão altera entradas de hash, nomes de campos
-ou ordem definidos nas seções 3.1, 4, 5 e 9.
+Pontos em que a SPEC (`spec/SPEC.md`, LucentDraw/2) ou a SPEC-v3 (`spec/SPEC-v3.md`, LucentDraw/3) era
+ambígua, contraditória ou dependia de fatos externos. Em cada caso foi escolhida a leitura mais
+conservadora. Nenhuma decisão altera entradas de hash, rótulos, nomes de campos ou ordem marcados
+como MUST.
+
+## Decisões do responsável
+
+1. **Sem calendário de sorteios (2026-11-19).** Substitui o "draw calendar" da SPEC-v3 4 e a sugestão de
+   concurso da SPEC 4.5. A página não guarda calendário, não sugere concurso nem data e não mostra
+   contagem regressiva para loterias. O operador digita o concurso como aparece no site da Caixa, com
+   link para `https://loterias.caixa.gov.br` e o aviso de usar o PRÓXIMO concurso. O calendário antigo
+   guardado no navegador é ignorado. A SPEC-v3 4 e 7 foram atualizadas.
+2. **"Este concurso já foi sorteado".** Ao lacrar, a página consulta a Caixa (e o relay, se configurado)
+   com tempo máximo de 8 s; se houver resultado, recusa o lacre. Falha de rede não impede o lacre: é só
+   melhor esforço.
+3. **Checagem de horário das loterias** (HTML e Python, todas as versões): o carimbo de tempo válido mais
+   antigo precisa ser anterior às 00:00 de Brasília (UTC−3) da data do sorteio. Vale a data oficial
+   quando a conferência obteve o resultado; senão, a `drawDate` do certificado. Sem carimbo: *não
+   verificado*, mostrando o `sealedAt` declarado ao lado da data. Id da checagem: `megasenaTiming` /
+   `federalTiming`. A checagem geral `timing` passa a cobrir só `eth` e `drand` (e não aparece num
+   sorteio só com loteria).
 
 ## A confirmar pelo responsável
 
-1. **Endpoint da Caixa** (`https://servicebus2.caixa.gov.br/portaldeloterias/api/<jogo>/<concurso>`):
-   usado só como descrito na SPEC 4.5. Nada foi testado contra o serviço real. O formato da resposta
-   foi assumido como `numero`, `dataApuracao` (`dd/mm/aaaa`) e `listaDezenas` (com
-   `dezenasSorteadasOrdemSorteio` como alternativa). Para a Loteria Federal assume-se que
-   `listaDezenas` traz os 5 bilhetes **na ordem dos prêmios** e que podem vir com 6 dígitos com zero
-   à esquerda (são reduzidos a 5). Se o formato não bater, o resultado é tratado como indisponível e
-   a página pede a entrada manual. **A confirmar pelo responsável.**
-2. **Calendário de sorteios** (valores padrão, editáveis em Detalhes técnicos):
-   Mega-Sena às terças, quintas e sábados, 21:00; Loteria Federal às quartas e sábados, 19:00
-   (horário de Brasília, UTC−3 fixo). A SPEC pede para conferir o calendário atual, mas não o dá, e
-   esta implementação não teve acesso à Caixa. **A confirmar pelo responsável.**
-3. **Número do concurso sugerido:** sem um concurso de referência conhecido (número + data), a
-   página sugere só a **data**; o número só é calculado se o responsável preencher a referência no
-   calendário. Feriados e sorteios especiais não são previstos: o operador sempre confirma.
-4. **Páginas oficiais de resultado** usadas como link: `https://loterias.caixa.gov.br/Paginas/Mega-Sena.aspx`
-   e `.../Federal.aspx`. **A confirmar pelo responsável.**
-5. **TSAs padrão** (freetsa.org, DigiCert) e agendas OpenTimestamps: copiadas da SPEC / do uso comum;
-   não testadas ao vivo.
+4. **Endpoint da Caixa** (`https://servicebus2.caixa.gov.br/portaldeloterias/api/<jogo>/<concurso>`):
+   nada foi testado contra o serviço real. Formato assumido: `numero`, `dataApuracao` (`dd/mm/aaaa`),
+   `listaDezenas` (ou `dezenasSorteadasOrdemSorteio`); para a Federal, os 5 bilhetes **na ordem dos
+   prêmios**. Para LucentDraw/3 assume-se que um concurso com sufixo ("6054-2") é pedido com o sufixo na
+   URL e que `numero` vem igual ao texto do concurso; se não vier, o resultado é tratado como
+   indisponível e a página pede a entrada manual.
+5. **Páginas oficiais de resultado** usadas como link: `https://loterias.caixa.gov.br/Paginas/Mega-Sena.aspx`
+   e `.../Federal.aspx`.
+6. **TSAs padrão** (freetsa.org, DigiCert) e agendas OpenTimestamps: não testadas ao vivo.
 
-## Protocolo e conferência
+## LucentDraw/3
 
-6. **Veredito com três estados.** A SPEC 9.7 só define "confere" e "não confere". Itens *atenção* e
-   *não verificado* (sem carimbo de tempo, fonte fora do ar) não são falhas, mas também não permitem
-   dizer "confere". Foi adicionado um terceiro texto, "Conferência incompleta: nenhum item falhou, mas
-   estes não puderam ser confirmados: …". A página nunca diz "confere" sem que tudo tenha passado
-   (exceção prevista na SPEC: loteria *não verificada* com a caixa "conferi a olho" marcada, ou
-   `--confirm-lottery` no Python). Consequência: sem carimbo de tempo, o melhor veredito possível é
-   "incompleta". `verify_draw.py` sai com 0 = confere, 1 = não confere, 2 = incompleta.
-7. **Lacre sem aleatoriedade** (SPEC 3.3): fontes ficam *não verificado* ("ainda não registrado"),
-   não *falhou*.
-8. **Rodada drand "at or after"**: `r = ceil((t − genesis) / 3) + 1`. O protótipo usava `floor + 1`,
-   que pode escolher a rodada *anterior* ao instante pedido; corrigido.
-9. **Lacre com loteria**: o sorteio do concurso precisa ser **pelo menos 2 h depois do lacre**
-   (a SPEC fala em sugerir; aqui também é exigido ao lacrar).
-10. **Horário da aleatoriedade na comparação com o carimbo** (SPEC 6.4): Ethereum = timestamp do bloco
-    alvo (ou `notBefore + 1` se o bloco não puder ser lido); drand = horário da rodada; loteria = data do
-    sorteio (do resultado oficial se obtido, senão do certificado) + hora do calendário assumido.
-    Só tokens RFC 3161 que carimbam o compromisso (e cuja assinatura não falhou, no Python) entram na
-    comparação. A prova OpenTimestamps não entra (não é validada aqui; use `ots verify`).
-11. **Validação estrita do spec v2**: campos de topo e de cada fonte devem ser exatamente os da SPEC
-    (campos extras falham), `chain`/`rule`/`chainHash` com os valores fixos, `confirmations ≥ 1`.
-    Para LucentDraw/1 a validação é a do protótipo (aceita `rule`/`value` livres, só `eth`/`drand`).
-12. **"Trim"** = conjunto de espaços de `String.prototype.trim` do ECMAScript, também no Python
-    (o `str.strip()` do Python difere em `U+FEFF` e `U+001C–U+001F`, `U+0085`).
-13. **Evidência inconsistente**: se o hash do bloco confere mas `timestamp`/`parentTimestamp` no
-    certificado diferem da cadeia, a checagem `eth` falha.
-14. **Bloco com menos confirmações que o exigido** na hora da conferência: *atenção*, não falha.
-15. **Reorganização**: se o bloco canônico na altura do alvo mudou, `eth` falha com mensagem explícita
-    e a ordem é recalculada com o bloco canônico (que passa a valer, SPEC 4.1); `order` então falha e
-    a ordem correta é mostrada.
-16. **Fonte devolve beacon com BLS inválido**: na página, a biblioteca recusa e a checagem fica *não
-    verificado* (a falha é da fonte, não do certificado); no Python, a checagem `drand` falha.
-17. **BLS no Python sem dependências**: a SPEC exige biblioteca padrão e verificação BLS. Foi escrita
-    uma verificação BLS12-381 em Python puro (hash_to_curve RFC 9380, emparelhamento ate), testada
-    contra vetores da RFC 9380 e assinaturas geradas com @noble/curves. Leva cerca de 1 s por rodada.
-18. **Assinatura das TSAs no Python**: via binário `openssl` (`cms -verify -noverify` para a
-    assinatura, `ts -verify` para a cadeia). Assinatura inválida = falha; cadeia sem CA confiável =
-    atenção; `openssl` ausente = só leitura, com nota. Use `--tsa-ca` para a CA da freetsa.org.
+7. **Gramática dos pesos**: só algarismos ASCII `0–9` (o `\d` da referência Python aceitaria algarismos
+   de outras escritas, como `٣`); espaço ou tab permitidos só em volta de `/` (como o `\s*` da
+   referência, mas só ASCII). "Trim" é o de `String.prototype.trim` (decisão 22). Códigos de erro:
+   vazio, sintaxe, negativo, denominador zero.
+8. **Frações reduzidas** antes do mmc, como a referência (`Fraction`). O resultado não depende disso
+   (a regra é invariante a um fator comum), mas o W mostrado sim; assim W bate com os vetores (489).
+9. **Booleano no spec**: a SPEC 3.1 proíbe "booleans as numbers"; em LucentDraw/3 um booleano é aceito
+   **só** em `spec.task.replace`. Em /1 e /2 nenhum booleano é aceito (um spec /2 com `task.replace` não
+   tem compromisso calculável).
+10. **Concurso em texto**: `^[1-9][0-9]*(-[1-9][0-9]*)?$` (sem zeros à esquerda, um sufixo opcional), para
+    que o `:` e o `-` da string de valor não fiquem ambíguos.
+11. **Bilhetes da Federal em LucentDraw/3**: inteiros de 0 a 999999 na evidência (`prizes`), não texto; a
+    Mega-Sena continua com 6 inteiros distintos de 1 a 60. Na conferência, um certificado v3 com bilhetes
+    em texto com zeros (formato /2) falha.
+12. **Relay**: nova rota `/v3/lottery/<jogo>/<concurso>` no formato v3; `/v1/lottery` ficou igual para
+    certificados e lacres /2.
+13. **Campos extras**: `spec` e `task` precisam ter exatamente os campos da SPEC-v3 2. Um certificado v3
+    sem `result`/`picks` mas com `order` falha em `result`. Para `picks` a comparação é estrita (no
+    Python, `True` não vale como `1`).
+14. **`preset`** só é conferido como um dos quatro valores; a conferência não exige que as opções
+    correspondam ao preset (a SPEC-v3 diz que ele é informativo).
+15. **Mínimos da interface**: a Lista exige pelo menos 2 opções com nome (a SPEC permite 1); linhas sem
+    nome são ignoradas; moeda, dados e listas com reposição vão até 1000 resultados. A conferência
+    segue só a SPEC.
+16. **Modo padrão**: Verificável quando a página vem de um endereço web, Rápido quando aberta de um
+    arquivo local; a última escolha fica no navegador.
+17. **Barra de intervalos**: com reposição, uma barra com todas as agulhas; sem reposição, uma barra por
+    escolha (as 8 primeiras, o resto num botão). Larguras e agulhas são calculadas em BigInt e só
+    convertidas para porcentagem na hora de desenhar; a regra em si não usa ponto flutuante.
+18. **Lacres LucentDraw/2 guardados antes da atualização** continuam a ser concluídos pela regra /2 (ordem).
+    Novos lacres são sempre /3.
+19. **"Loteria + drand"** não é mais oferecido (sem calendário não há horário seguro para a rodada drand);
+    a conferência continua aceitando certificados com essa combinação.
+20. **Aviso de milhar**: um peso como `1.000` ou `1,000` vale 1 pela gramática; a lista mostra um aviso
+    ("para mil, digite 1000"), sem mudar o valor.
+
+## Protocolo e conferência (de LucentDraw/2, continuam valendo)
+
+21. **Veredito com três estados.** A SPEC 9.7 só define "confere" e "não confere". Itens *atenção* e
+    *não verificado* não são falhas, mas também não permitem dizer "confere": "Conferência incompleta:
+    nenhum item falhou, mas estes não puderam ser confirmados: …". Exceção: loteria *não verificada* com
+    "conferi a olho" marcado (`--confirm-lottery` no Python). `verify_draw.py` sai com 0 = confere,
+    1 = não confere, 2 = incompleta.
+22. **"Trim"** = conjunto de espaços de `String.prototype.trim` do ECMAScript, também no Python.
+23. **Lacre sem aleatoriedade**: fontes ficam *não verificado* ("ainda não registrado"), não *falhou*.
+24. **Rodada drand "at or after"**: `r = ceil((t − genesis) / 3) + 1`.
+25. **Horário da aleatoriedade** (SPEC 6.4): Ethereum = timestamp do bloco alvo (ou `notBefore + 1` se o
+    bloco não puder ser lido); drand = horário da rodada; loterias: decisão 3. Só tokens RFC 3161 que
+    carimbam o compromisso (e cuja assinatura não falhou, no Python) entram na comparação.
+26. **Validação estrita** de campos de topo e de cada fonte em /2 e /3; para /1, a do protótipo.
+27. **Evidência Ethereum inconsistente** falha; bloco com menos confirmações que o exigido é *atenção*;
+    reorganização falha com mensagem explícita e o resultado é recalculado com o bloco canônico.
+28. **Beacon com BLS inválido**: na página, *não verificado* (a falha é da fonte); no Python, falha.
+29. **BLS em Python puro** (RFC 9380), cerca de 1 s por rodada; **TSAs no Python** via `openssl`.
 
 ## Interface e segurança
 
-19. **Fontes Google removidas**: a SPEC 8 limita pedidos de rede às fontes, endpoints e relay; o
-    protótipo carregava Google Fonts. A página usa fontes do sistema.
-20. **Informação da cadeia quicknet fixada na página**: a verificação BLS usa a chave pública embutida,
-    sem buscar `/info`. O `drand-client` 1.4.2 não exporta `verifyBeacon`; a página passa um
-    ChainClient próprio a `fetchBeacon` (com fallback api.drand.sh → drand.cloudflare.com).
-21. **Um lacre por ID**: a lista de IDs lacrados fica no localStorage do navegador; um ID já lacrado é
-    recusado e o botão "Novo sorteio com outro ID" limpa o campo. Vários lacres pendentes ficam
-    guardados e podem ser reabertos.
-22. **Entrada manual**: só aparece quando a busca automática falha (ou 6 h após o horário previsto
-    sem resultado) e exige marcar "Conferi estes números na página oficial".
-23. **ICP-Brasil**: presente na configuração do relay (`enabled: false`), sem código que dependa dela.
-    Autenticação junto a uma ACT não foi implementada.
-24. **Não foi construído** nada da SPEC 12 (sorteio ponderado, grupos, FilaLúcida, interface em inglês etc.).
+30. **Sem fontes externas**: a página usa fontes do sistema; o único script de terceiros é o
+    `drand-client` fixado por versão e hash.
+31. **Chave da quicknet fixada na página**; `fetchBeacon` recebe um ChainClient próprio com fallback.
+32. **Um lacre por ID** no localStorage; "Novo sorteio com outro ID" troca o ID sugerido.
+33. **Entrada manual de loteria**: aparece quando a busca automática falha, ou pelo botão "Inserir o
+    resultado manualmente"; exige números, data e a confirmação de que foram conferidos na página oficial.
+34. **ICP-Brasil**: presente na configuração do relay (`enabled: false`), sem código que dependa dela.
+35. **Não foi construído** o resto da SPEC 12 (grupos de prioridade, FilaLúcida, interface em inglês etc.).
