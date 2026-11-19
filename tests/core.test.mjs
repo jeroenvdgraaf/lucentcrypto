@@ -60,9 +60,9 @@ test("drand round selection is 'at or after' (SPEC 4.2)", () => {
     const r = C.planSources(preset, seal).drand.round;
     assert.ok(C.drandRoundTime(r) >= seal + lead && C.drandRoundTime(r - 1) < seal + lead, preset);
   }
-  const drawMs = C.brtMs("2026-11-11", "19:00");
-  const r = C.planSources("federal+drand", seal, { contest: 5900, drawMs }).drand.round;
-  assert.ok(C.drandRoundTime(r) >= drawMs + 7200000 && C.drandRoundTime(r - 1) < drawMs + 7200000);
+  // Sem calendário (decisão do responsável) não há horário seguro para loteria + drand: recusado.
+  assert.throws(() => C.planSources("federal+drand", seal, { contest: "5900" }));
+  assert.deepEqual(C.PRESETS.scheduled, ["federal", "megasena"]);
 });
 
 test("planSources produces exactly the spec fields of SPEC 4", () => {
@@ -75,21 +75,6 @@ test("planSources produces exactly the spec fields of SPEC 4", () => {
 test("lottery value strings (SPEC 4.3, 4.4)", () => {
   assert.equal(C.megasenaValue(3001, [58, 4, 41, 12, 35, 23]), "3001:04-12-23-35-41-58");
   assert.equal(C.federalValue(5900, ["01234", "56789", "13579", "24680", "97531"]), "5900:01234-56789-13579-24680-97531");
-});
-
-test("lottery calendar suggestion: first draw >= 2 h after the seal", () => {
-  const cal = { megasena: { weekdays: [2, 4, 6], time: "21:00", ref: { contest: 3000, date: "2026-11-07" } }, federal: { weekdays: [3, 6], time: "19:00", ref: null } };
-  // Segunda 09/11/2026 12:00 BRT -> Mega-Sena terça 10/11, concurso 3001
-  let s = C.suggestContest("megasena", C.brtMs("2026-11-09", "12:00"), cal);
-  assert.deepEqual([s.date, s.contest], ["2026-11-10", 3001]);
-  // Terça 19:30 BRT: menos de 2 h antes das 21:00 -> quinta 12/11, concurso 3002
-  s = C.suggestContest("megasena", C.brtMs("2026-11-10", "19:30"), cal);
-  assert.deepEqual([s.date, s.contest], ["2026-11-12", 3002]);
-  assert.equal(C.dateForContest("megasena", 3003, cal), "2026-11-14");
-  // Sem referência: sugere a data, não o número.
-  s = C.suggestContest("federal", C.brtMs("2026-11-09", "12:00"), cal);
-  assert.deepEqual([s.date, s.contest], ["2026-11-11", null]);
-  assert.equal(s.drawMs, Date.UTC(2026, 10, 11, 22, 0));
 });
 
 test("Caixa normalization and manual entry", () => {

@@ -192,15 +192,46 @@ test("v3 Caixa normalization, relay route and manual entry", async () => {
   assert.deepEqual(C.parseManualLottery("federal", "017469 81210 7767 41317 79412", "2027-01-20", C.V3).prizes, [17469, 81210, 7767, 41317, 79412]);
   assert.ok(C.parseManualLottery("federal", "1234567 1 2 3 4", "2027-01-20", C.V3).error);
 });
-test("calendar defaults (SPEC-v3 4): Federal Wed 20:00 and Sun 11:00; unknown weekday has no assumed time", () => {
-  assert.deepEqual(C.LOTTERY.calendar.federal.slots, [{ wd: 3, time: "20:00" }, { wd: 0, time: "11:00" }]);
-  assert.equal(C.lotteryTimeOf("federal", "2027-01-20"), "20:00"); // quarta
-  assert.equal(C.lotteryTimeOf("federal", "2027-01-24"), "11:00"); // domingo
-  assert.equal(C.lotteryDrawTime("federal", "2027-01-21"), null);   // quinta: sorteio extra, horário desconhecido
-  const s = C.suggestContest("federal", C.brtMs("2027-01-20", "18:30"));
-  assert.deepEqual([s.date, s.time], ["2027-01-24", "11:00"]);
-  // formato antigo do calendário continua aceito
-  assert.deepEqual(C.calSlots({ weekdays: [2, 4], time: "21:00" }), [{ wd: 2, time: "21:00" }, { wd: 4, time: "21:00" }]);
+test("no draw calendar (owner decision): draw day starts at 00:00 in Brasília", () => {
+  assert.equal(C.LOTTERY.calendar, undefined);
+  for (const k of ["suggestContest", "lotteryDrawTime", "contestForDate", "dateForContest"]) assert.equal(C[k], undefined, k);
+  assert.equal(C.drawDayStart("2027-01-20"), Date.UTC(2027, 0, 20, 3, 0));
+  assert.equal(C.drawDayStart("2027-02-30"), null);
+  assert.equal(C.drawDayStart(""), null);
+});
+
+// ---- horário das loterias: o carimbo mais antigo precisa ser anterior ao início do dia do sorteio
+const withDrawDate = (key, drawDate) => { const w = clone(WORLD); w.lottery[key].drawDate = drawDate; return depsFor(w); };
+test("lottery timing: seal stamped before the draw day passes", async () => {
+  const rep = await verify(cert("v3-scheduled-federal-order"));
+  assert.equal(statusOf(rep).federalTiming, "passou");
+  assert.ok(!("timing" in statusOf(rep)), "sem eth/drand não há checagem geral de horário");
+  assert.match(rep.checks.find((x) => x.id === "federalTiming").detail, /< sorteio em 2027-01-20 \(data oficial\); início do dia 2027-01-20T03:00:00Z/);
+});
+test("lottery timing: seal stamped on or after the draw day fails", async () => {
+  const c = cert("v3-scheduled-federal-order");
+  const brtDay = (ms) => new Date(ms - 3 * 3600e3).toISOString().slice(0, 10);
+  const stamp = C.isoToMs(c.anchors[0].time), sameDay = brtDay(stamp), dayAfter = brtDay(stamp + 86400e3);
+  for (const day of [sameDay, "2026-11-01"]) {
+    const rep = await verify(c, {}, withDrawDate("federal/6120", day));
+    assert.equal(statusOf(rep).federalTiming, "falhou", day);
+    assert.deepEqual(failing(rep), ["federalTiming"], day);
+    assert.equal(rep.verdict, "nao_confere");
+  }
+  // um dia depois do carimbo: passa
+  assert.equal(statusOf(await verify(c, {}, withDrawDate("federal/6120", dayAfter))).federalTiming, "passou");
+  // a data oficial vale; sem a Caixa, usa a data do certificado
+  const off = await verify(c, {}, depsFor(WORLD, { unreachable: ["federal"] }));
+  assert.match(off.checks.find((x) => x.id === "federalTiming").detail, /data certificado/);
+});
+test("lottery timing: no anchors gives 'não verificado' with the sealedAt claim next to the draw date", async () => {
+  const c = cert("v3-scheduled-megasena-dice-manual");
+  const rep = await verify(c);
+  const t = rep.checks.find((x) => x.id === "megasenaTiming");
+  assert.equal(t.status, "nao_verificado");
+  assert.ok(t.detail.includes(c.sealedAt) && t.detail.includes("sorteio em 2027-01-21"), t.detail);
+  const seal = await verify(cert("v3-seal-only-coin"));
+  assert.equal(statusOf(seal).timing, "atencao");
 });
 
 // ---- conferência de certificados v3
@@ -230,7 +261,8 @@ test("v3 Mega-Sena with suffixed contest, manual entry, no anchor: incompleto, n
   const rep = await verify(cert("v3-scheduled-megasena-dice-manual"));
   assert.deepEqual(failing(rep), []);
   assert.match(rep.checks.find((x) => x.id === "megasena").title, /3010-2.*inserido manualmente/);
-  assert.equal(statusOf(rep).timing, "atencao");
+  assert.equal(statusOf(rep).megasenaTiming, "nao_verificado");
+  assert.equal(rep.verdict, "incompleto");
   const rep2 = await verify(cert("v3-scheduled-megasena-dice-manual"), {}, depsFor(WORLD, { unreachable: ["megasena"] }));
   assert.equal(statusOf(rep2).megasena, "nao_verificado");
   assert.ok(rep2.checks.find((x) => x.id === "megasena").detail.includes("3010-2:1-7-13-22-48-60"));

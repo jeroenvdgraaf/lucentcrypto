@@ -556,6 +556,15 @@ const STR = {
     timingPartial: "Horário de alguma fonte desconhecido; comparação incompleta.",
     timingUnknown: (l) => l + ": horário desconhecido",
     timingOk: "O carimbo de tempo mais antigo é anterior à aleatoriedade.",
+    lotTimeOk: (l, c) => l + ", concurso " + c + ": o carimbo de tempo mais antigo é anterior ao dia do sorteio.",
+    lotTimeBad: (l, c) => l + ", concurso " + c + ": o carimbo de tempo mais antigo não é anterior ao dia do sorteio.",
+    lotTimeNone: (l, c) => l + ", concurso " + c + ": sem carimbo de tempo; não é possível provar que o lacre veio antes do dia do sorteio.",
+    lotTimeNoneD: (s) => "lacre declarado em " + s + " (declaração do operador, não verificada)",
+    lotTimeNoDate: (l, c) => l + ", concurso " + c + ": data do sorteio desconhecida; horário não comparado.",
+    lotTimeNoDateSeal: "o resultado ainda não foi registrado",
+    lotTimeNoDateD: "o certificado não traz uma data de sorteio válida",
+    lotTimeD: (d, o, t) => "sorteio em " + d + " (data " + o + "); início do dia " + t + " (00:00 em Brasília)",
+    lotTimeCmp: (e, before) => "carimbo mais antigo " + e + (before ? " <" : " ≥"),
     timingBad: "O carimbo de tempo mais antigo não é anterior à aleatoriedade.",
     labels: { eth: "bloco Ethereum", drand: "rodada drand", megasena: "sorteio da Mega-Sena", federal: "sorteio da Loteria Federal" },
     specOkV3: (n, W, sum) => n + (n === 1 ? " opção" : " opções") + " · W = " + W + " · " + sum,
@@ -679,21 +688,17 @@ const ETH = {
   genesis: 1606824023, slot: 12, confirmations: 1, chain: "ethereum-mainnet", rule: "first-block-after",
   rpcs: ["https://ethereum-rpc.publicnode.com", "https://eth.llamarpc.com", "https://1rpc.io/eth"],
 };
-// Endpoint não oficial e calendário: A CONFIRMAR PELO RESPONSÁVEL (DECISIONS.md).
+// Endpoint não oficial: A CONFIRMAR PELO RESPONSÁVEL (DECISIONS.md). Sem calendário de sorteios (decisão do
+// responsável, SPEC-v3 4): o operador digita o concurso; a conferência usa o início do dia do sorteio.
 const LOTTERY = {
   api: "https://servicebus2.caixa.gov.br/portaldeloterias/api/",
   games: {
     megasena: { label: "Mega-Sena", page: "https://loterias.caixa.gov.br/Paginas/Mega-Sena.aspx" },
     federal: { label: "Loteria Federal", page: "https://loterias.caixa.gov.br/Paginas/Federal.aspx" },
   },
-  // Só uma sugestão editável (SPEC-v3 4). wd: dia da semana (0 = domingo), hora de Brasília.
-  calendar: {
-    megasena: { slots: [{ wd: 2, time: "21:00" }, { wd: 4, time: "21:00" }, { wd: 6, time: "21:00" }], ref: null },
-    federal: { slots: [{ wd: 3, time: "20:00" }, { wd: 0, time: "11:00" }], ref: null },
-  },
   tzOffsetMin: -180, // horário de Brasília, sem horário de verão desde 2019
 };
-const LEAD_MS = { drand: 6000, "eth+drand": 36000, lotteryDrand: 2 * 3600 * 1000, lotteryMin: 2 * 3600 * 1000 };
+const LEAD_MS = { drand: 6000, "eth+drand": 36000 };
 const OID = { sha256: "2.16.840.1.101.3.4.2.1", signedData: "1.2.840.113549.1.7.2", tstInfo: "1.2.840.113549.1.9.16.1.4" };
 
 // ---- bytes, hashes
@@ -950,68 +955,22 @@ function fmtBrt(ms) {
 }
 const fmtUnix = (s) => msToIso(s * 1000);
 
-// ---- calendário das loterias (SPEC 4.5)
+// ---- data do sorteio das loterias (SPEC-v3 4, decisão do responsável: sem calendário)
 const tzMs = LOTTERY.tzOffsetMin * 60000;
-function brtParts(ms) { const d = new Date(ms + tzMs); return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate(), wd: d.getUTCDay() }; }
 function brtMs(dateStr, time) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr || ""), t = /^(\d{1,2}):(\d{2})$/.exec(time || "");
   if (!m || !t) return null;
-  return Date.UTC(+m[1], +m[2] - 1, +m[3], +t[1], +t[2]) - tzMs;
+  const ms = Date.UTC(+m[1], +m[2] - 1, +m[3], +t[1], +t[2]);
+  if (new Date(ms).toISOString().slice(0, 10) !== dateStr) return null; // rejeita 2027-02-30
+  return ms - tzMs;
 }
-const dateStrOf = (p) => p.y + "-" + pad(p.m, 2) + "-" + pad(p.d, 2);
-// Calendário: { slots: [{ wd, time }] } (atual) ou { weekdays, time } (formato antigo, ainda aceito).
-const calSlots = (cal) => (cal && Array.isArray(cal.slots) ? cal.slots : ((cal && cal.weekdays) || []).map((wd) => ({ wd, time: cal.time })));
-function weekdayOf(dateStr) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr || "");
-  return m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay() : null;
-}
-// Hora prevista do sorteio numa data, pelo calendário; null se esse dia da semana não está no calendário.
-function lotteryTimeOf(game, dateStr, calendar = LOTTERY.calendar) {
-  const wd = weekdayOf(dateStr), slot = calSlots(calendar[game]).find((s) => s.wd === wd);
-  return slot ? slot.time : null;
-}
-function lotteryDrawTime(game, dateStr, calendar = LOTTERY.calendar) {
-  const t = lotteryTimeOf(game, dateStr, calendar);
-  return t ? brtMs(dateStr, t) : null;
-}
-// Datas de sorteio a partir de um dia (inclusive), segundo o calendário.
-function* drawDates(game, fromDateStr, calendar = LOTTERY.calendar) {
-  const days = calSlots(calendar[game]).map((s) => s.wd);
-  let ms = brtMs(fromDateStr, "12:00");
-  for (let i = 0; i < 3700; i++, ms += 86400000) {
-    const p = brtParts(ms);
-    if (days.includes(p.wd)) yield dateStrOf(p);
-  }
-}
-// Primeiro sorteio pelo menos 2 h depois do lacre; número do concurso se houver referência.
-function suggestContest(game, sealMs, calendar = LOTTERY.calendar) {
-  const min = sealMs + LEAD_MS.lotteryMin;
-  let date = null;
-  for (const d of drawDates(game, dateStrOf(brtParts(sealMs)), calendar)) {
-    if (lotteryDrawTime(game, d, calendar) >= min) { date = d; break; }
-  }
-  return { date, time: date && lotteryTimeOf(game, date, calendar), drawMs: date && lotteryDrawTime(game, date, calendar), contest: date ? contestForDate(game, date, calendar) : null };
-}
-function contestForDate(game, date, calendar = LOTTERY.calendar) {
-  const ref = calendar[game].ref;
-  if (!ref || !Number.isInteger(ref.contest) || !ref.date || date < ref.date) return null;
-  let n = ref.contest;
-  for (const d of drawDates(game, ref.date, calendar)) { if (d === ref.date) continue; if (d > date) break; n++; }
-  return n;
-}
-function dateForContest(game, contest, calendar = LOTTERY.calendar) {
-  const ref = calendar[game].ref;
-  if (!ref || !Number.isInteger(ref.contest) || !ref.date || contest < ref.contest) return null;
-  if (contest === ref.contest) return ref.date;
-  let n = ref.contest;
-  for (const d of drawDates(game, ref.date, calendar)) { if (d === ref.date) continue; if (++n === contest) return d; }
-  return null;
-}
+// Início do dia do sorteio: 00:00 em America/Sao_Paulo (UTC−3). Conservador: o sorteio não acontece antes.
+const drawDayStart = (dateStr) => brtMs(dateStr, "00:00");
 
 // ---- montagem do spec no lacre (SPEC 3.2, 4)
 const PRESETS = {
   live: ["eth", "drand", "eth+drand"],
-  scheduled: ["federal", "megasena", "federal+drand", "megasena+drand"],
+  scheduled: ["federal", "megasena"],
 };
 function planSources(preset, sealMs, lottery) {
   const parts = preset.split("+"), sources = {};
@@ -1021,7 +980,9 @@ function planSources(preset, sealMs, lottery) {
   const game = parts.find((p) => p === "megasena" || p === "federal");
   if (game) sources[game] = { contest: lottery.contest };
   if (parts.includes("drand")) {
-    const at = game ? lottery.drawMs + LEAD_MS.lotteryDrand : sealMs + (parts.includes("eth") ? LEAD_MS["eth+drand"] : LEAD_MS.drand);
+    // Loteria + drand não é oferecido: sem calendário não há horário seguro para a rodada (DECISIONS.md).
+    if (game) throw new Error("loteria + drand não é suportado");
+    const at = sealMs + (parts.includes("eth") ? LEAD_MS["eth+drand"] : LEAD_MS.drand);
     sources.drand = { chain: "quicknet", chainHash: QUICKNET.hash, round: drandRoundAtOrAfter(at) };
   }
   return sources;
@@ -1428,7 +1389,7 @@ async function verifyCertificate(cert, deps = {}, opts = {}) {
 
   const sources = spec.sources && typeof spec.sources === "object" && !Array.isArray(spec.sources) ? spec.sources : {};
   const rand = cert.randomness && typeof cert.randomness === "object" ? cert.randomness : {};
-  const indep = {}, claimed = {}, rtimes = {};
+  const indep = {}, claimed = {}, rtimes = {}, drawDates = {}; // rtimes: só eth e drand
   const obj = (x) => (x && typeof x === "object" && !Array.isArray(x) ? x : null);
   // Um lacre (SPEC 3.3): sem aleatoriedade, sem semente e sem ordem. Fontes ficam pendentes, não falham.
   const isSeal = !Object.keys(rand).length && !("seed" in cert) && !("order" in cert) && !("result" in cert) && !("picks" in cert);
@@ -1487,15 +1448,13 @@ async function verifyCertificate(cert, deps = {}, opts = {}) {
     const manual = ev && ev.source === "manual" ? K.lotManual : "";
     if (!okEv) { add(game, missing, isSeal ? K.sealPending(label + ", concurso " + contest) : K.lotMissing(label, contest)); continue; }
     claimed[game] = lotteryValue(game, contest, ev, v);
-    const t = lotteryDrawTime(game, ev.drawDate || "");
-    if (t) rtimes[game] = t / 1000;
+    if (drawDayStart(ev.drawDate)) drawDates[game] = [ev.drawDate, "certificado"];
     let f = null, err = null;
     try { if (!deps.lottery) throw new Error("não consultado"); f = await deps.lottery(game, contest); } catch (e) { err = e; }
     if (f && !err) {
       const off = lotteryValue(game, contest, f, v);
       indep[game] = off;
-      const t2 = f.drawDate && lotteryDrawTime(game, f.drawDate);
-      if (t2) rtimes[game] = t2 / 1000;
+      if (drawDayStart(f.drawDate)) drawDates[game] = [f.drawDate, "oficial"];
       if (off === claimed[game]) add(game, STATUS.PASS, K.lotOk(label, contest, manual), off + " · " + link);
       else add(game, STATUS.FAIL, K.lotBad(label, contest, manual), "oficial " + off + " · certificado " + claimed[game] + " · " + link);
     } else {
@@ -1557,15 +1516,29 @@ async function verifyCertificate(cert, deps = {}, opts = {}) {
     if (bad.length) add("anchors", STATUS.FAIL, K.anchorsBad, bad.concat(notes).join("; "));
     else add("anchors", STATUS.PASS, K.anchorsOk, notes.join("; "));
   }
-  const tkeys = keys.filter((k) => k in rtimes), noTime = keys.filter((k) => !(k in rtimes));
-  const deadline = tkeys.length ? Math.min(...tkeys.map((k) => rtimes[k])) : null;
-  if (!times.length) add("timing", STATUS.WARN, K.timingNone, deadline !== null ? K.timingNoneD(fmtUnix(deadline)) : "");
-  else {
-    const earliest = Math.min(...times); let ok = true;
-    const parts = tkeys.map((k) => { const before = earliest < rtimes[k] * 1000; ok = ok && before; return msToIso(earliest) + (before ? " < " : " ≥ ") + K.labels[k] + " " + fmtUnix(rtimes[k]); });
-    if (noTime.length) add("timing", STATUS.UNVERIFIED, K.timingPartial, parts.concat(noTime.map((k) => K.timingUnknown(K.labels[k]))).join("; "));
-    else if (ok) add("timing", STATUS.PASS, K.timingOk, parts.join("; "));
-    else add("timing", STATUS.FAIL, K.timingBad, parts.join("; "));
+  const live = keys.filter((k) => k === "eth" || k === "drand");
+  if (live.length) {
+    const tkeys = live.filter((k) => k in rtimes), noTime = live.filter((k) => !(k in rtimes));
+    const deadline = tkeys.length ? Math.min(...tkeys.map((k) => rtimes[k])) : null;
+    if (!times.length) add("timing", STATUS.WARN, K.timingNone, deadline !== null ? K.timingNoneD(fmtUnix(deadline)) : "");
+    else {
+      const earliest = Math.min(...times); let ok = true;
+      const parts = tkeys.map((k) => { const before = earliest < rtimes[k] * 1000; ok = ok && before; return msToIso(earliest) + (before ? " < " : " ≥ ") + K.labels[k] + " " + fmtUnix(rtimes[k]); });
+      if (noTime.length) add("timing", STATUS.UNVERIFIED, K.timingPartial, parts.concat(noTime.map((k) => K.timingUnknown(K.labels[k]))).join("; "));
+      else if (ok) add("timing", STATUS.PASS, K.timingOk, parts.join("; "));
+      else add("timing", STATUS.FAIL, K.timingBad, parts.join("; "));
+    }
+  }
+  // Loterias: o carimbo mais antigo precisa ser anterior ao INÍCIO do dia do sorteio (00:00, Brasília).
+  for (const game of ["megasena", "federal"]) {
+    if (!(game in sources)) continue;
+    const label = LOTTERY.games[game].label, contest = sources[game].contest, id = game + "Timing";
+    if (!drawDates[game]) { add(id, STATUS.UNVERIFIED, K.lotTimeNoDate(label, contest), isSeal ? K.lotTimeNoDateSeal : K.lotTimeNoDateD); continue; }
+    const [date, origin] = drawDates[game], day0 = drawDayStart(date);
+    const det = K.lotTimeD(date, origin, fmtUnix(day0 / 1000));
+    if (!times.length) { add(id, STATUS.UNVERIFIED, K.lotTimeNone(label, contest), K.lotTimeNoneD(String(cert.sealedAt)) + " · " + det); continue; }
+    const earliest = Math.min(...times), before = earliest < day0;
+    add(id, before ? STATUS.PASS : STATUS.FAIL, before ? K.lotTimeOk(label, contest) : K.lotTimeBad(label, contest), K.lotTimeCmp(msToIso(earliest), before) + " " + det);
   }
   return done(computed);
 }
@@ -1585,14 +1558,14 @@ const CORE = Object.freeze({
   bytesToHex, hexToBytes, b64ToBytes, sha256hex, sha256Bytes, cmpCodePoints, canon, normText, normHex, parseNames,
   checkJsonTypes, commitmentOf, seedV2, keyV2, orderV2, seedV1, orderV1, megasenaValue, federalValue, lotteryValue,
   sourceValues, drandRoundTime, drandRoundAtOrAfter, ethNextSlotTime, msToIso, isoToMs, fmtBrt, fmtUnix,
-  lotteryDrawTime, suggestContest, contestForDate, dateForContest, brtMs, planSources, buildSpec, validateSpec,
+  drawDayStart, brtMs, planSources, buildSpec, validateSpec,
   findEthTarget, waitEthTarget, makeEthRpc, makeDrandClient, fetchVerifiedBeacon, normalizeCaixa, fetchLottery,
   parseManualLottery, parseTimestampResponse, anchorsFromRelay, tsaName, certificateOf, certFileName, links, ataText,
   verifyCertificate, verdictOf,
   // LucentDraw/3
   V3, TASK_PRESETS, DIE_FACES, COIN, DECK, parseWeight, integerWeights, shareText, seedV3, pickHash, selectPicks,
   quickDraw, presetTask, validateTask, buildSpecV3, contestOkV3, federalOkV3, megasenaValueV3, federalValueV3,
-  lotteryEvidenceOk, calSlots, lotteryTimeOf, isDone, taskSummary, boolPathsOf,
+  lotteryEvidenceOk, isDone, taskSummary, boolPathsOf,
 });
 // ---------------------------------------------------------------- CORE-END
 
