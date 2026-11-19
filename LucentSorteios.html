@@ -153,6 +153,61 @@ code { font-family: var(--mono); font-size: .92em; }
 .check-inline { display: flex; gap: 8px; align-items: start; font-size: 13.5px; }
 .check-inline input { margin-top: 3px; }
 footer { color: var(--muted); font-size: 12.5px; }
+footer a { color: var(--accent); }
+/* LucentDraw/3: abas, tabela de pesos, visuais do resultado e barra de intervalos */
+:root { --seg-a: #d8e3e6; --seg-b: #c3d3d8; --seg-pick: #f3c98d; --needle: #b3261e; --coin: #e0b24f; --coin-edge: #a87a1c; --coin-ink: #5a3d00; --die: #ffffff; --die-ink: #13232b; --card: #ffffff; --card-red: #b3261e; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --seg-a: #22343b; --seg-b: #2d434b; --seg-pick: #7a5520; --needle: #ff8a7a; --coin: #c99a35; --coin-edge: #8a6214; --coin-ink: #2a1c00; --die: #e2ebee; --die-ink: #0d1417; --card: #e9eef0; --card-red: #c0392b; } }
+:root[data-theme="dark"] { --seg-a: #22343b; --seg-b: #2d434b; --seg-pick: #7a5520; --needle: #ff8a7a; --coin: #c99a35; --coin-edge: #8a6214; --coin-ink: #2a1c00; --die: #e2ebee; --die-ink: #0d1417; --card: #e9eef0; --card-red: #c0392b; }
+.tabs { flex-wrap: wrap; }
+.tabs button:disabled { opacity: .4; cursor: not-allowed; }
+@media (max-width: 480px) { .tabs button, .seg label { padding: 7px 10px; font-size: 13.5px; } .toprow { gap: 8px; } }
+.kind { display: grid; gap: 12px; min-width: 0; }
+.grid.single { grid-template-columns: minmax(0, 1fr); }
+.wtable { display: grid; gap: 4px; min-width: 0; }
+.wrow { display: grid; grid-template-columns: minmax(0, 1fr) 5.6em 5em 2.2em; gap: 6px; align-items: center; min-width: 0; }
+.wrow.whead { font: 500 11.5px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.wrow input { padding: 6px 8px; }
+.wrow .wname { overflow-wrap: anywhere; font-weight: 600; }
+.wrow .wshare { font: 500 12.5px var(--mono); text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.wrow .wdel { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 8px; height: 32px; cursor: pointer; font-size: 16px; }
+.wrow .wnote { grid-column: 1 / -1; font-size: 12.5px; color: var(--bad); margin: -2px 0 4px; }
+.wrow .wnote.warn { color: var(--warn); }
+.wrow.off input, .wrow.off .wname { opacity: .5; }
+.wrow.off .wshare { font-style: italic; }
+.wrow.blank .wshare { opacity: .6; }
+.wrow input[aria-invalid="true"] { border-color: var(--bad); background: var(--bad-soft); }
+#doneBox > *, .bars > * { min-width: 0; }
+.visual { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+.visual:empty { display: none; }
+.visual figure { margin: 0; display: grid; justify-items: center; gap: 4px; }
+.visual figcaption { font: 600 12px var(--body); color: var(--muted); }
+.visual svg { width: 76px; height: 76px; display: block; }
+.coin-edge { fill: var(--coin-edge); } .coin-face { fill: var(--coin); } .coin-mark { fill: var(--coin-ink); }
+.die-body { fill: var(--die); stroke: var(--die-ink); stroke-width: 3; } .die-pip { fill: var(--die-ink); }
+.die-num { fill: var(--die-ink); font: 800 30px var(--display); text-anchor: middle; dominant-baseline: central; }
+.pcard { width: 62px; height: 88px; border-radius: 8px; background: var(--card); color: #13232b; border: 1px solid var(--line); box-shadow: 0 1px 3px rgba(0,0,0,.15); position: relative; display: grid; place-items: center; font-family: var(--display); }
+.pcard.red { color: var(--card-red); }
+.pcard .r1, .pcard .r2 { position: absolute; font: 700 14px/1 var(--display); }
+.pcard .r1 { top: 6px; left: 6px; } .pcard .r2 { bottom: 6px; right: 6px; transform: rotate(180deg); }
+.pcard .s { font-size: 30px; line-height: 1; }
+.vmore { font: 600 13px var(--body); color: var(--muted); align-self: center; }
+@media (prefers-reduced-motion: no-preference) {
+  .pop { animation: pop .42s cubic-bezier(.2,.9,.3,1.3) both; }
+  .flip { animation: flip .6s ease-out both; }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.85); } }
+  @keyframes flip { from { opacity: 0; transform: rotateY(540deg); } }
+}
+.resline { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.resline:empty, #resultSum:empty { display: none; }
+.bars { display: grid; gap: 14px; min-width: 0; }
+.ibar { position: relative; height: 34px; display: flex; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); background: var(--sunk); }
+.ibar .sg { flex: 0 0 auto; height: 100%; background: var(--seg-a); min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 600 11.5px/34px var(--body); padding: 0; color: var(--ink); text-align: center; box-shadow: inset -1px 0 0 var(--surface); }
+.ibar .sg.alt { background: var(--seg-b); }
+.ibar .sg.pick { background: var(--seg-pick); }
+.ibar .needle { position: absolute; top: -2px; bottom: -2px; width: 2px; margin-left: -1px; background: var(--needle); pointer-events: none; }
+.ibar .needle span { position: absolute; top: 1px; left: 3px; font: 700 10px/1 var(--mono); color: var(--needle); background: var(--surface); padding: 1px 2px; border-radius: 3px; }
+.bar-cap { font: 12.5px var(--mono); color: var(--muted); margin: 4px 0 0; overflow-wrap: anywhere; }
+.vresult { margin: 0; padding-left: 1.6em; display: grid; gap: 2px; }
 </style>
 </head>
 <body>
@@ -166,82 +221,125 @@ footer { color: var(--muted); font-size: 12.5px; }
     </div>
     <div class="toprow">
       <div class="tabs" role="tablist" data-s-aria="tabsAria">
-        <button role="tab" id="tab-run" aria-selected="true" aria-controls="view-run" data-s="tabRun"></button>
-        <button role="tab" id="tab-verify" aria-selected="false" aria-controls="view-verify" tabindex="-1" data-s="tabVerify"></button>
+        <button role="tab" id="tab-list" type="button" aria-selected="true" aria-controls="view-run" data-s="tabList"></button>
+        <button role="tab" id="tab-coin" type="button" aria-selected="false" aria-controls="view-run" tabindex="-1" data-s="tabCoin"></button>
+        <button role="tab" id="tab-die" type="button" aria-selected="false" aria-controls="view-run" tabindex="-1" data-s="tabDie"></button>
+        <button role="tab" id="tab-cards" type="button" aria-selected="false" aria-controls="view-run" tabindex="-1" data-s="tabCards"></button>
+        <button role="tab" id="tab-verify" type="button" aria-selected="false" aria-controls="view-verify" tabindex="-1" data-s="tabVerify"></button>
+      </div>
+      <div class="seg" role="radiogroup" id="drawModeBox" data-s-aria="drawModeAria">
+        <label><input type="radio" name="drawmode" value="verif"><span data-s="modeVerif"></span></label>
+        <label><input type="radio" name="drawmode" value="quick"><span data-s="modeQuick"></span></label>
       </div>
       <button class="theme" id="themeBtn" type="button"></button>
     </div>
   </header>
 
   <!-- ===================== SORTEAR ===================== -->
-  <section id="view-run" role="tabpanel" aria-labelledby="tab-run">
-    <div class="grid">
+  <section id="view-run" role="tabpanel">
+    <div class="grid" id="runGrid">
       <div class="col">
 
         <div class="panel" id="prep">
           <div class="step-head"><span class="step-no">1</span><h2 data-s="step1"></h2></div>
-          <div class="seg" role="radiogroup" data-s-aria="modeAria">
-            <label><input type="radio" name="mode" value="live" checked><span data-s="modeLive"></span></label>
-            <label><input type="radio" name="mode" value="scheduled"><span data-s="modeScheduled"></span></label>
-          </div>
-          <div class="fields">
-            <label class="f" for="title"><span data-s="fTitle"></span>
-              <input type="text" id="title" autocomplete="off">
-            </label>
-            <label class="f" for="drawId"><span><span data-s="fDrawId"></span> <small data-s="fDrawIdHint"></small></span>
-              <input type="text" id="drawId" autocomplete="off" spellcheck="false">
-            </label>
-          </div>
-          <label class="f" for="cands">
-            <span class="row" style="justify-content:space-between">
-              <span data-s="fCands"></span>
+
+          <div id="kind-list" class="kind">
+            <p class="hint" data-s="weightsHint"></p>
+            <div class="wtable" id="listTable"></div>
+            <div class="row" style="justify-content:space-between">
+              <button class="btn" id="addOpt" type="button" data-s="addOpt"></button>
               <span class="counter" id="candCount" aria-live="polite"></span>
-            </span>
-            <textarea id="cands" spellcheck="false"></textarea>
-          </label>
-          <div class="msg bad" id="candErr" role="alert" hidden></div>
-
-          <div class="f">
-            <span data-s="fSource"></span>
-            <div class="sources" role="radiogroup" id="presetBox" data-s-aria="fSource"></div>
-          </div>
-
-          <div class="fields" id="lotteryBox" hidden>
-            <label class="f" for="contest"><span><span data-s="fContest"></span> <small id="contestHint"></small></span>
-              <input type="number" id="contest" min="1" step="1" inputmode="numeric">
-            </label>
-            <label class="f" for="drawDate"><span><span data-s="fDrawDate"></span> <small id="drawTimeHint"></small></span>
-              <input type="date" id="drawDate">
-            </label>
-          </div>
-          <p class="hint" id="lotteryNote" hidden></p>
-
-          <label class="f" for="contrib"><span><span data-s="fContrib"></span> <small data-s="fContribHint"></small></span>
-            <input type="text" id="contrib" autocomplete="off" data-s-ph="fContribPh">
-          </label>
-
-          <details id="techPrep">
-            <summary data-s="techDetails"></summary>
-            <div class="inner">
-              <label class="f" for="rpcs"><span><span data-s="fRpcs"></span> <small data-s="fRpcsHint"></small></span>
-                <textarea id="rpcs" class="short" spellcheck="false"></textarea>
-              </label>
-              <label class="f" for="relay"><span><span data-s="fRelay"></span> <small data-s="fRelayHint"></small></span>
-                <input type="url" id="relay" spellcheck="false" placeholder="https://relay.exemplo.org">
-              </label>
-              <div class="f">
-                <span><span data-s="fCalendar"></span> <small data-s="fCalendarHint"></small></span>
-                <div class="fields" id="calendarBox"></div>
-              </div>
-              <p class="hint" id="drandInfo"></p>
             </div>
-          </details>
+            <details id="pasteBox">
+              <summary data-s="pasteTitle"></summary>
+              <div class="inner">
+                <p class="hint" data-s="pasteHint"></p>
+                <textarea id="cands" spellcheck="false"></textarea>
+                <div class="row"><button class="btn" id="pasteApply" type="button" data-s="pasteApply"></button></div>
+              </div>
+            </details>
+            <div class="msg bad" id="candErr" role="alert" hidden></div>
+            <div class="seg" role="radiogroup" data-s-aria="listChoiceAria">
+              <label><input type="radio" name="listChoice" value="all" checked><span data-s="listAll"></span></label>
+              <label><input type="radio" name="listChoice" value="pick"><span data-s="listPick"></span></label>
+            </div>
+            <div class="fields" id="pickBox" hidden>
+              <label class="f" for="listCount"><span data-s="listCount"></span>
+                <input type="number" id="listCount" min="1" step="1" value="1" inputmode="numeric">
+              </label>
+              <label class="check-inline"><input type="checkbox" id="listReplace"><span data-s="listReplace"></span></label>
+            </div>
+          </div>
+
+          <div id="kind-coin" class="kind" hidden>
+            <label class="f" for="coinCount"><span data-s="coinCount"></span>
+              <input type="number" id="coinCount" min="1" max="1000" step="1" value="1" inputmode="numeric">
+            </label>
+          </div>
+
+          <div id="kind-die" class="kind" hidden>
+            <div class="f"><span data-s="dieFaces"></span><div class="seg" role="radiogroup" id="dieFacesBox" data-s-aria="dieFaces"></div></div>
+            <label class="f" for="dieCount"><span data-s="dieCount"></span>
+              <input type="number" id="dieCount" min="1" max="1000" step="1" value="1" inputmode="numeric">
+            </label>
+            <details id="dieLoaded">
+              <summary data-s="dieLoaded"></summary>
+              <div class="inner"><p class="hint" data-s="dieLoadedHint"></p><div class="wtable" id="dieTable"></div></div>
+            </details>
+          </div>
+
+          <div id="kind-cards" class="kind" hidden>
+            <label class="f" for="cardCount"><span><span data-s="cardCount"></span> <small data-s="cardCountHint"></small></span>
+              <input type="number" id="cardCount" min="1" max="52" step="1" value="5" inputmode="numeric">
+            </label>
+            <div class="row"><button class="btn" id="shuffleBtn" type="button" data-s="shuffleBtn"></button></div>
+          </div>
+
+          <div id="verifBox" class="col" style="gap:14px">
+            <div class="seg" role="radiogroup" data-s-aria="modeAria">
+              <label><input type="radio" name="mode" value="live" checked><span data-s="modeLive"></span></label>
+              <label><input type="radio" name="mode" value="scheduled"><span data-s="modeScheduled"></span></label>
+            </div>
+            <div class="fields">
+              <label class="f" for="title"><span data-s="fTitle"></span>
+                <input type="text" id="title" autocomplete="off">
+              </label>
+              <label class="f" for="drawId"><span><span data-s="fDrawId"></span> <small data-s="fDrawIdHint"></small></span>
+                <input type="text" id="drawId" autocomplete="off" spellcheck="false">
+              </label>
+            </div>
+            <div class="f">
+              <span data-s="fSource"></span>
+              <div class="sources" role="radiogroup" id="presetBox" data-s-aria="fSource"></div>
+            </div>
+            <div id="lotteryBox" class="col" style="gap:6px" hidden>
+              <label class="f" for="contest"><span data-s="fContest"></span>
+                <input type="text" id="contest" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="6120">
+              </label>
+              <p class="hint"><span data-s="contestHint"></span> <a id="caixaLink" target="_blank" rel="noopener noreferrer" data-s="caixaLink"></a></p>
+            </div>
+            <label class="f" for="contrib"><span><span data-s="fContrib"></span> <small data-s="fContribHint"></small></span>
+              <input type="text" id="contrib" autocomplete="off" data-s-ph="fContribPh">
+            </label>
+            <details id="techPrep">
+              <summary data-s="techDetails"></summary>
+              <div class="inner">
+                <label class="f" for="rpcs"><span><span data-s="fRpcs"></span> <small data-s="fRpcsHint"></small></span>
+                  <textarea id="rpcs" class="short" spellcheck="false"></textarea>
+                </label>
+                <label class="f" for="relay"><span><span data-s="fRelay"></span> <small data-s="fRelayHint"></small></span>
+                  <input type="url" id="relay" spellcheck="false" placeholder="https://relay.exemplo.org">
+                </label>
+                <p class="hint" id="drandInfo"></p>
+              </div>
+            </details>
+          </div>
 
           <div class="msg bad" id="sealErr" role="alert" hidden></div>
           <div class="row">
-            <button class="btn primary" id="sealBtn" type="button" data-s="sealBtn"></button>
+            <button class="btn primary" id="sealBtn" type="button"></button>
             <button class="btn" id="otherIdBtn" type="button" data-s="otherIdBtn" hidden></button>
-            <span class="hint" data-s="sealLockHint"></span>
+            <span class="hint" id="sealHint"></span>
           </div>
         </div>
 
@@ -274,7 +372,10 @@ footer { color: var(--muted); font-size: 12.5px; }
           <div class="step-head"><span class="step-no">3</span><h2 id="resultTitle"></h2></div>
           <div id="pendingBox" hidden>
             <p class="hint" id="pendingText"></p>
-            <div class="row" style="margin-top:10px"><button class="btn" id="fetchNow" type="button" data-s="fetchNow"></button></div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn" id="fetchNow" type="button" data-s="fetchNow"></button>
+              <button class="btn quiet" id="manualOpen" type="button" data-s="manualOpen"></button>
+            </div>
           </div>
           <div id="manualBox" hidden class="panel" style="background:var(--bg)">
             <h3 id="manualTitle"></h3>
@@ -293,29 +394,45 @@ footer { color: var(--muted); font-size: 12.5px; }
             <div class="row"><button class="btn primary" id="manualSave" type="button" data-s="manualSave"></button></div>
           </div>
           <div id="doneBox" hidden class="col" style="gap:14px">
-            <div class="result">
+            <div class="msg warn" id="quickNote" data-s="quickNote" hidden></div>
+            <div class="visual" id="visual" aria-hidden="true"></div>
+            <p class="resline" id="resultLine"></p>
+            <p class="hint" id="resultSum"></p>
+            <div class="result" id="resultTableWrap">
               <table class="order">
-                <thead><tr><th data-s="thPos"></th><th data-s="thName"></th><th data-s="thKey"></th></tr></thead>
+                <thead><tr id="resultHead"></tr></thead>
                 <tbody id="orderBody"></tbody>
               </table>
             </div>
+            <section class="bars-wrap" id="barsWrap">
+              <h3 data-s="barsTitle"></h3>
+              <p class="hint" data-s="barsIntro"></p>
+              <div id="bars" class="bars"></div>
+            </section>
             <dl class="kv" id="resultFacts"></dl>
-            <div class="row">
+            <div class="row" id="certRow">
               <button class="btn primary" id="dlCert" type="button" data-s="dlCert"></button>
               <button class="btn" id="copyCert" type="button" data-s="copyCert"></button>
               <button class="btn" id="copyAta" type="button" data-s="copyAta"></button>
               <span class="hint" id="copyNote2" role="status"></span>
             </div>
-            <details>
+            <details id="ataBox">
               <summary data-s="ataTitle"></summary>
               <div class="inner"><pre class="ata" id="ataText"></pre></div>
             </details>
+            <details id="quickTech" hidden>
+              <summary data-s="techDetails"></summary>
+              <div class="inner"><dl class="kv" id="quickFacts"></dl></div>
+            </details>
           </div>
-          <div class="row"><button class="btn quiet" id="newDraw" type="button" data-s="newDraw"></button></div>
+          <div class="row">
+            <button class="btn primary" id="againBtn" type="button" data-s="againBtn" hidden></button>
+            <button class="btn quiet" id="newDraw" type="button" data-s="newDraw"></button>
+          </div>
         </div>
       </div>
 
-      <aside class="panel rail" aria-live="polite">
+      <aside class="panel rail" id="rail" aria-live="polite">
         <h3 data-s="statusTitle"></h3>
         <div id="cdWrap" hidden><div class="hint" id="cdLabel" data-s="cdLabel"></div><div class="countdown" id="countdown">--</div></div>
         <ol class="timeline" id="timeline"></ol>
@@ -350,6 +467,18 @@ footer { color: var(--muted); font-size: 12.5px; }
         <div class="msg" id="verdict" role="status" hidden></div>
         <ul class="checks" id="checks"></ul>
         <ol id="vOrderWrap" hidden></ol>
+        <div id="vV3" hidden class="col" style="gap:12px">
+          <h3 data-s="vResultTitle"></h3>
+          <ol id="vResult" class="vresult"></ol>
+          <div class="bars" id="vBars"></div>
+          <details id="vTaskBox">
+            <summary data-s="vTaskTitle"></summary>
+            <div class="inner">
+              <p class="hint" id="vW"></p>
+              <div class="result"><table class="order"><thead><tr><th data-s="thOpt"></th><th data-s="thTyped"></th><th data-s="thInt"></th><th data-s="thShare"></th></tr></thead><tbody id="vTask"></tbody></table></div>
+            </div>
+          </details>
+        </div>
         <details>
           <summary data-s="ruleTitle"></summary>
           <div class="inner prose">
@@ -370,7 +499,7 @@ footer { color: var(--muted); font-size: 12.5px; }
     </div>
   </section>
 
-  <footer data-s="footer"></footer>
+  <footer><span data-s="footer"></span> <span id="footerLinks"></span></footer>
 </div>
 
 <script type="module">
@@ -381,24 +510,52 @@ footer { color: var(--muted); font-size: 12.5px; }
 // ---- Tabela de textos (pt-BR). Para outra língua, troque só esta tabela.
 const STR = {
   family: "LucentCrypto · sorteios verificáveis",
-  tagline: "Um sorteio que qualquer pessoa pode conferir. Primeiro a lista é lacrada; depois chega um valor aleatório público que ninguém controla; a ordem é calculada a partir dele, seguindo uma regra publicada.",
-  tabsAria: "Seções", tabRun: "Sortear", tabVerify: "Conferir",
+  tagline: "Listas com pesos, moeda, dados e cartas. No modo verificável, tudo é lacrado antes de existir o valor aleatório público que decide o resultado, e qualquer pessoa pode conferir depois. No modo rápido, o resultado sai na hora, sem certificado.",
+  tabsAria: "Tipo de sorteio e conferência", tabList: "Lista", tabCoin: "Moeda", tabDie: "Dado", tabCards: "Cartas", tabVerify: "Conferir",
+  drawModeAria: "Modo do sorteio", modeVerif: "Verificável", modeQuick: "Rápido",
   themeAuto: "Tema: automático", themeLight: "Tema: claro", themeDark: "Tema: escuro",
   step1: "Preparar", step2: "Lacrar: divulgue o lacre agora", step3: "Resultado",
-  modeAria: "Tipo de sorteio", modeLive: "Ao vivo", modeScheduled: "Agendado",
+  modeAria: "Quando sai o resultado", modeLive: "Ao vivo", modeScheduled: "Agendado",
   fTitle: "Título", fDrawId: "ID do sorteio", fDrawIdHint: "sugerido automaticamente; troque se quiser anunciá-lo antes",
-  fCands: "Participantes, um por linha",
+  // Lista com pesos
+  thOption: "Opção", thWeight: "Peso", thShare: "Chance",
+  optAria: (i) => "Opção " + i, weightAria: (n) => "Peso de " + n, removeOpt: (n) => "Remover " + n,
+  addOpt: "Adicionar opção",
+  optCount: (n, p) => n + (n === 1 ? " opção" : " opções") + (p !== n ? " · " + p + " no sorteio" : ""),
+  weightsHint: "Peso 1 = chance normal; 0 = fora do sorteio. Aceita inteiro (3), decimal (0,35) ou fração (1/7).",
+  outOfDraw: "fora do sorteio", blankRow: "linha vazia, ignorada",
+  weightThousands: (w) => "atenção: \"" + w + "\" vale " + w.replace(".", ",") + " (ponto e vírgula separam decimais); para mil, digite 1000",
+  pasteTitle: "Colar uma lista",
+  pasteHint: "Uma opção por linha. Para dar um peso, escreva-o depois de um ponto e vírgula ou de um Tab (ex.: Ana; 2). A lista atual será substituída.",
+  pasteApply: "Usar esta lista",
+  listChoiceAria: "O que sortear", listAll: "Ordenar todos", listPick: "Escolher N",
+  listCount: "Quantos escolher", listReplace: "Com reposição (a mesma opção pode sair mais de uma vez)",
+  coinCount: "Número de lançamentos",
+  dieFaces: "Faces do dado", dieCount: "Número de dados",
+  dieLoaded: "Detalhes: dado viciado", dieLoadedHint: "Mude o peso de uma face para ela sair mais (ou menos). Todas com peso 1 = dado honesto.",
+  cardCount: "Número de cartas", cardCountHint: "de 1 a 52; 52 = embaralhar o baralho", shuffleBtn: "Embaralhar o baralho (52)",
+  errFewOptions: "Inclua pelo menos duas opções.",
+  errDupsOpt: (list) => "Cada opção precisa ser única. Repetidas: " + list,
+  errWeightAt: (name, m) => "Peso de \"" + name + "\": " + m + ".",
+  errAllZero: "Pelo menos um peso precisa ser maior que zero.",
+  errCount: (min, max) => "Informe um número inteiro de " + min + " a " + max + ".",
+  errPickTooMany: (p) => "Sem reposição, dá para escolher no máximo " + p + " (as opções com peso maior que zero).",
+  // Fontes e lacre
   fSource: "Fonte de aleatoriedade",
-  fContest: "Concurso", fDrawDate: "Data prevista do sorteio",
+  fContest: "Concurso (como aparece no site da Caixa)",
+  contestHint: "Use o número do PRÓXIMO concurso, anunciado no site da Caixa. Um concurso já sorteado não serve: o resultado já seria conhecido.",
+  caixaLink: "Resultados no site da Caixa",
   fContrib: "Contribuição dos presentes", fContribHint: "opcional: dados, uma frase; entra no registro lacrado",
   fContribPh: "ex.: 4 6 1 3 5 2",
   techDetails: "Detalhes técnicos",
   fRpcs: "Servidores Ethereum (JSON-RPC), um por linha", fRpcsHint: "tentados em ordem; sem chave de API",
   fRelay: "Relay de carimbo de tempo", fRelayHint: "opcional; sem ele não há carimbo de tempo",
-  fCalendar: "Calendário de sorteios da Caixa", fCalendarHint: "dias da semana (0 = domingo) e hora de Brasília; confira no site da Caixa",
-  calDays: "Dias", calTime: "Hora", calRefContest: "Concurso de referência", calRefDate: "Data dele",
   drandInfo: (h) => "Farol drand quicknet, cadeia " + h + ", verificado por assinatura BLS com a chave pública fixada nesta página.",
-  sealBtn: "Lacrar o sorteio", sealing: "Lacrando…", sealLockHint: "Depois de lacrar, a lista e as opções ficam travadas.",
+  sealBtn: "Lacrar o sorteio", sealing: "Lacrando…", checkingContest: "Conferindo o concurso…",
+  sealLockHint: "Depois de lacrar, as opções ficam travadas.",
+  quickBtn: "Sortear agora", againBtn: "Sortear de novo",
+  quickHint: "Resultado instantâneo neste aparelho, sem lacre e sem certificado.",
+  quickNote: "Modo rápido: resultado instantâneo, mas ninguém pode conferir depois. Para um sorteio que vale perante outras pessoas, use o modo verificável.",
   otherIdBtn: "Novo sorteio com outro ID",
   presets: {
     eth: ["Bloco público Ethereum", "Hash do primeiro bloco após o lacre, com 1 confirmação. Cerca de 15–30 s."],
@@ -406,17 +563,10 @@ const STR = {
     "eth+drand": ["Bloco Ethereum + farol drand", "Primeiro o bloco, depois uma rodada drand. Nenhuma fonte sozinha decide. Cerca de 40 s."],
     federal: ["Loteria Federal", "Os 5 bilhetes premiados do concurso escolhido. Resultado após o concurso."],
     megasena: ["Mega-Sena", "As 6 dezenas do concurso escolhido. Resultado após o concurso."],
-    "federal+drand": ["Loteria Federal + farol drand", "O concurso e uma rodada drand cerca de 2 h depois dele."],
-    "megasena+drand": ["Mega-Sena + farol drand", "O concurso e uma rodada drand cerca de 2 h depois dele."],
   },
-  candCount: (n) => n + (n === 1 ? " participante" : " participantes"),
-  dupNames: (list) => "Cada nome precisa ser único. Repetidos: " + list,
-  errFewNames: "Inclua pelo menos dois participantes.",
-  errDups: "Há nomes repetidos. Corrija a lista antes de lacrar.",
   errIdUsed: (id) => "O ID \"" + id + "\" já foi lacrado neste navegador. Um segundo lacre com o mesmo ID invalidaria o sorteio. Use \"Novo sorteio com outro ID\".",
-  errContest: "Informe o número do concurso (inteiro, maior que zero).",
-  errDrawDate: "Informe a data prevista do sorteio do concurso.",
-  errDrawTooSoon: "O sorteio do concurso precisa ser pelo menos 2 horas depois do lacre. Escolha um concurso posterior.",
+  errContest: "Informe o concurso como aparece no site da Caixa, por exemplo 6120 ou 6054-2.",
+  errContestDrawn: (c) => "Este concurso já foi sorteado (" + c + "): o resultado já é conhecido. Use o número do próximo concurso.",
   errEthNone: "Nenhum servidor Ethereum respondeu. Confira a conexão ou edite a lista em Detalhes técnicos.",
   errSealFailed: (m) => m + " Nada foi lacrado; confira a conexão e tente de novo.",
   errStorage: "Atenção: este navegador não permite guardar dados; se a página for recarregada, o lacre em andamento se perde. Guarde o lacre copiado.",
@@ -433,39 +583,40 @@ const STR = {
   otsPending: "registro público de longo prazo: pendente (completa em algumas horas)",
   otsComplete: "registro público de longo prazo: completo",
   otsUpgrade: "Atualizar registro público de longo prazo",
-  factId: "ID do sorteio", factCount: "Participantes", factSealed: "Lacrado em", factMode: "Tipo",
+  factId: "ID do sorteio", factTask: "Sorteio", factCount: "Participantes", factSealed: "Lacrado em", factMode: "Tipo",
   factEth: "Bloco público Ethereum", factDrand: "Farol drand", factMegasena: "Mega-Sena", factFederal: "Loteria Federal",
   factEthPlan: (t, c) => "primeiro bloco após " + t + ", com " + c + " confirmação",
   factDrandPlan: (r, t) => "rodada " + r + " · prevista para " + t,
-  factLotteryPlan: (c, d) => "concurso " + c + " · sorteio previsto para " + d,
-  factCommit: "Lacre", factSeed: "Semente", factAnchors: "Carimbos de tempo", factRelay: "Relay", factRpcs: "Servidores Ethereum",
+  factLotteryPlan: (c) => "concurso " + c + " · resultado depois do sorteio, no site da Caixa",
+  factCommit: "Lacre", factSeed: "Semente", factQuickSeed: "Semente (gerada neste aparelho)", factAnchors: "Carimbos de tempo", factRelay: "Relay", factRpcs: "Servidores Ethereum",
   statusTitle: "Andamento", cdLabel: "Aleatoriedade esperada em", cdSoon: "a qualquer momento",
-  tlPrep: "Preparar", tlPrepD: "Lista e fonte", tlSeal: "Lacrar", tlSealD: "Registro travado e resumido",
+  tlPrep: "Preparar", tlPrepD: "Opções e fonte", tlSeal: "Lacrar", tlSealD: "Registro travado e resumido",
   tlAnchor: "Carimbo de tempo", tlAnchorIdle: "Depois do lacre",
   tlEth: "Bloco público Ethereum", tlDrand: "Farol drand", tlMegasena: "Mega-Sena", tlFederal: "Loteria Federal",
-  tlResult: "Ordem calculada", tlResultD: "A partir do lacre e da aleatoriedade",
+  tlResult: "Resultado calculado", tlResultD: "A partir do lacre e da aleatoriedade",
   tlNotUsed: "Não usado neste sorteio",
   tlWaitingSlot: (h) => "Bloco mais recente #" + h + "; aguardando o próximo",
   tlConfirming: (n, c) => "Bloco #" + n + " produzido; aguardando " + c + " confirmação",
   tlEthDone: (n, h) => "#" + n + " · " + h + "…",
   tlDrandWait: (r) => "Aguardando a rodada " + r,
   tlDrandDone: (r, v) => "Rodada " + r + " · " + v + "… · assinatura verificada",
-  tlLotteryWait: (c, d) => "Aguardando o concurso " + c + " (" + d + ")",
+  tlLotteryWait: (c) => "Aguardando o resultado do concurso " + c,
   tlLotteryDone: (c, v) => "Concurso " + c + " · " + v,
   tlRetrying: "Sem resposta; tentando de novo",
   tlRetryingWhy: (why) => "Sem resposta; tentando de novo. Motivo: " + why + ". Se a página foi aberta numa pré-visualização (por exemplo dentro de um aplicativo), baixe o arquivo e abra no Chrome, Edge ou Firefox.",
   savedTitle: "Lacres guardados neste navegador", reopen: "Reabrir",
   savedPending: "aguardando", savedDone: "concluído",
   resultTitle: (t) => t ? "Resultado · " + t : "Resultado",
+  quickTitle: "Resultado (modo rápido)",
   pendingTitle: "Aguardando a aleatoriedade",
-  pendingLottery: (label, c, d) => label + ", concurso " + c + ": resultado ainda não disponível (sorteio previsto para " + d + "). Você pode fechar esta página; ao reabrir, o resultado será buscado.",
-  fetchNow: "Buscar resultado agora",
+  pendingLottery: (label, c) => label + ", concurso " + c + ": resultado ainda não disponível. Você pode fechar esta página; ao reabrir, o resultado será buscado de novo (a cada 10 minutos enquanto ela estiver aberta).",
+  fetchNow: "Buscar resultado agora", manualOpen: "Inserir o resultado manualmente",
   lotteryUnavailable: "Não foi possível obter o resultado automaticamente (o site da Caixa pode recusar pedidos desta página). Digite o resultado oficial abaixo.",
   manualTitle: (label, c) => "Inserir o resultado manualmente · " + label + ", concurso " + c,
-  manualHint: "Copie os números exatamente como publicados na página oficial. O certificado e a ata registram que a entrada foi manual.",
+  manualHint: "Copie os números e a data exatamente como publicados na página oficial. O certificado e a ata registram que a entrada foi manual.",
   manualNumsMega: "As 6 dezenas sorteadas, separadas por espaço", manualNumsFederal: "Os 5 bilhetes premiados, do 1º ao 5º prêmio, separados por espaço",
-  manualDate: "Data do sorteio",
-  manualConfirm: "Conferi estes números na página oficial da Caixa.",
+  manualDate: "Data do sorteio (como publicada)",
+  manualConfirm: "Conferi estes números e a data na página oficial da Caixa.",
   manualSave: "Usar este resultado",
   manualBadMega: "Digite 6 dezenas diferentes, de 1 a 60.",
   manualBadFederal: "Digite 5 bilhetes de até 5 algarismos, na ordem dos prêmios.",
@@ -473,7 +624,15 @@ const STR = {
   manualBadDate: "Informe a data do sorteio.",
   manualNoConfirm: "Marque a confirmação de que os números foram conferidos na página oficial.",
   officialPage: "Página oficial de resultados",
-  thPos: "Pos.", thName: "Participante", thKey: "Chave",
+  thPos: "Pos.", thName: "Participante", thKey: "Chave", thOpt: "Opção", thTyped: "Digitado", thInt: "Inteiro",
+  resultLine: (list) => "Resultado: " + list,
+  sumCoin: (a, b) => "Cara: " + a + " · Coroa: " + b,
+  sumDice: (s) => "Soma: " + s,
+  visualMore: (n) => "e mais " + n,
+  barsTitle: "Onde caiu cada escolha",
+  barsIntro: "Cada barra é o intervalo [0, 2²⁵⁶) dividido em partes proporcionais aos pesos inteiros. A agulha marca onde caiu o hash de cada escolha: x = ⌊r · W / 2²⁵⁶⌋. Sem reposição, a parte escolhida sai da barra seguinte.",
+  barCaption: (j, x, W, pct, opt) => "Escolha " + j + ": x = " + x + " de W = " + W + " (" + pct + ") → " + opt,
+  barsMore: (n) => "Mostrar todas as " + n + " barras",
   dlCert: "Baixar certificado", copyCert: "Copiar certificado", copyAta: "Copiar ata",
   ataTitle: "Ata do sorteio",
   newDraw: "Começar um novo sorteio",
@@ -483,7 +642,7 @@ const STR = {
   errDrandRound: (got, r) => "O drand devolveu a rodada " + got + " em vez de " + r + ".",
   errEthWait: (c) => "Não foi possível ler um bloco Ethereum posterior ao lacre com " + c + " confirmação.",
   verifyTitle: "Conferir um certificado de sorteio",
-  verifyIntro: "Cole ou carregue um certificado. Esta página recalcula o lacre, busca de novo os valores nas fontes públicas, verifica a assinatura do drand e refaz a ordem.",
+  verifyIntro: "Cole ou carregue um certificado (LucentDraw/3, /2 ou /1). Esta página recalcula o lacre, busca de novo os valores nas fontes públicas, verifica a assinatura do drand e refaz o resultado.",
   certIn: "Certificado do sorteio (JSON)", loadFile: "Carregar arquivo…",
   lotteryEye: "Conferi a olho os números da loteria na página oficial da Caixa (permite concluir mesmo sem a consulta automática).",
   verifyBtn: "Conferir", verifying: "Conferindo…",
@@ -495,14 +654,18 @@ const STR = {
   verdictBad: (list) => "Este sorteio não confere: " + list,
   verdictIncomplete: (list) => "Conferência incompleta: nenhum item falhou, mas estes não puderam ser confirmados: " + list,
   orderTitle: "Ordem recalculada",
+  vTaskTitle: "Pesos lacrados: como digitados, inteiros e chance",
+  vW: (W, L) => "W = " + W + " (soma dos pesos inteiros; denominador comum L = " + L + ")",
+  vResultTitle: "Resultado recalculado",
   ruleTitle: "A regra, para conferir sem esta página",
-  ruleText1: "Tudo é SHA-256 sobre texto UTF-8. C é o hash do registro lacrado em JSON canônico (chaves ordenadas, sem espaços). A semente resume a versão, C e o valor de cada fonte, uma por linha, na ordem eth, drand, megasena, federal, com \"-\" para fonte não usada. Cada participante recebe a chave H(\"LucentDraw/2\\nkey\\n\" + semente + \"\\n\" + nome) e a ordem é crescente pela chave.",
-  ruleText2: "O verificador de referência verify_draw.py faz a conferência completa, inclusive das assinaturas dos carimbos de tempo. O mesmo cálculo em poucas linhas de Python:",
+  ruleText1: "Tudo é SHA-256 sobre texto UTF-8. C é o hash do registro lacrado em JSON canônico (chaves ordenadas, sem espaços). A semente resume a versão, C e o valor de cada fonte, uma por linha, na ordem eth, drand, megasena, federal, com \"-\" para fonte não usada. Em LucentDraw/3, cada peso vira uma fração exata, todas vão para o mesmo denominador e viram inteiros; W é a soma. Para a escolha j, r = H(\"LucentDraw/3\\npick\\n\" + semente + \"\\n\" + j) lido como inteiro de 256 bits, x = ⌊r·W/2²⁵⁶⌋, e sai a primeira opção cuja soma acumulada passa de x. Sem reposição, ela sai da lista antes da próxima escolha.",
+  ruleText2: "O verificador de referência verify_draw.py faz a conferência completa, inclusive das assinaturas dos carimbos de tempo e das versões /2 e /1. O mesmo cálculo em poucas linhas de Python:",
   passMeansTitle: "O que significa passar",
-  passMeans1: "A ordem decorre da lista lacrada e de valores aleatórios públicos que ninguém podia escolher depois de ver a lista.",
-  passMeans2: "O que o programa não prova sozinho: que o lacre foi divulgado antes da aleatoriedade. Os carimbos de tempo servem de prova; sem eles, confira onde e quando o lacre foi publicado.",
+  passMeans1: "O resultado decorre das opções e pesos lacrados e de valores aleatórios públicos que ninguém podia escolher depois de ver o lacre.",
+  passMeans2: "O que o programa não prova sozinho: que o lacre foi divulgado antes da aleatoriedade. Os carimbos de tempo servem de prova; sem eles, confira onde e quando o lacre foi publicado. Para loterias, o carimbo precisa ser anterior ao dia do sorteio.",
   passMeans3: "O valor drand é conferido com a chave pública da quicknet. Para o bloco Ethereum, a página confere que ele é o primeiro após o lacre e que continua na cadeia canônica, usando os servidores listados; para independência total, use o seu próprio nó.",
-  footer: "Lucent Sorteios · protocolo LucentDraw/2 · parte da família LucentCrypto. Funciona no seu navegador, sem chaves, sem cadastro e sem estatísticas de uso. A página só faz pedidos às fontes de aleatoriedade (servidores Ethereum listados, drand, Caixa), à biblioteca drand-client fixada por hash e ao relay, se você configurar um.",
+  footer: "Lucent Sorteios · protocolo LucentDraw/3 · parte da família LucentCrypto. Funciona no seu navegador, sem chaves, sem cadastro e sem estatísticas de uso. A página só faz pedidos às fontes de aleatoriedade (servidores Ethereum listados, drand, Caixa), à biblioteca drand-client fixada por hash e ao relay, se você configurar um. O modo rápido não faz nenhum pedido.",
+  footerHome: "LucentCrypto", footerSpec: "Especificação", footerVerifier: "Verificador em Python",
   // Conferência (SPEC 9)
   ck: {
     parseNoSpec: "O certificado não tem o objeto spec.",
@@ -696,6 +859,7 @@ const LOTTERY = {
     megasena: { label: "Mega-Sena", page: "https://loterias.caixa.gov.br/Paginas/Mega-Sena.aspx" },
     federal: { label: "Loteria Federal", page: "https://loterias.caixa.gov.br/Paginas/Federal.aspx" },
   },
+  portal: "https://loterias.caixa.gov.br",
   tzOffsetMin: -180, // horário de Brasília, sem horário de verão desde 2019
 };
 const LEAD_MS = { drand: 6000, "eth+drand": 36000 };
@@ -1570,26 +1734,42 @@ const CORE = Object.freeze({
 // ---------------------------------------------------------------- CORE-END
 
 // ================================================================ página (DOM)
+// Regra da casa: textos de usuário e dados externos só entram com textContent / setAttribute.
 const $ = (id) => document.getElementById(id);
 const el = (tag, props = {}, ...kids) => { const e = document.createElement(tag); Object.assign(e, props); e.append(...kids); return e; };
+const SVGNS = "http://www.w3.org/2000/svg";
+const sv = (tag, attrs = {}, ...kids) => { const e = document.createElementNS(SVGNS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v)); e.append(...kids); return e; };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const MAXN = 1000; // limite da interface para moeda, dados e listas com reposição
 
 // Textos estáticos a partir da tabela STR.
 document.querySelectorAll("[data-s]").forEach((n) => { n.textContent = STR[n.dataset.s]; });
 document.querySelectorAll("[data-s-aria]").forEach((n) => n.setAttribute("aria-label", STR[n.dataset.sAria]));
 document.querySelectorAll("[data-s-ph]").forEach((n) => n.setAttribute("placeholder", STR[n.dataset.sPh]));
 $("drandInfo").textContent = STR.drandInfo(QUICKNET.hash);
+$("caixaLink").href = LOTTERY.portal;
 $("ruleCode").textContent = [
   "import hashlib, json",
+  "from fractions import Fraction",
+  "from math import lcm",
   "H = lambda s: hashlib.sha256(s.encode()).hexdigest()",
   "cert = json.load(open(\"certificado-sorteio-ID.json\"))",
-  "spec = cert[\"spec\"]",
+  "spec, t = cert[\"spec\"], cert[\"spec\"][\"task\"]",
   "C = H(json.dumps(spec, sort_keys=True, separators=(\",\", \":\"), ensure_ascii=False))",
-  "vals = {...}  # eth: hash do bloco; drand: randomness; megasena: \"3001:04-12-23-35-41-58\"",
-  "seed = H(\"\\n\".join([\"LucentDraw/2\", \"seed\", C] + [k + \"=\" + vals.get(k, \"-\") for k in (\"eth\", \"drand\", \"megasena\", \"federal\")]))",
-  "order = sorted(spec[\"candidates\"], key=lambda n: (H(\"LucentDraw/2\\nkey\\n\" + seed + \"\\n\" + n), n))",
-  "print(C == cert[\"commitment\"], order == cert[\"order\"])",
+  "vals = {...}  # eth: hash do bloco; drand: randomness; federal: \"6120:17469-81210-7767-41317-79412\"",
+  "seed = H(\"\\n\".join([\"LucentDraw/3\", \"seed\", C] + [k + \"=\" + vals.get(k, \"-\") for k in (\"eth\", \"drand\", \"megasena\", \"federal\")]))",
+  "fr = [Fraction(w.strip().replace(\",\", \".\")) for w in t[\"weights\"]]",
+  "L = lcm(*[f.denominator for f in fr]); w = [f.numerator * (L // f.denominator) for f in fr]",
+  "alive, picks = [i for i in range(len(w)) if w[i] > 0], []",
+  "for j in range(t[\"count\"]):",
+  "    W = sum(w[i] for i in alive); x = int(H(\"LucentDraw/3\\npick\\n\" + seed + \"\\n\" + str(j)), 16) * W >> 256",
+  "    acc = 0",
+  "    for i in alive:",
+  "        acc += w[i]",
+  "        if x < acc: picks.append(i); break",
+  "    if not t[\"replace\"]: alive.remove(picks[-1])",
+  "print(C == cert[\"commitment\"], picks == cert[\"picks\"])",
 ].join("\n");
 
 // ---- armazenamento local (sempre em try/catch)
@@ -1609,54 +1789,22 @@ let theme = LS.get("theme", "auto"); if (!THEMES.includes(theme)) theme = "auto"
 applyTheme(theme);
 $("themeBtn").addEventListener("click", () => { theme = THEMES[(THEMES.indexOf(theme) + 1) % 3]; LS.set("theme", theme); applyTheme(theme); });
 
-// ---- abas (setas do teclado entre abas)
-const TABS = [["tab-run", "view-run"], ["tab-verify", "view-verify"]];
-function selectTab(tab) {
-  for (const [t, v] of TABS) { const on = t === tab; $(t).setAttribute("aria-selected", String(on)); $(t).tabIndex = on ? 0 : -1; $(v).hidden = !on; }
-}
-for (const [t] of TABS) {
-  $(t).addEventListener("click", () => selectTab(t));
-  $(t).addEventListener("keydown", (e) => {
-    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-    const other = TABS.find(([x]) => x !== t)[0]; selectTab(other); $(other).focus();
-  });
+// ---- rodapé: links do site (só quando servido por um endereço web)
+if (/^https?:$/.test(location.protocol)) {
+  const fl = $("footerLinks");
+  for (const [href, key] of [["/", "footerHome"], ["/spec/SPEC-v3.md", "footerSpec"], ["/verifier/verify_draw.py", "footerVerifier"]]) {
+    fl.append(el("a", { href, textContent: STR[key] }), " ");
+  }
 }
 
-// ---- configurações
+// ---- configurações (o calendário de sorteios antigo, se guardado, é ignorado)
 const savedSettings = LS.get("settings", {}) || {};
-const settings = { rpcs: [...ETH.rpcs], relay: "", ...savedSettings, calendar: {} };
-for (const g of ["megasena", "federal"]) settings.calendar[g] = { ...LOTTERY.calendar[g], ...((savedSettings.calendar || {})[g] || {}) };
-if (!Array.isArray(settings.rpcs) || !settings.rpcs.length) settings.rpcs = [...ETH.rpcs];
+const settings = { rpcs: Array.isArray(savedSettings.rpcs) && savedSettings.rpcs.length ? savedSettings.rpcs : [...ETH.rpcs], relay: typeof savedSettings.relay === "string" ? savedSettings.relay : "" };
 const saveSettings = () => LS.set("settings", settings);
 $("rpcs").value = settings.rpcs.join("\n");
 $("relay").value = settings.relay;
-$("rpcs").addEventListener("change", () => { settings.rpcs = $("rpcs").value.split(/\s+/).map((s) => s.trim()).filter(Boolean); saveSettings(); });
+$("rpcs").addEventListener("change", () => { settings.rpcs = $("rpcs").value.split(/\s+/).map((s) => s.trim()).filter(Boolean); if (!settings.rpcs.length) settings.rpcs = [...ETH.rpcs]; saveSettings(); });
 $("relay").addEventListener("change", () => { settings.relay = $("relay").value.trim(); saveSettings(); });
-function renderCalendar() {
-  const box = $("calendarBox"); box.replaceChildren();
-  for (const g of ["federal", "megasena"]) {
-    const c = settings.calendar[g];
-    const days = el("input", { type: "text", value: c.weekdays.join(" "), id: "cal-days-" + g });
-    const time = el("input", { type: "time", value: c.time, id: "cal-time-" + g });
-    const refC = el("input", { type: "number", min: 1, value: c.ref ? c.ref.contest : "", id: "cal-refc-" + g });
-    const refD = el("input", { type: "date", value: c.ref ? c.ref.date : "", id: "cal-refd-" + g });
-    const save = () => {
-      c.weekdays = days.value.split(/[\s,]+/).map((x) => parseInt(x, 10)).filter((x) => x >= 0 && x <= 6);
-      if (/^\d{1,2}:\d{2}$/.test(time.value)) c.time = time.value;
-      const rc = parseInt(refC.value, 10);
-      c.ref = rc > 0 && /^\d{4}-\d{2}-\d{2}$/.test(refD.value) ? { contest: rc, date: refD.value } : null;
-      saveSettings(); refreshLottery(true);
-    };
-    for (const i of [days, time, refC, refD]) i.addEventListener("change", save);
-    const grp = el("fieldset", { className: "f" }, el("legend", { textContent: LOTTERY.games[g].label }));
-    grp.style.cssText = "border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;gap:6px;min-width:0";
-    for (const [lab, inp] of [[STR.calDays, days], [STR.calTime, time], [STR.calRefContest, refC], [STR.calRefDate, refD]]) {
-      grp.append(el("label", { className: "f", htmlFor: inp.id }, el("small", { textContent: lab }), inp));
-    }
-    box.append(grp);
-  }
-}
-renderCalendar();
 
 // ---- rede
 async function fetchJson(url, opts = {}) {
@@ -1675,10 +1823,10 @@ let drandMod = null;
 async function drandLib() { if (!drandMod) drandMod = await import("drand-client"); return drandMod; }
 const drandClient = makeDrandClient(fetchJson);
 async function getDrand(round) { return fetchVerifiedBeacon(await drandLib(), drandClient, round); }
-const getLottery = (game, contest) => fetchLottery(fetchJson, game, contest, settings.relay);
+const getLottery = (game, contest, fj = fetchJson) => fetchLottery(fj, game, contest, settings.relay);
 async function ethEvidence(n) { const [head, block, parent] = [await ethRpc.head(), await ethRpc.block(n), await ethRpc.block(n - 1)]; return { head, block, parent }; }
 
-// ---- UI: utilidades
+// ---- utilidades
 function showMsg(node, text, kind) { node.textContent = text || ""; node.hidden = !text; if (kind) node.className = "msg " + kind; }
 function kv(dl, pairs) {
   dl.replaceChildren();
@@ -1696,60 +1844,238 @@ function download(name, text) {
   const a = el("a", { href: URL.createObjectURL(new Blob([text], { type: "application/json" })), download: name });
   document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
+const intIn = (id, min, max) => { const s = String($(id).value).trim(); if (!/^[0-9]{1,7}$/.test(s)) return null; const n = parseInt(s, 10); return n >= min && n <= max ? n : null; };
+// Porcentagem (só para desenhar): a/b com 4 casas, calculada em BigInt.
+const pctOf = (a, b) => (b ? Number((a * 1000000n) / b) / 10000 : 0);
 
-// ---- Preparar
+// ================================================================ estado
+let current = null;   // sorteio verificável lacrado: { spec, commitment, sealedAt, anchors, randomness, seed, result, picks, meta }
+let quick = null;     // último resultado do modo rápido (não é guardado)
+let ticker = null;
+let locked = false;
+const waitingStates = new WeakSet();
+const draws = () => LS.get("draws", {});
+
+// ---- abas: Lista · Moeda · Dado · Cartas · Conferir
+const KINDS = ["list", "coin", "die", "cards"];
+const TAB = { list: "tab-list", coin: "tab-coin", die: "tab-die", cards: "tab-cards", verify: "tab-verify" };
+let kind = LS.get("kind", "list"); if (!KINDS.includes(kind)) kind = "list";
+let onVerify = false;
+function selectTab(t) {
+  if (t !== "verify" && current && t !== kind) return; // sorteio lacrado: as outras abas ficam travadas
+  onVerify = t === "verify";
+  for (const [k, id] of Object.entries(TAB)) { const on = k === t; $(id).setAttribute("aria-selected", String(on)); $(id).tabIndex = on ? 0 : -1; }
+  $("view-run").hidden = onVerify; $("view-verify").hidden = !onVerify;
+  $("view-run").setAttribute("aria-labelledby", TAB[kind]);
+  if (!onVerify && t !== kind) { kind = t; LS.set("kind", t); if (!current) { hideResult(); quick = null; refreshSuggestions(); } }
+  if (!onVerify) showKind();
+}
+const tabOrder = ["list", "coin", "die", "cards", "verify"];
+for (const t of tabOrder) {
+  $(TAB[t]).addEventListener("click", () => selectTab(t));
+  $(TAB[t]).addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const enabled = tabOrder.filter((x) => !$(TAB[x]).disabled);
+    const i = enabled.indexOf(t), next = enabled[(i + (e.key === "ArrowRight" ? 1 : enabled.length - 1)) % enabled.length];
+    selectTab(next); $(TAB[next]).focus();
+  });
+}
+function showKind() { for (const k of KINDS) $("kind-" + k).hidden = k !== kind; refreshCounts(); }
+
+// ---- modo: Verificável / Rápido (verificável por padrão num endereço web; rápido num arquivo local)
+let drawMode = LS.get("drawmode", null);
+if (drawMode !== "verif" && drawMode !== "quick") drawMode = location.protocol === "file:" ? "quick" : "verif";
+document.querySelectorAll('input[name="drawmode"]').forEach((r) => {
+  r.checked = r.value === drawMode;
+  r.addEventListener("change", () => { if (!r.checked) return; drawMode = r.value; LS.set("drawmode", drawMode); applyDrawMode(); });
+});
+const isQuick = () => drawMode === "quick";
+function applyDrawMode() {
+  const q = isQuick();
+  $("verifBox").hidden = q; $("rail").hidden = q; $("runGrid").classList.toggle("single", q);
+  $("sealBtn").textContent = q ? STR.quickBtn : STR.sealBtn;
+  $("sealHint").textContent = q ? STR.quickHint : STR.sealLockHint;
+  showMsg($("sealErr"), "");
+  if (q) { $("sealPanel").hidden = true; if (!quick) hideResult(); else renderQuick(); }
+  else { quick = null; hideResult(); }
+}
+
+// ================================================================ tabela de pesos (Lista e dado viciado)
+// rows: [{ opt, w }] (modelo); names: "edit" (lista) ou "fixed" (faces do dado).
+function weightTable(box, rows, { names, onChange }) {
+  let lines = [];
+  function render() {
+    box.replaceChildren(el("div", { className: "wrow whead", ariaHidden: "true" },
+      el("span", { textContent: STR.thOption }), el("span", { textContent: STR.thWeight }), el("span", { textContent: STR.thShare }), el("span")));
+    lines = rows.map((r, i) => {
+      const label = () => normText(r.opt) || String(i + 1);
+      const name = names === "edit" ? el("input", { type: "text", value: r.opt, autocomplete: "off", spellcheck: false }) : el("span", { className: "wname", textContent: r.opt });
+      const w = el("input", { type: "text", value: r.w, autocomplete: "off", spellcheck: false, className: "wval" });
+      w.setAttribute("inputmode", "decimal"); w.setAttribute("aria-label", STR.weightAria(label()));
+      const share = el("span", { className: "wshare" });
+      const note = el("div", { className: "wnote" }); note.hidden = true;
+      let del = el("span");
+      if (names === "edit") {
+        name.setAttribute("aria-label", STR.optAria(i + 1));
+        name.addEventListener("input", () => { r.opt = name.value; w.setAttribute("aria-label", STR.weightAria(label())); refresh(); });
+        del = el("button", { type: "button", className: "wdel", textContent: "×" });
+        del.setAttribute("aria-label", STR.removeOpt(label()));
+        del.addEventListener("click", () => { rows.splice(i, 1); render(); });
+      }
+      w.addEventListener("input", () => { r.w = w.value; refresh(); });
+      const line = el("div", { className: "wrow" }, name, w, share, del, note);
+      box.append(line);
+      return { line, name, w, share, note, del };
+    });
+    for (const x of lines) for (const n of [x.name, x.w, x.del]) if (n.tagName !== "SPAN") n.disabled = locked;
+    refresh();
+  }
+  function refresh() {
+    const parsed = rows.map((r) => (names === "edit" && !normText(r.opt) ? null : parseWeight(r.w)));
+    const fr = parsed.map((p) => (p && !p.error ? p : { n: 0n, d: 1n }));
+    const L = fr.reduce((acc, f) => (acc / bigGcd(acc, f.d)) * f.d, 1n);
+    const ints = fr.map((f) => f.n * (L / f.d)), W = ints.reduce((a, b) => a + b, 0n);
+    rows.forEach((r, i) => {
+      const x = lines[i]; if (!x) return;
+      const p = parsed[i], blank = p === null, bad = p && p.error, zero = p && !bad && p.n === 0n;
+      x.line.classList.toggle("blank", blank); x.line.classList.toggle("off", !!zero);
+      x.w.setAttribute("aria-invalid", bad ? "true" : "false");
+      x.share.textContent = blank ? "—" : bad ? "?" : zero ? STR.outOfDraw : shareText(ints[i], W);
+      const thousands = !bad && /^[0-9]{1,3}[.,][0-9]{3}$/.test(normText(r.w));
+      x.note.hidden = !(bad || thousands || blank) || (blank && names !== "edit");
+      x.note.className = "wnote" + (bad ? "" : " warn");
+      x.note.textContent = blank ? STR.blankRow : bad ? STR.weightErr[p.error] : thousands ? STR.weightThousands(normText(r.w)) : "";
+      if (blank && i === rows.length - 1) x.note.hidden = true; // última linha vazia: nada a dizer
+    });
+    if (onChange) onChange();
+  }
+  return { render, refresh };
+}
+
+// ---- Lista
+const defaultList = () => Array.from({ length: 8 }, (_, i) => ({ opt: "Opção " + (i + 1), w: "1" }));
+let listRows = defaultList();
+const listTable = weightTable($("listTable"), listRows, { names: "edit", onChange: () => refreshCounts() });
+$("addOpt").addEventListener("click", () => { listRows.push({ opt: "", w: "1" }); listTable.render(); const ins = $("listTable").querySelectorAll(".wrow input[type=text]:not(.wval)"); if (ins.length) ins[ins.length - 1].focus(); });
+function parsePasted(text) {
+  return String(text).split(/\r?\n/).map((line) => {
+    const cut = line.includes("\t") ? line.lastIndexOf("\t") : line.lastIndexOf(";");
+    if (cut < 0) return { opt: normText(line), w: "1" };
+    const w = normText(line.slice(cut + 1));
+    return { opt: normText(line.slice(0, cut)), w: w || "1" };
+  }).filter((r) => r.opt);
+}
+function setListRows(rows) { listRows.splice(0, listRows.length, ...rows); listTable.render(); }
+$("pasteApply").addEventListener("click", () => { const rows = parsePasted($("cands").value); if (rows.length) setListRows(rows); $("pasteBox").open = false; });
+$("cands").addEventListener("input", () => { const rows = parsePasted($("cands").value); const dups = dupNames(rows.map((r) => r.opt)); showMsg($("candErr"), dups.length ? STR.errDupsOpt(dups.join(", ")) : ""); });
+const listChoice = () => document.querySelector('input[name="listChoice"]:checked').value;
+document.querySelectorAll('input[name="listChoice"]').forEach((r) => r.addEventListener("change", () => { $("pickBox").hidden = listChoice() !== "pick"; refreshCounts(); }));
+function dupNames(names) { const seen = new Set(), d = new Set(); for (const n of names) { if (!n) continue; if (seen.has(n)) d.add(n); seen.add(n); } return [...d]; }
+function refreshCounts() {
+  const named = listRows.filter((r) => normText(r.opt));
+  const positive = named.filter((r) => { const p = parseWeight(r.w); return !p.error && p.n > 0n; }).length;
+  $("candCount").textContent = STR.optCount(named.length, positive);
+  const dups = dupNames(named.map((r) => normText(r.opt)));
+  if (!$("cands").matches(":focus")) showMsg($("candErr"), dups.length ? STR.errDupsOpt(dups.join(", ")) : "");
+}
+
+// ---- Dado
+let dieFaces = 6, dieRows = [];
+const dieTable = weightTable($("dieTable"), dieRows, { names: "fixed" });
+function setFaces(f, weights) {
+  dieFaces = f;
+  dieRows.splice(0, dieRows.length, ...Array.from({ length: f }, (_, i) => ({ opt: String(i + 1), w: weights ? weights[i] : "1" })));
+  dieTable.render();
+  document.querySelectorAll('input[name="dieFaces"]').forEach((r) => (r.checked = Number(r.value) === f));
+}
+for (const f of DIE_FACES) {
+  const input = el("input", { type: "radio", name: "dieFaces", value: String(f), checked: f === 6 });
+  input.addEventListener("change", () => { if (input.checked) setFaces(f); });
+  $("dieFacesBox").append(el("label", {}, input, el("span", { textContent: "d" + f })));
+}
+setFaces(6);
+
+// ---- Cartas
+$("shuffleBtn").addEventListener("click", () => { $("cardCount").value = "52"; });
+
+// ---- tarefa a partir da tela (SPEC-v3 2)
+function taskFromUI() {
+  let task;
+  if (kind === "coin") {
+    const n = intIn("coinCount", 1, MAXN); if (n === null) return { error: STR.errCount(1, MAXN) };
+    task = presetTask("coin", { count: n });
+  } else if (kind === "die") {
+    const n = intIn("dieCount", 1, MAXN); if (n === null) return { error: STR.errCount(1, MAXN) };
+    const weights = dieRows.map((r) => normText(r.w));
+    const bad = weights.findIndex((w) => parseWeight(w).error);
+    if (bad >= 0) return { error: STR.errWeightAt(dieRows[bad].opt, STR.weightErr[parseWeight(weights[bad]).error]) };
+    if (!weights.some((w) => parseWeight(w).n > 0n)) return { error: STR.errAllZero };
+    task = presetTask("die", { count: n, faces: dieFaces, weights });
+  } else if (kind === "cards") {
+    const n = intIn("cardCount", 1, 52); if (n === null) return { error: STR.errCount(1, 52) };
+    task = presetTask("cards", { count: n });
+  } else {
+    const rows = listRows.map((r) => ({ opt: normText(r.opt), w: normText(r.w) })).filter((r) => r.opt);
+    if (rows.length < 2) return { error: STR.errFewOptions };
+    const dups = dupNames(rows.map((r) => r.opt));
+    if (dups.length) return { error: STR.errDupsOpt(dups.join(", ")) };
+    for (const r of rows) { const p = parseWeight(r.w); if (p.error) return { error: STR.errWeightAt(r.opt, STR.weightErr[p.error]) }; }
+    const positive = rows.filter((r) => parseWeight(r.w).n > 0n).length;
+    if (!positive) return { error: STR.errAllZero };
+    let count = positive, replace = false;
+    if (listChoice() === "pick") {
+      replace = $("listReplace").checked;
+      const max = replace ? MAXN : positive;
+      count = intIn("listCount", 1, max);
+      if (count === null) return { error: replace ? STR.errCount(1, MAXN) : STR.errPickTooMany(positive) };
+    }
+    task = presetTask("list", { options: rows.map((r) => r.opt), weights: rows.map((r) => r.w), count, replace });
+  }
+  const problems = validateTask(task);
+  return problems.length ? { error: problems.join("; ") } : { task };
+}
+// Preenche a tela a partir de uma tarefa lacrada (ao reabrir um sorteio).
+function taskToUI(t) {
+  kind = t.preset; LS.set("kind", kind);
+  if (t.preset === "coin") $("coinCount").value = t.count;
+  else if (t.preset === "die") { setFaces(t.options.length, t.weights); $("dieCount").value = t.count; $("dieLoaded").open = t.weights.some((w) => w !== "1"); }
+  else if (t.preset === "cards") $("cardCount").value = t.count;
+  else {
+    setListRows(t.options.map((o, i) => ({ opt: o, w: t.weights[i] })));
+    const positive = t.weights.filter((w) => parseWeight(w).n > 0n).length;
+    const all = !t.replace && t.count === positive;
+    document.querySelector('input[name="listChoice"][value="' + (all ? "all" : "pick") + '"]').checked = true;
+    $("pickBox").hidden = all; $("listCount").value = t.count; $("listReplace").checked = t.replace;
+  }
+}
+
+// ================================================================ Preparar (fontes)
 const mode = () => document.querySelector('input[name="mode"]:checked').value;
 const preset = () => (document.querySelector('input[name="preset"]:checked') || {}).value;
 const presetGame = (p) => (p || "").split("+").find((x) => x === "megasena" || x === "federal");
 function renderPresets(selected) {
   const box = $("presetBox"); box.replaceChildren();
   PRESETS[mode()].forEach((p, i) => {
-    const input = el("input", { type: "radio", name: "preset", value: p, checked: selected ? p === selected : i === 0 });
-    input.addEventListener("change", () => refreshLottery(true));
+    const input = el("input", { type: "radio", name: "preset", value: p, checked: selected ? p === selected : i === 0, disabled: locked });
+    input.addEventListener("change", refreshLottery);
     box.append(el("label", { className: "src" }, input, el("b", { textContent: STR.presets[p][0] }), el("span", { textContent: STR.presets[p][1] })));
   });
-  refreshLottery(true);
+  refreshLottery();
 }
 document.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener("change", () => renderPresets()));
-function refreshLottery(suggest) {
-  const g = presetGame(preset());
-  $("lotteryBox").hidden = !g; $("lotteryNote").hidden = !g;
-  if (!g) return;
-  const cal = settings.calendar[g];
-  $("drawTimeHint").textContent = "às " + cal.time + " (Brasília)";
-  if (suggest && !current) {
-    const s = suggestContest(g, Date.now(), settings.calendar);
-    if (s.date) $("drawDate").value = s.date;
-    if (s.contest) $("contest").value = s.contest;
-    $("contestHint").textContent = s.contest ? "sugerido pelo calendário" : "consulte o próximo concurso no site da Caixa";
-  }
-  $("lotteryNote").textContent = "Data assumida: " + ($("drawDate").value || "?") + " às " + cal.time + " (Brasília). O sorteio precisa ser pelo menos 2 horas após o lacre; confira o concurso e a data em " + LOTTERY.games[g].page;
-}
-$("contest").addEventListener("input", () => {
-  const g = presetGame(preset()); if (!g) return;
-  const d = dateForContest(g, parseInt($("contest").value, 10), settings.calendar);
-  if (d) $("drawDate").value = d;
-  refreshLottery(false);
-});
-$("drawDate").addEventListener("change", () => refreshLottery(false));
+function refreshLottery() { $("lotteryBox").hidden = !presetGame(preset()); }
 
-function refreshCount() {
-  const { names, dups } = parseNames($("cands").value);
-  $("candCount").textContent = STR.candCount(names.length);
-  showMsg($("candErr"), dups.length ? STR.dupNames(dups.join(", ")) : "");
-}
-$("cands").addEventListener("input", refreshCount);
-
-function lockForm(locked) {
-  for (const id of ["title", "drawId", "cands", "contrib", "contest", "drawDate", "sealBtn"]) $(id).disabled = locked;
-  document.querySelectorAll('input[name="preset"], input[name="mode"]').forEach((r) => (r.disabled = locked));
+function lockForm(on) {
+  locked = on;
+  document.querySelectorAll("#prep input, #prep textarea, #prep button").forEach((n) => {
+    if (["rpcs", "relay", "otherIdBtn"].includes(n.id)) return;
+    n.disabled = on;
+  });
+  document.querySelectorAll('input[name="drawmode"]').forEach((r) => (r.disabled = on));
+  for (const k of KINDS) $(TAB[k]).disabled = on && k !== kind;
 }
 
-// ---- estado do sorteio atual
-let current = null; // { spec, commitment, sealedAt, anchors, randomness, seed, order, meta }
-let ticker = null;
-const waitingStates = new WeakSet(); // laços de espera em andamento, um por sorteio
-const draws = () => LS.get("draws", {});
+// ---- guardar e listar sorteios lacrados
 function persist(state = current) {
   if (!state) return;
   const all = draws(); all[state.spec.id] = state;
@@ -1765,7 +2091,7 @@ function renderSaved() {
   for (const id of ids) {
     const b = el("button", { className: "btn quiet", type: "button", textContent: STR.reopen });
     b.addEventListener("click", () => openDraw(draws()[id]));
-    ul.append(el("li", {}, el("span", { textContent: id + " · " + (all[id].order ? STR.savedDone : STR.savedPending) }), b));
+    ul.append(el("li", {}, el("span", { textContent: id + " · " + (isDone(all[id]) ? STR.savedDone : STR.savedPending) }), b));
   }
 }
 
@@ -1785,36 +2111,47 @@ function renderTimeline() {
 const setStep = (k, st, d) => setStepUI(k, st, d);
 function setStepUI(k, state, detail) { const li = $("tl-" + k); if (!li) return; li.dataset.s = state; if (detail !== undefined) li.querySelector(".d").textContent = detail; }
 
-// ---- Lacrar
-$("sealBtn").addEventListener("click", seal);
+// ================================================================ Lacrar (verificável) ou sortear (rápido)
+$("sealBtn").addEventListener("click", () => (isQuick() ? runQuick() : seal()));
+$("againBtn").addEventListener("click", () => runQuick());
 $("otherIdBtn").addEventListener("click", () => { $("drawId").value = suggestId(); $("otherIdBtn").hidden = true; showMsg($("sealErr"), ""); $("drawId").focus(); });
+
+async function runQuick() {
+  showMsg($("sealErr"), "");
+  const { task, error } = taskFromUI();
+  if (error) return showMsg($("sealErr"), error);
+  const q = await quickDraw(task);
+  quick = { task, ...q };
+  renderQuick(true);
+}
+
 async function seal() {
   showMsg($("sealErr"), ""); showMsg($("runErr"), ""); $("otherIdBtn").hidden = true;
-  const { names, dups } = parseNames($("cands").value);
+  const { task, error } = taskFromUI();
+  if (error) return showMsg($("sealErr"), error);
   if (!normText($("title").value)) $("title").value = suggestTitle();
   if (!normText($("drawId").value)) $("drawId").value = suggestId();
   const id = normText($("drawId").value), p = preset(), g = presetGame(p);
-  if (names.length < 2) return showMsg($("sealErr"), STR.errFewNames);
-  if (dups.length) return showMsg($("sealErr"), STR.errDups);
   if (LS.get("sealedIds", []).includes(id) || id in draws()) { $("otherIdBtn").hidden = false; return showMsg($("sealErr"), STR.errIdUsed(id)); }
-  let lottery = null;
-  if (g) {
-    const contest = Number($("contest").value);
-    if (!Number.isSafeInteger(contest) || contest < 1) return showMsg($("sealErr"), STR.errContest);
-    const drawMs = lotteryDrawTime(g, $("drawDate").value, settings.calendar);
-    if (!drawMs) return showMsg($("sealErr"), STR.errDrawDate);
-    lottery = { contest, drawMs };
-  }
-  lockForm(true); $("sealBtn").textContent = STR.sealing;
+  let contest = null;
+  if (g) { contest = normText($("contest").value); if (!contestOkV3(contest)) return showMsg($("sealErr"), STR.errContest); }
+  lockForm(true);
   try {
+    if (g) {
+      // Melhor esforço: se a Caixa ou o relay já têm o resultado deste concurso, ele não serve.
+      $("sealBtn").textContent = STR.checkingContest;
+      let known = null;
+      try { known = await getLottery(g, contest, (u, o) => fetchJson(u, { ...o, timeout: 8000 })); } catch { known = null; }
+      if (known) throw Object.assign(new Error(STR.errContestDrawn(contest)), { plain: true });
+    }
+    $("sealBtn").textContent = STR.sealing;
     if (p.includes("eth")) await ethRpc.head(); // falha cedo se nenhum servidor responde
     const now = Date.now();
-    if (lottery && lottery.drawMs < now + LEAD_MS.lotteryMin) throw Object.assign(new Error(STR.errDrawTooSoon), { plain: true });
-    const spec = buildSpec({ id, title: $("title").value, mode: mode(), namesText: $("cands").value, contribution: $("contrib").value, preset: p, sealMs: now, lottery });
+    const spec = buildSpecV3({ id, title: $("title").value, mode: mode(), contribution: $("contrib").value, preset: p, sealMs: now, lottery: g ? { contest } : null, task });
     const problems = validateSpec(spec);
     if (problems.length) throw Object.assign(new Error(problems.join("; ")), { plain: true });
     const commitment = await commitmentOf(spec);
-    current = { spec, commitment, sealedAt: new Date(now).toISOString(), anchors: [], randomness: {}, meta: { preset: p, lotteryDrawMs: lottery ? lottery.drawMs : null } };
+    current = { spec, commitment, sealedAt: new Date(now).toISOString(), anchors: [], randomness: {}, meta: { preset: p } };
     LS.set("sealedIds", [...new Set([...LS.get("sealedIds", []), id])]);
     persist();
     renderTimeline(); showSeal();
@@ -1823,26 +2160,27 @@ async function seal() {
   } catch (e) {
     if (!current) { lockForm(false); showMsg($("sealErr"), e.plain ? e.message : STR.errSealFailed(e.message)); }
     else showMsg($("runErr"), STR.errWait(e.message));
-  } finally { $("sealBtn").textContent = STR.sealBtn; }
+  } finally { $("sealBtn").textContent = isQuick() ? STR.quickBtn : STR.sealBtn; }
 }
 
 function showSeal() {
   const { spec, commitment, sealedAt } = current;
-  $("sealPanel").hidden = false; $("resultPanel").hidden = false;
+  $("sealPanel").hidden = false; $("resultPanel").hidden = false; $("againBtn").hidden = true; $("newDraw").hidden = false;
   $("commitHash").textContent = commitment;
-  const s = spec.sources, facts = [[STR.factId, spec.id], [STR.factCount, String(spec.candidates.length)], [STR.factSealed, fmtBrt(Date.parse(sealedAt))]];
+  const s = spec.sources, v3 = spec.v === V3;
+  const facts = [[STR.factId, spec.id], v3 ? [STR.factTask, STR.task.presetName[spec.task.preset] + " · " + taskSummary(spec.task)] : [STR.factCount, String(spec.candidates.length)], [STR.factSealed, fmtBrt(Date.parse(sealedAt))]];
   if (s.eth) facts.push([STR.factEth, STR.factEthPlan(fmtBrt(s.eth.notBefore * 1000), s.eth.confirmations)]);
   if (s.drand) facts.push([STR.factDrand, STR.factDrandPlan(s.drand.round, fmtBrt(drandRoundTime(s.drand.round)))]);
-  for (const g of ["megasena", "federal"]) if (s[g]) facts.push([LOTTERY.games[g].label, STR.factLotteryPlan(s[g].contest, current.meta.lotteryDrawMs ? fmtBrt(current.meta.lotteryDrawMs) : "?")]);
+  for (const g of ["megasena", "federal"]) if (s[g]) facts.push([LOTTERY.games[g].label, STR.factLotteryPlan(s[g].contest), LOTTERY.games[g].page]);
   kv($("sealFacts"), facts);
   kv($("sealTech"), [[STR.factCommit, commitment], ["sealedAt", sealedAt], [STR.factRelay, settings.relay || "—"], [STR.factRpcs, settings.rpcs.join(" ")]]);
   $("specJson").textContent = JSON.stringify(spec, null, 2);
-  setStep("prep", "done", STR.candCount(spec.candidates.length));
+  setStep("prep", "done", v3 ? taskSummary(spec.task) : STR.optCount(spec.candidates.length, spec.candidates.length));
   setStep("seal", "done", commitment.slice(0, 16) + "…");
   renderAnchors();
   for (const k of Object.keys(s)) setStep(k, "active");
   if (s.drand) setStep("drand", "active", STR.tlDrandWait(s.drand.round));
-  for (const g of ["megasena", "federal"]) if (s[g]) setStep(g, "active", STR.tlLotteryWait(s[g].contest, current.meta.lotteryDrawMs ? fmtBrt(current.meta.lotteryDrawMs) : "?"));
+  for (const g of ["megasena", "federal"]) if (s[g]) setStep(g, "active", STR.tlLotteryWait(s[g].contest));
   $("resultTitle").textContent = STR.pendingTitle;
   startCountdown();
 }
@@ -1862,13 +2200,13 @@ async function anchor() {
     if (!rf.length) { renderAnchors(STR.relayFailed(problems.join("; ") || "sem tokens"), "warn"); setStep("anchor", "warn"); return; }
     renderAnchors(problems.length ? STR.anchorPartial(problems.join("; ")) : null, problems.length ? "warn" : "ok");
     setStep("anchor", "done", rf.map((a) => tsaName(a.tsa) + " " + a.time).join(" · "));
-    if (current.order) renderDone();
+    if (isDone(current)) renderDone();
   } catch (e) {
     if (state !== current) return;
     renderAnchors(STR.relayFailed(e.message), "warn"); setStep("anchor", "warn", STR.noRelay);
   }
 }
-function renderAnchors(extra, kind) {
+function renderAnchors(extra, kindMsg) {
   const a = (current && current.anchors) || [];
   const rf = a.filter((x) => x.type === "rfc3161"), ots = a.find((x) => x.type === "ots");
   const parts = [];
@@ -1876,7 +2214,7 @@ function renderAnchors(extra, kind) {
   if (ots) parts.push(ots.complete ? STR.otsComplete : STR.otsPending);
   if (extra) parts.push(extra);
   if (!parts.length && current && !settings.relay) parts.push(STR.noRelay);
-  showMsg($("anchorMsg"), parts.join(" "), kind || (rf.length ? "ok" : "warn"));
+  showMsg($("anchorMsg"), parts.join(" "), kindMsg || (rf.length ? "ok" : "warn"));
   $("otsUpgrade").hidden = !(ots && !ots.complete && settings.relay);
   if (rf.length) setStep("anchor", "done", rf.map((x) => tsaName(x.tsa) + " " + x.time).join(" · "));
 }
@@ -1886,17 +2224,16 @@ async function upgradeOts() {
   if (!ots || ots.complete || !settings.relay) return;
   try {
     const r = await fetchJson(settings.relay.replace(/\/+$/, "") + "/v1/ots/upgrade", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ots: ots.proof }), timeout: 30000 });
-    if (typeof r.ots === "string" && r.ots) { ots.proof = r.ots; ots.complete = r.complete === true; persist(); renderAnchors(); if (current.order) renderDone(); }
+    if (typeof r.ots === "string" && r.ots) { ots.proof = r.ots; ots.complete = r.complete === true; persist(); renderAnchors(); if (isDone(current)) renderDone(); }
   } catch (e) { renderAnchors(STR.relayFailed(e.message), "warn"); }
 }
 
-// ---- contagem regressiva (só UX; usa o relógio local)
+// ---- contagem regressiva (só UX; relógio local; só para fontes com horário conhecido: eth e drand)
 function expectedMs() {
   const s = current.spec.sources, t = [];
   if (s.eth) t.push(ethNextSlotTime(s.eth.notBefore) + s.eth.confirmations * ETH.slot * 1000 + 4000);
   if (s.drand) t.push(drandRoundTime(s.drand.round));
-  if (current.meta.lotteryDrawMs) t.push(current.meta.lotteryDrawMs);
-  return Math.max(...t);
+  return t.length ? Math.max(...t) : null;
 }
 function fmtLeft(sec) {
   if (sec <= 0) return STR.cdSoon;
@@ -1905,13 +2242,14 @@ function fmtLeft(sec) {
 }
 function startCountdown() {
   clearInterval(ticker);
-  const due = expectedMs(); $("cdWrap").hidden = false;
+  const due = expectedMs();
+  $("cdWrap").hidden = due === null;
+  if (due === null) return;
   const tick = () => { $("countdown").textContent = fmtLeft(Math.round((due - Date.now()) / 1000)); };
   tick(); ticker = setInterval(tick, 1000);
 }
 
 // ---- espera pelas fontes
-// Motivo legível de uma falha de rede, incluindo a causa de "nenhum servidor respondeu".
 function errWhy(e) {
   const c = e && e.cause ? e.cause : e;
   const m = (c && c.message) || String(c || "desconhecido");
@@ -1927,12 +2265,13 @@ async function waitDrand(round) {
   }
   throw new Error(STR.errDrandFetch(round, last ? last.message : "tempo esgotado"));
 }
+const lotteryEv = (g, contest, res, source) => ({ contest, ...(g === "megasena" ? { numbers: res.numbers } : { prizes: res.prizes }), drawDate: res.drawDate || "", source });
 async function pollLottery(game, contest, once, state = current) {
   for (;;) {
     let r = null, err = null;
     try { r = await getLottery(game, contest); } catch (e) { err = e; }
-    if (r) return { ...r, source: "caixa-api" };
-    if (current === state && (err || (state.meta.lotteryDrawMs && Date.now() > state.meta.lotteryDrawMs + 6 * 3600 * 1000))) showManual(game, contest, !!err);
+    if (r) return r;
+    if (current === state && err) showManual(game, contest, true);
     if (once) return null;
     await sleep(10 * 60 * 1000);
     if (current !== state || state.randomness[game]) return null;
@@ -1942,14 +2281,13 @@ async function waitAndDraw() {
   const state = current;
   if (waitingStates.has(state)) return;
   waitingStates.add(state);
-  const s = state.spec.sources, r = state.randomness, jobs = [];
-  // Um laço antigo (sorteio trocado por outro) continua guardando o resultado, mas não mexe na tela.
+  const s = state.spec.sources, r = state.randomness, jobs = [], v = state.spec.v;
   const setStep = (k, st, d) => { if (current === state) setStepUI(k, st, d); };
   const persist = () => persistState(state);
   try {
     if (r.eth) setStep("eth", "done", STR.tlEthDone(r.eth.number, r.eth.hash.slice(0, 16)));
     if (r.drand) setStep("drand", "done", STR.tlDrandDone(r.drand.round, r.drand.randomness.slice(0, 16)));
-    for (const g of ["megasena", "federal"]) if (r[g]) setStep(g, "done", STR.tlLotteryDone(r[g].contest, lotteryValue(g, r[g].contest, r[g]).split(":")[1]));
+    for (const g of ["megasena", "federal"]) if (r[g]) setStep(g, "done", STR.tlLotteryDone(r[g].contest, lotteryValue(g, r[g].contest, r[g], v).split(":")[1]));
     if (s.drand && !r.drand) jobs.push(waitDrand(s.drand.round).then((d) => { r.drand = d; persist(); setStep("drand", "done", STR.tlDrandDone(d.round, d.randomness.slice(0, 16))); }));
     if (s.eth && !r.eth) jobs.push(waitEthTarget(ethRpc, s.eth, {
       sleep, onStatus: (st) => {
@@ -1960,16 +2298,14 @@ async function waitAndDraw() {
     }).then((b) => { r.eth = b; persist(); setStep("eth", "done", STR.tlEthDone(b.number, b.hash.slice(0, 16))); }));
     for (const g of ["megasena", "federal"]) {
       if (s[g] && !r[g]) {
-        const lotteryJob = (async () => {
-          if (state.meta.lotteryDrawMs && Date.now() < state.meta.lotteryDrawMs) { showPending(g, s[g].contest); while (current === state && Date.now() < state.meta.lotteryDrawMs) await sleep(Math.min(60000, state.meta.lotteryDrawMs - Date.now())); }
-          if (current !== state) throw new Error("cancelado");
-          showPending(g, s[g].contest);
+        const job = (async () => {
+          if (current === state) showPending(g, s[g].contest);
           const res = await pollLottery(g, s[g].contest, false, state);
-          if (res && !r[g]) { r[g] = { contest: s[g].contest, ...(g === "megasena" ? { numbers: res.numbers } : { prizes: res.prizes }), drawDate: res.drawDate || "", source: "caixa-api" }; }
+          if (res && !r[g]) r[g] = lotteryEv(g, s[g].contest, res, "caixa-api");
           if (!r[g]) throw new Error("cancelado");
-          persist(); setStep(g, "done", STR.tlLotteryDone(r[g].contest, lotteryValue(g, r[g].contest, r[g]).split(":")[1]));
+          persist(); setStep(g, "done", STR.tlLotteryDone(r[g].contest, lotteryValue(g, r[g].contest, r[g], v).split(":")[1]));
         })();
-        lotteryJob.catch(() => {}); jobs.push(lotteryJob);
+        job.catch(() => {}); jobs.push(job);
       }
     }
     await Promise.all(jobs);
@@ -1984,17 +2320,15 @@ async function waitAndDraw() {
 }
 function showPending(game, contest) {
   $("pendingBox").hidden = false;
-  $("pendingText").textContent = STR.pendingLottery(LOTTERY.games[game].label, contest, current.meta.lotteryDrawMs ? fmtBrt(current.meta.lotteryDrawMs) : "?");
+  $("pendingText").textContent = STR.pendingLottery(LOTTERY.games[game].label, contest);
 }
+const pendingGame = () => current && ["megasena", "federal"].find((g) => current.spec.sources[g] && !current.randomness[g]);
 $("fetchNow").addEventListener("click", async () => {
-  if (!current) return;
-  for (const g of ["megasena", "federal"]) {
-    const s = current.spec.sources[g];
-    if (!s || current.randomness[g]) continue;
-    const res = await pollLottery(g, s.contest, true);
-    if (res) { manualResolve(g, { contest: s.contest, ...(g === "megasena" ? { numbers: res.numbers } : { prizes: res.prizes }), drawDate: res.drawDate || "", source: "caixa-api" }); }
-  }
+  const g = pendingGame(); if (!g) return;
+  const c = current.spec.sources[g].contest, res = await pollLottery(g, c, true);
+  if (res) resolveLottery(g, lotteryEv(g, c, res, "caixa-api"));
 });
+$("manualOpen").addEventListener("click", () => { const g = pendingGame(); if (g) showManual(g, current.spec.sources[g].contest, false); });
 let manualGame = null;
 function showManual(game, contest, unreachable) {
   manualGame = game; $("manualBox").hidden = false;
@@ -2005,47 +2339,182 @@ function showManual(game, contest, unreachable) {
 }
 $("manualSave").addEventListener("click", () => {
   const g = manualGame; if (!g || !current) return;
-  const parsed = parseManualLottery(g, $("manualNums").value, $("manualDate").value);
+  const parsed = parseManualLottery(g, $("manualNums").value, $("manualDate").value, current.spec.v);
   if (parsed.error) return showMsg($("manualErr"), parsed.error);
   if (!$("manualConfirm").checked) return showMsg($("manualErr"), STR.manualNoConfirm);
   showMsg($("manualErr"), "");
-  manualResolve(g, { contest: current.spec.sources[g].contest, ...parsed, source: "manual" });
+  resolveLottery(g, { contest: current.spec.sources[g].contest, ...parsed, source: "manual" });
 });
 // Resultado de loteria obtido fora do laço de espera (botão ou entrada manual).
-function manualResolve(g, ev) {
+function resolveLottery(g, ev) {
   if (current.randomness[g]) return;
   current.randomness[g] = ev; persist();
-  setStep(g, "done", STR.tlLotteryDone(ev.contest, lotteryValue(g, ev.contest, ev).split(":")[1]));
+  setStep(g, "done", STR.tlLotteryDone(ev.contest, lotteryValue(g, ev.contest, ev, current.spec.v).split(":")[1]));
   $("manualBox").hidden = true;
-  const s = current.spec.sources;
-  if (Object.keys(s).every((k) => current.randomness[k])) finish();
+  if (Object.keys(current.spec.sources).every((k) => current.randomness[k])) finish();
 }
 
 async function finish() {
-  if (current.order && current.seed) { renderDone(); return; }
+  if (isDone(current)) { renderDone(); return; }
   clearInterval(ticker); $("cdWrap").hidden = true;
-  current.seed = await seedV2(current.commitment, sourceValues(current.randomness));
-  const rows = await orderV2(current.seed, current.spec.candidates);
-  current.order = rows.map((x) => x.name);
+  const v = current.spec.v;
+  if (v === V3) {
+    current.seed = await seedV3(current.commitment, sourceValues(current.randomness, V3));
+    current.picks = (await selectPicks(current.seed, current.spec.task)).picks;
+    current.result = current.picks.map((i) => current.spec.task.options[i]);
+  } else { // sorteio LucentDraw/2 lacrado antes da atualização: termina pela regra dele
+    current.seed = await seedV2(current.commitment, sourceValues(current.randomness));
+    current.order = (await orderV2(current.seed, current.spec.candidates)).map((x) => x.name);
+  }
   persist();
   renderDone();
 }
+
+// ================================================================ resultado: visuais, tabela e barras
+function hideResult() { for (const id of ["resultPanel", "doneBox", "pendingBox", "manualBox"]) $(id).hidden = true; }
+function coinFig(face, i) {
+  const s = sv("svg", { viewBox: "0 0 100 100" },
+    sv("circle", { cx: 50, cy: 50, r: 48, class: "coin-edge" }), sv("circle", { cx: 50, cy: 50, r: 40, class: "coin-face" }));
+  if (face === COIN[0]) s.append(sv("circle", { cx: 50, cy: 40, r: 12, class: "coin-mark" }), sv("path", { d: "M29 74 Q29 55 50 55 Q71 55 71 74 Z", class: "coin-mark" }));
+  else s.append(sv("path", { d: "M28 66 L30 38 L41 51 L50 33 L59 51 L70 38 L72 66 Z", class: "coin-mark" }), sv("rect", { x: 28, y: 68, width: 44, height: 6, rx: 2, class: "coin-mark" }));
+  return fig(s, face, i, "flip");
+}
+const PIPS = { 1: [[50, 50]], 2: [[30, 30], [70, 70]], 3: [[30, 30], [50, 50], [70, 70]], 4: [[30, 30], [70, 30], [30, 70], [70, 70]], 5: [[30, 30], [70, 30], [50, 50], [30, 70], [70, 70]], 6: [[30, 28], [70, 28], [30, 50], [70, 50], [30, 72], [70, 72]] };
+const DIE_SHAPES = { 4: "50,6 95,88 5,88", 8: "50,3 96,50 50,97 4,50", 10: "50,3 94,42 50,97 6,42", 12: "50,4 96,37 78,94 22,94 4,37", 20: "50,3 93,27 93,73 50,97 7,73 7,27" };
+function dieFig(face, faces, i) {
+  const n = Number(face), s = sv("svg", { viewBox: "0 0 100 100" });
+  if (faces === 6) {
+    s.append(sv("rect", { x: 6, y: 6, width: 88, height: 88, rx: 16, class: "die-body" }));
+    for (const [x, y] of PIPS[n] || []) s.append(sv("circle", { cx: x, cy: y, r: 8, class: "die-pip" }));
+  } else {
+    s.append(sv("polygon", { points: DIE_SHAPES[faces], class: "die-body" }));
+    const t = sv("text", { x: 50, y: faces === 4 ? 64 : 52, class: "die-num" }); t.textContent = face;
+    if (face.length > 1) t.setAttribute("style", "font-size:26px");
+    s.append(t);
+  }
+  return fig(s, "d" + faces + ": " + face, i, "pop");
+}
+function cardFig(card, i) {
+  const rank = card.slice(0, -1), suit = card.slice(-1), shown = suit + "\uFE0E"; // U+FE0E: naipe como texto, não emoji (só na tela)
+  const c = el("div", { className: "pcard" + (suit === "♥" || suit === "♦" ? " red" : "") },
+    el("span", { className: "r1", textContent: rank + shown }), el("span", { className: "s", textContent: shown }), el("span", { className: "r2", textContent: rank + shown }));
+  return fig(c, card, i, "pop", false);
+}
+function fig(node, label, i, anim, caption = true) {
+  const f = el("figure", { className: anim });
+  f.style.animationDelay = Math.min(i * 70, 1400) + "ms";
+  f.append(node);
+  if (caption) f.append(el("figcaption", { textContent: label }));
+  return f;
+}
+function renderVisual(box, task, result) {
+  box.replaceChildren();
+  const show = result.slice(0, 120);
+  if (task.preset === "coin") show.forEach((r, i) => box.append(coinFig(r, i)));
+  else if (task.preset === "die") show.forEach((r, i) => box.append(dieFig(r, task.options.length, i)));
+  else if (task.preset === "cards") show.forEach((r, i) => box.append(cardFig(r, i)));
+  else return;
+  if (result.length > show.length) box.append(el("span", { className: "vmore", textContent: STR.visualMore(result.length - show.length) }));
+}
+// Barras de intervalos (SPEC-v3 6): uma barra por escolha sem reposição; uma barra com todas as agulhas com reposição.
+function renderBars(box, task, ints, steps) {
+  box.replaceChildren();
+  const many = task.options.length > 20;
+  const bar = (alive, W, marks) => {
+    const b = el("div", { className: "ibar" });
+    b.setAttribute("role", "img");
+    b.setAttribute("aria-label", marks.map((m) => STR.barCaption(m.j + 1, String(m.x), String(W), shareText(m.x, W), task.options[m.index])).join("; "));
+    const picked = new Set(marks.map((m) => m.index));
+    alive.forEach((i, k) => {
+      const seg = el("div", { className: "sg" + (k % 2 ? " alt" : "") + (picked.has(i) ? " pick" : "") });
+      const pct = pctOf(ints[i], W);
+      seg.style.width = pct + "%";
+      seg.title = task.options[i] + " · " + shareText(ints[i], W);
+      if ((!many || picked.has(i)) && pct >= 6) seg.textContent = task.options[i];
+      b.append(seg);
+    });
+    marks.forEach((m) => {
+      const n = el("div", { className: "needle" });
+      n.style.left = pctOf(m.x, W) + "%";
+      if (marks.length <= 20) n.append(el("span", { textContent: String(m.j + 1) }));
+      b.append(n);
+    });
+    return b;
+  };
+  const caps = (marks, W) => marks.slice(0, 20).map((m) => STR.barCaption(m.j + 1, String(m.x), String(W), shareText(m.x, W), task.options[m.index])).join(" · ") + (marks.length > 20 ? " · …" : "");
+  if (task.replace) {
+    const alive = ints.map((w, i) => i).filter((i) => ints[i] > 0n), W = steps.length ? steps[0].W : 0n;
+    box.append(bar(alive, W, steps), el("p", { className: "bar-cap", textContent: caps(steps, W) }));
+    return;
+  }
+  const alive = ints.map((w, i) => i).filter((i) => ints[i] > 0n), items = [];
+  for (const st of steps) {
+    items.push(el("div", {}, bar([...alive], st.W, [st]), el("p", { className: "bar-cap", textContent: caps([st], st.W) })));
+    alive.splice(alive.indexOf(st.index), 1);
+  }
+  const first = 8;
+  items.slice(0, first).forEach((x) => box.append(x));
+  if (items.length > first) {
+    const more = el("button", { type: "button", className: "btn quiet", textContent: STR.barsMore(items.length) });
+    more.addEventListener("click", () => { more.remove(); items.slice(first).forEach((x) => box.append(x)); });
+    box.append(more);
+  }
+}
+function summaryLine(task, result) {
+  if (task.preset === "coin") return STR.sumCoin(result.filter((r) => r === COIN[0]).length, result.filter((r) => r === COIN[1]).length);
+  if (task.preset === "die" && result.length > 1) return STR.sumDice(result.reduce((a, r) => a + Number(r), 0));
+  return "";
+}
+// Mostra um resultado v3 (verificável ou rápido): visuais, tabela, barras.
+function renderOutcome(task, picks, steps, ints) {
+  const result = picks.map((i) => task.options[i]);
+  renderVisual($("visual"), task, result);
+  const isList = task.preset === "list";
+  $("resultLine").textContent = isList ? "" : STR.resultLine(result.join(", "));
+  $("resultSum").textContent = summaryLine(task, result);
+  $("resultTableWrap").hidden = !isList;
+  const W = ints.reduce((a, b) => a + b, 0n);
+  if (isList) {
+    $("resultHead").replaceChildren(el("th", { textContent: STR.thPos }), el("th", { textContent: STR.thOpt }), el("th", { textContent: STR.thShare }));
+    const body = $("orderBody"); body.replaceChildren();
+    picks.forEach((i, k) => body.append(el("tr", {}, el("td", { className: "pos", textContent: String(k + 1) }), el("td", { className: "name", textContent: task.options[i] }), el("td", { className: "key", textContent: shareText(ints[i], W) }))));
+  }
+  $("barsWrap").hidden = false;
+  renderBars($("bars"), task, ints, steps);
+}
+async function renderQuick(scroll) {
+  const q = quick; if (!q) return;
+  $("resultPanel").hidden = false; $("doneBox").hidden = false; $("pendingBox").hidden = true; $("manualBox").hidden = true;
+  $("resultTitle").textContent = STR.quickTitle;
+  $("quickNote").hidden = false; $("certRow").hidden = true; $("ataBox").hidden = true; $("resultFacts").hidden = true;
+  $("quickTech").hidden = false; kv($("quickFacts"), [[STR.factQuickSeed, q.seed]]);
+  $("againBtn").hidden = false; $("newDraw").hidden = true;
+  renderOutcome(q.task, q.picks, q.steps, q.ints);
+  if (scroll && !reduceMotion()) $("resultPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+}
 async function renderDone() {
   clearInterval(ticker); $("cdWrap").hidden = true;
-  const { spec, randomness: r } = current;
-  const rows = spec.v === VERSION ? await orderV2(current.seed, spec.candidates) : await orderV1(current.seed, spec.candidates);
+  const { spec, randomness: r } = current, v3 = spec.v === V3;
   setStep("result", "done", "semente " + current.seed.slice(0, 16) + "…");
   $("resultTitle").textContent = STR.resultTitle(spec.title);
   $("pendingBox").hidden = true; $("manualBox").hidden = true; $("doneBox").hidden = false;
-  const body = $("orderBody"); body.replaceChildren();
-  rows.forEach((row, i) => {
-    const key = el("td", { className: "key", textContent: row.key.slice(0, 12) + "…", title: row.key });
-    body.append(el("tr", {}, el("td", { className: "pos", textContent: String(i + 1) }), el("td", { className: "name", textContent: row.name }), key));
-  });
+  $("quickNote").hidden = true; $("quickTech").hidden = true; $("certRow").hidden = false; $("ataBox").hidden = false; $("resultFacts").hidden = false;
+  $("againBtn").hidden = true; $("newDraw").hidden = false;
+  if (v3) {
+    const { picks, steps, ints } = await selectPicks(current.seed, spec.task);
+    renderOutcome(spec.task, picks, steps, ints);
+  } else {
+    const rows = await orderV2(current.seed, spec.candidates);
+    renderVisual($("visual"), { preset: "list" }, []); $("resultLine").textContent = ""; $("resultSum").textContent = "";
+    $("resultTableWrap").hidden = false; $("barsWrap").hidden = true;
+    $("resultHead").replaceChildren(el("th", { textContent: STR.thPos }), el("th", { textContent: STR.thName }), el("th", { textContent: STR.thKey }));
+    const body = $("orderBody"); body.replaceChildren();
+    rows.forEach((row, i) => body.append(el("tr", {}, el("td", { className: "pos", textContent: String(i + 1) }), el("td", { className: "name", textContent: row.name }), el("td", { className: "key", textContent: row.key.slice(0, 12) + "…", title: row.key }))));
+  }
   const facts = [[STR.factCommit, current.commitment]];
   if (r.eth) facts.push([STR.factEth, "#" + r.eth.number + " · " + r.eth.hash, links.eth(r.eth.number)]);
   if (r.drand) facts.push([STR.factDrand, "#" + r.drand.round + " · " + r.drand.randomness, links.drand(r.drand.round)]);
-  for (const g of ["megasena", "federal"]) if (r[g]) facts.push([LOTTERY.games[g].label, lotteryValue(g, r[g].contest, r[g]) + (r[g].source === "manual" ? " · inserido manualmente" : ""), links.lottery(g)]);
+  for (const g of ["megasena", "federal"]) if (r[g]) facts.push([LOTTERY.games[g].label, lotteryValue(g, r[g].contest, r[g], spec.v) + (r[g].drawDate ? " · " + r[g].drawDate : "") + (r[g].source === "manual" ? " · inserido manualmente" : ""), links.lottery(g)]);
   facts.push([STR.factSeed, current.seed]);
   kv($("resultFacts"), facts);
   $("ataText").textContent = ataText(certificateOf(current));
@@ -2060,25 +2529,27 @@ $("copyAta").addEventListener("click", () => copyText(ataText(certificateOf(curr
 $("dlCert").addEventListener("click", () => download(certFileName(current.spec.id), certText()));
 $("newDraw").addEventListener("click", resetDraw);
 function resetDraw() {
-  current = null; LS.del("current"); clearInterval(ticker);
+  current = null; quick = null; LS.del("current"); clearInterval(ticker);
   lockForm(false);
   for (const id of ["sealPanel", "resultPanel", "cdWrap", "doneBox", "pendingBox", "manualBox"]) $(id).hidden = true;
   showMsg($("runErr"), ""); showMsg($("sealErr"), ""); $("drawId").value = ""; $("copyFallback").hidden = true;
-  renderTimeline(); renderSaved(); refreshLottery(true); refreshSuggestions(); $("title").focus();
+  renderTimeline(); renderSaved(); refreshSuggestions(); selectTab(kind); $("title").focus();
 }
 function openDraw(state) {
   if (!state || !state.spec || !state.spec.sources) return;
+  if (isQuick()) { drawMode = "verif"; document.querySelector('input[name="drawmode"][value="verif"]').checked = true; applyDrawMode(); }
   current = state; current.meta = current.meta || {}; current.anchors = current.anchors || []; current.randomness = current.randomness || {};
   LS.set("current", state.spec.id);
   for (const id of ["doneBox", "pendingBox", "manualBox"]) $(id).hidden = true;
-  $("title").value = state.spec.title; $("drawId").value = state.spec.id;
-  $("cands").value = state.spec.candidates.join("\n"); $("contrib").value = state.spec.contribution || "";
+  $("title").value = state.spec.title; $("drawId").value = state.spec.id; $("contrib").value = state.spec.contribution || "";
+  if (state.spec.v === V3) taskToUI(state.spec.task);
+  else { kind = "list"; setListRows(state.spec.candidates.map((c) => ({ opt: c, w: "1" }))); }
   document.querySelector('input[name="mode"][value="' + (state.spec.mode === "scheduled" ? "scheduled" : "live") + '"]').checked = true;
   renderPresets(state.meta.preset);
   const g = presetGame(state.meta.preset);
-  if (g) { $("contest").value = state.spec.sources[g].contest; if (state.meta.lotteryDrawMs) $("drawDate").value = new Date(state.meta.lotteryDrawMs + tzMs).toISOString().slice(0, 10); }
-  refreshCount(); lockForm(true); renderTimeline(); showSeal(); renderSaved();
-  if (state.order && state.seed) { finish(); return; }
+  if (g) $("contest").value = state.spec.sources[g].contest;
+  lockForm(true); selectTab(kind); renderTimeline(); showSeal(); renderSaved();
+  if (isDone(state)) { finish(); return; }
   const ots = current.anchors.find((x) => x.type === "ots"); if (ots && !ots.complete) upgradeOts();
   waitAndDraw();
 }
@@ -2086,24 +2557,25 @@ function openDraw(state) {
 // ---- sugestões de título e ID: preenchidas, editáveis, e repostas ao lacrar se ficarem em branco
 const pad2 = (n) => String(n).padStart(2, "0");
 function suggestTitle(d = new Date()) {
-  return "Sorteio de " + pad2(d.getDate()) + "/" + pad2(d.getMonth() + 1) + "/" + d.getFullYear() + ", " + pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+  return STR.task.presetName[kind] + " · " + pad2(d.getDate()) + "/" + pad2(d.getMonth() + 1) + "/" + d.getFullYear() + ", " + pad2(d.getHours()) + ":" + pad2(d.getMinutes());
 }
 function suggestId(d = new Date()) {
-  const base = "sorteio-" + d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()) + "-" + pad2(d.getHours()) + pad2(d.getMinutes());
+  const base = ({ list: "sorteio", coin: "moeda", die: "dado", cards: "cartas" }[kind] || "sorteio") + "-" + d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()) + "-" + pad2(d.getHours()) + pad2(d.getMinutes());
   const used = new Set([...LS.get("sealedIds", []), ...Object.keys(draws())]);
   let id = base, n = 2;
   while (used.has(id)) id = base + "-" + n++;
   return id;
 }
+let lastSuggestedId = "";
 function refreshSuggestions() {
   $("title").placeholder = suggestTitle();
-  if (!$("drawId").disabled && !normText($("drawId").value)) $("drawId").value = suggestId();
+  const v = normText($("drawId").value);
+  if (!$("drawId").disabled && (!v || v === lastSuggestedId)) $("drawId").value = lastSuggestedId = suggestId();
 }
 
-// ---- inicialização: exemplo e retomada
-$("title").value = "Vagas de garagem, bloco B";
-$("cands").value = ["Apto 101 · Souza", "Apto 102 · Oliveira", "Apto 201 · Pereira", "Apto 202 · Lima", "Apto 301 · Carvalho", "Apto 302 · Ribeiro"].join("\n");
-renderPresets(); refreshCount(); renderTimeline(); renderSaved(); refreshSuggestions();
+// ---- inicialização: exemplo, modo e retomada
+listTable.render();
+renderPresets(); renderTimeline(); renderSaved(); refreshSuggestions(); applyDrawMode(); selectTab(kind);
 {
   const id = LS.get("current", null), all = draws();
   if (id && all[id]) openDraw(all[id]);
@@ -2112,13 +2584,13 @@ renderPresets(); refreshCount(); renderTimeline(); renderSaved(); refreshSuggest
 // ================================================================ Conferir
 $("certFile").addEventListener("change", async (e) => { const f = e.target.files[0]; if (f) $("certIn").value = await f.text(); });
 $("verifyBtn").addEventListener("click", async () => {
-  const list = $("checks"); list.replaceChildren(); showMsg($("verdict"), ""); $("verifyHead").hidden = true; $("vOrderWrap").hidden = true;
+  const list = $("checks"); list.replaceChildren(); showMsg($("verdict"), ""); $("verifyHead").hidden = true; $("vOrderWrap").hidden = true; $("vV3").hidden = true;
   let cert;
   try { cert = JSON.parse($("certIn").value); } catch { showMsg($("verdict"), STR.notJson, "bad"); return; }
   $("verifyBtn").disabled = true; $("verifyBtn").textContent = STR.verifying;
   try {
     if (cert && cert.spec && typeof cert.spec.id === "string") { $("verifyHead").hidden = false; $("vDrawId").textContent = cert.spec.id; }
-    const rep = await verifyCertificate(cert, { eth: ethEvidence, drand: getDrand, lottery: getLottery }, { lotteryConfirmed: $("lotteryEye").checked });
+    const rep = await verifyCertificate(cert, { eth: ethEvidence, drand: getDrand, lottery: (g, c) => getLottery(g, c) }, { lotteryConfirmed: $("lotteryEye").checked });
     for (const c of rep.checks) {
       const body = el("div", { textContent: c.title });
       if (c.detail) body.append(el("small", { textContent: c.detail }));
@@ -2131,8 +2603,25 @@ $("verifyBtn").addEventListener("click", async () => {
       ol.setAttribute("aria-label", STR.orderTitle);
       rep.order.forEach((n) => ol.append(el("li", { textContent: n })));
     }
+    if (rep.v3) renderVerifyV3(rep.v3);
   } finally { $("verifyBtn").disabled = false; $("verifyBtn").textContent = STR.verifyBtn; }
 });
+// SPEC-v3 7: pesos como digitados, pesos inteiros e W, e o resultado recalculado com as barras.
+function renderVerifyV3(x) {
+  const t = x.task;
+  $("vV3").hidden = false;
+  const L = integerWeights(t.weights).L;
+  $("vW").textContent = STR.vW(String(x.W), String(L));
+  const body = $("vTask"); body.replaceChildren();
+  t.options.forEach((o, i) => body.append(el("tr", {}, el("td", { className: "name", textContent: o }), el("td", { className: "key", textContent: t.weights[i] }), el("td", { className: "key", textContent: String(x.ints[i]) }), el("td", { className: "key", textContent: shareText(x.ints[i], x.W) }))));
+  $("vTaskBox").open = t.options.length <= 12;
+  const ol = $("vResult"); ol.replaceChildren();
+  $("vBars").replaceChildren();
+  if (x.result) {
+    x.result.forEach((n) => ol.append(el("li", { textContent: n })));
+    renderBars($("vBars"), t, x.ints, x.steps);
+  }
+}
 </script>
 </body>
 </html>
