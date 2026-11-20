@@ -101,3 +101,7 @@ como MUST.
     resultado manualmente"; exige números, data e a confirmação de que foram conferidos na página oficial.
 34. **ICP-Brasil**: presente na configuração do relay (`enabled: false`), sem código que dependa dela.
 35. **Não foi construído** o resto da SPEC 12 (grupos de prioridade, FilaLúcida, interface em inglês etc.).
+
+## Pendente: Amigo Oculto
+- Coluna "Celular ou e-mail" por participante (como no Lucent Segredo): "Enviar pelo WhatsApp" direto ao número, "Enviar por e-mail" ao endereço.
+- "Colar uma lista": uma pessoa por linha, nome e, opcionalmente, celular ou e-mail (cabeçalho de planilha ignorado).

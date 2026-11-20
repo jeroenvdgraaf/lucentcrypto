@@ -5,9 +5,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
-<title>Lucent Segredo · demonstração</title>
+<title>Lucent Segredo · dividir um segredo entre pessoas de confiança</title>
 <meta name="description" content="Divida um segredo entre pessoas de confiança: menos guardiões do que o combinado não descobrem nada; o número combinado, juntos, abre. Funciona no navegador, também sem internet.">
+<link rel="canonical" href="https://lucentcrypto.org/segredo/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="LucentCrypto">
+<meta property="og:title" content="Lucent Segredo · dividir um segredo entre pessoas de confiança">
+<meta property="og:description" content="Menos guardiões do que o combinado não descobrem nada; o número combinado, juntos, abre. Demonstração, no navegador, também sem internet.">
+<meta property="og:url" content="https://lucentcrypto.org/segredo/">
+<meta property="og:image" content="https://lucentcrypto.org/og/segredo.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23a85d08'/%3E%3Cpath d='M22 14h8v28h16v8H22z' fill='%23fff'/%3E%3C/svg%3E">
 <style>
 :root {
@@ -53,6 +63,13 @@ button.theme { font: 600 13px var(--body); border: 1px solid var(--line); backgr
 .partner .go { font-weight: 700; color: var(--pine); white-space: nowrap; }
 .partner:hover { filter: brightness(1.03); }
 @media (max-width: 620px) { .partner { grid-template-columns: 1fr; } }
+.danger { display: grid; grid-template-columns: auto 1fr; gap: 12px 16px; align-items: start; background: var(--warn-soft); border: 2px solid var(--warn); border-radius: 14px; padding: 14px 18px; }
+.danger svg { width: 40px; height: 40px; color: var(--warn); flex: none; }
+.danger b { font: 700 17px var(--display); color: var(--warn); display: block; margin-bottom: 2px; }
+.danger p { font-size: 14.5px; }
+.disclaimer { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 8px; font-size: 14px; }
+.disclaimer h3 { margin: 0; font: 700 16px var(--display); color: var(--warn); }
+.import { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--bg); display: grid; gap: 8px; }
 .tabs { display: inline-flex; gap: 4px; background: var(--sunk); border: 1px solid var(--line); border-radius: 999px; padding: 4px; justify-self: start; }
 .tabs button { font: 600 14px var(--body); border: 0; background: transparent; color: var(--muted); padding: 8px 16px; border-radius: 999px; cursor: pointer; }
 .tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
@@ -117,6 +134,14 @@ code { font-family: var(--mono); font-size: 12.5px; }
   <button class="theme" id="themeBtn" type="button"></button>
 </header>
 
+<div class="danger" role="note" aria-labelledby="dangerTitle">
+  <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 2 44h44L24 4z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M24 18v12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="36.5" r="2.6" fill="currentColor"/></svg>
+  <div>
+    <b id="dangerTitle">Versão de demonstração</b>
+    <p>Feita de boa-fé e com cuidado, mas <b style="display:inline;font:inherit;font-weight:700;color:inherit">sem garantias e sem responsabilidade</b> por perdas. Não use para guardar o acesso a dinheiro, investimentos ou outros bens de valor. Leia o aviso completo no fim da página.</p>
+  </div>
+</div>
+
 <a class="partner" href="https://grifortis.com" target="_blank" rel="noopener">
   <span class="badge">Empresa parceira</span>
   <span><b>Para guardar por décadas: DuraShare, da Grifortis</b><br><span class="small">Segredos que precisam atravessar gerações e poder ser recuperados até sem computador, só com papel, calculadora e instruções.</span></span>
@@ -153,7 +178,13 @@ code { font-family: var(--mono); font-size: 12.5px; }
     <thead><tr><th></th><th>Nome</th><th>Celular ou e-mail <small>(opcional, para enviar)</small></th><th></th></tr></thead>
     <tbody id="gRows"></tbody>
   </table>
-  <div class="row"><button class="btn small" id="addRow" type="button">+ Guardião</button></div>
+  <div class="row"><button class="btn small" id="addRow" type="button">+ Guardião</button><button class="btn small" id="importOpen" type="button">Colar uma lista</button></div>
+  <div class="import" id="importBox" hidden>
+    <label class="f"><span>Uma pessoa por linha <small>nome e, se quiser, celular ou e-mail; por exemplo “Bruno; (31) 98888-7777” ou “Carla carla@exemplo.com”. Pode colar duas colunas de uma planilha.</small></span>
+      <textarea id="importText" rows="5" spellcheck="false"></textarea></label>
+    <p class="small muted" id="importPreview" aria-live="polite"></p>
+    <div class="row"><button class="btn small primary" id="importUse" type="button" disabled>Usar esta lista</button><button class="btn small" id="importCancel" type="button">Cancelar</button></div>
+  </div>
   <div class="k-line">Quantos guardiões precisam se juntar para abrir? <select id="kSel" aria-label="Número necessário"></select> <span id="kOf"></span></div>
   <p class="small muted" id="kHint"></p>
 
@@ -196,6 +227,12 @@ code { font-family: var(--mono); font-size: 12.5px; }
     <li><b>O ponto fraco é o envio:</b> as mensagens enviadas ficam no seu celular e nas cópias de segurança. Apague-as, use canais diferentes, ou entregue pessoalmente pelo QR.</li>
     <li><b>Nada fica guardado em servidor:</b> se guardiões demais perderem suas partes, a ponto de não restar o número combinado, ninguém consegue recuperar o segredo, nem nós.</li>
   </ul>
+  <div class="disclaimer" id="aviso">
+    <h3>Aviso: demonstração, sem garantias</h3>
+    <p>Esta página é uma demonstração, feita de boa-fé e com cuidado, para mostrar como funciona a divisão de um segredo entre pessoas de confiança. Ela é oferecida “como está”, <b>sem garantia de qualquer tipo</b>, expressa ou implícita, inclusive de funcionamento, de segurança ou de adequação a um uso específico. Os autores e a LucentCrypto <b>não se responsabilizam</b> por perda de segredos, de acessos, de dinheiro ou de outros bens, nem por qualquer dano decorrente do uso.</p>
+    <p>O código ainda não passou por auditoria independente. Um aparelho com vírus ou programa espião pode ver o segredo enquanto ele é digitado ou aberto, seja qual for a matemática. Erros de uso, como apagar partes, perder links ou enviar todas as partes pelo mesmo canal, podem tornar o segredo irrecuperável ou exposto.</p>
+    <p><b>Não use esta demonstração para guardar o acesso a dinheiro, investimentos ou outros bens de valor.</b> Para isso, procure uma solução com auditoria independente e apoio profissional, como o DuraShare, da empresa parceira <a href="https://grifortis.com" target="_blank" rel="noopener">Grifortis</a>.</p>
+  </div>
 </section>
 
 <footer>
@@ -436,7 +473,7 @@ function lsDecodeShare(text) {
       del.addEventListener("click", () => { rows.splice(i, 1); renderRows(); });
       tb.append(tr);
     });
-    $("addRow").disabled = locked || rows.length >= LS_MAX_N;
+    $("addRow").disabled = locked || rows.length >= LS_MAX_N; $("importOpen").disabled = locked;
     renderK();
   }
   $("addRow").addEventListener("click", () => { rows.push({ name: "", contact: "" }); renderRows(); });
@@ -457,6 +494,40 @@ function lsDecodeShare(text) {
     $("secretCount").textContent = b > LS_MAX_BYTES ? "longo demais: " + b + " de " + LS_MAX_BYTES + " bytes" : "não sai deste aparelho · " + b + " de " + LS_MAX_BYTES + " bytes";
   }
   $("secret").addEventListener("input", updateCount);
+
+  // ---- colar uma lista de guardiões: nome e, opcionalmente, celular ou e-mail no fim da linha
+  function parseGuardians(text) {
+    const out = [];
+    for (const raw of String(text).split(/\r?\n/)) {
+      const line = raw.trim(); if (!line) continue;
+      if (!out.length && /^(nome|name|guardi[aã]o|pessoa)\b/i.test(line) && !/\d|@/.test(line)) continue; // cabeçalho de planilha
+      let name = line, contact = "";
+      const mail = line.match(/[^\s;,\t<>()]+@[^\s;,\t<>()]+\.[^\s;,\t<>()]+/);
+      if (mail) { contact = mail[0]; name = line.replace(mail[0], ""); }
+      else {
+        const ph = line.match(/(\+?\(?\d[\d\s().-]{7,}\d)\s*$/);
+        if (ph && ph[1].replace(/\D/g, "").length >= 8) { contact = ph[1].trim(); name = line.slice(0, ph.index); }
+      }
+      name = name.replace(/[<>()]/g, " ").replace(/[\s;,:\t|-]+$/, "").replace(/^[\s;,:\t|-]+/, "").replace(/\s+/g, " ").trim().slice(0, 40);
+      if (name) out.push({ name, contact });
+    }
+    return out;
+  }
+  function importPreview() {
+    const list = parseGuardians($("importText").value), max = LS_MAX_N;
+    $("importPreview").textContent = !list.length ? "" : list.length + (list.length === 1 ? " pessoa lida" : " pessoas lidas") + ": " +
+      list.slice(0, 4).map((g) => g.name + (g.contact ? " (" + g.contact + ")" : "")).join(" · ") + (list.length > 4 ? " · …" : "") +
+      (list.length > max ? " — no máximo " + max + " guardiões." : list.length < 2 ? " — são precisos pelo menos 2." : "");
+    $("importUse").disabled = list.length < 2 || list.length > max;
+    return list;
+  }
+  $("importOpen").addEventListener("click", () => { $("importBox").hidden = false; $("importText").focus(); importPreview(); });
+  $("importCancel").addEventListener("click", () => { $("importBox").hidden = true; });
+  $("importText").addEventListener("input", importPreview);
+  $("importUse").addEventListener("click", () => {
+    const list = importPreview(); if (list.length < 2 || list.length > LS_MAX_N) return;
+    rows = list; kChosen = null; $("importBox").hidden = true; $("importText").value = ""; renderRows();
+  });
 
   // ---- dividir
   let current = null; // { meta, shares: [{ name, contact, text }] }
