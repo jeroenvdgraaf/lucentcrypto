@@ -118,6 +118,14 @@ label.check small { color: var(--muted); }
 .events li span:first-child { font-family: var(--mono); color: var(--muted); }
 .scope { border-left: 4px solid var(--accent); }
 .scope ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+details.scope { display: block; }
+details.scope > * + * { margin-top: 14px; }
+details.scope summary { cursor: pointer; list-style: none; display: flex; gap: 10px; align-items: baseline; }
+details.scope summary::-webkit-details-marker { display: none; }
+details.scope summary::before { content: "▸"; color: var(--accent); font-size: 18px; }
+details.scope[open] summary::before { content: "▾"; }
+.events li.mine { background: var(--accent-soft); border-radius: 6px; }
+.events li.target { outline: 2px solid var(--accent); border-radius: 6px; }
 .disclaimer { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 8px; font-size: 14px; }
 .disclaimer h3 { color: var(--warn); }
 dialog { border: 0; border-radius: 16px; padding: 0; max-width: min(92vw, 460px); width: 100%; background: var(--surface); color: var(--ink); box-shadow: 0 20px 60px rgba(0,0,0,.35); }
@@ -249,7 +257,7 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
 <section id="viewVoter" hidden>
   <div class="wrap" style="max-width:none">
     <section class="panel">
-      <h2 id="vTitle"></h2>
+      <div class="row" style="justify-content:space-between"><h2 id="vTitle"></h2><a class="btn small" id="vBoard" target="_blank" rel="noopener">Ver o quadro</a></div>
       <p id="vHello"></p>
       <p class="small muted" id="vSecrecy"></p>
     </section>
@@ -282,8 +290,8 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
   </div>
 </section>
 
-<section class="panel scope" id="scope">
-  <h2>O que esta demonstração garante, e o que não garante</h2>
+<details class="panel scope" id="scope">
+  <summary><h2>O que esta demonstração garante, e o que não garante</h2></summary>
   <ul>
     <li><b>Voto secreto:</b> cada cédula é cifrada no celular de quem vota. Só os totais de cada votação são abertos. <span id="scopeKey">Com a chave dividida, nem o organizador nem a LucentCrypto, sozinhos, conseguem ler uma cédula.</span></li>
     <li><b>Contado como votado:</b> cada pessoa vê a sua cédula no quadro, e qualquer um confere que o resultado é exatamente a soma das cédulas aceitas. O quadro tem uma cadeia de hashes: o histórico não pode ser reescrito sem que as páginas percebam.</li>
@@ -297,7 +305,7 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
     <h3>Aviso: demonstração, sem garantias</h3>
     <p>Esta página é uma demonstração, feita de boa-fé e com cuidado. Ela é oferecida “como está”, <b>sem garantia de qualquer tipo</b>, inclusive de funcionamento, de segurança ou de adequação a um uso específico. <b>Nenhum valor jurídico pode ser atribuído a estas votações.</b> Os autores e a LucentCrypto não se responsabilizam por qualquer dano decorrente do uso. O código ainda não passou por auditoria independente.</p>
   </div>
-</section>
+</details>
 
 <footer>
   <p>Formato LucentVote/1 · ristretto255; uma cifra ElGamal por opção, com provas de Chaum–Pedersen disjuntivas de que cada cédula marca no máximo uma opção; decifração só dos totais, com prova. Especificação: <a href="https://github.com/jeroenvdgraaf/lucentcrypto/blob/main/spec/VOTACAO.md" target="_blank" rel="noopener">spec/VOTACAO.md</a>. Bibliotecas: noble-curves e noble-hashes, de Paul Miller; qrcode-generator, de Kazuhiko Arase (licença MIT).</p>
@@ -655,6 +663,7 @@ function viewVoter() {
   const f = /^[0-9a-f]{32}$/.test(voterS || "") ? V.fingerprint(voterS) : null;
   let chosen = null, busy = false, lastOpen = null, voteErr = "";
   const mine = () => LSread()["mine:" + sid] || {};
+  $("vBoard").href = BASE + "#s=" + sid;
   async function render() {
     const st = board.st;
     if (!f) { $("fatal").hidden = false; $("fatal").textContent = "Este link de votação está incompleto. Peça um novo à mesa."; return; }
@@ -679,7 +688,7 @@ function viewVoter() {
       if (b) {
         const wasMe = mine()[open.n] === b.fp;
         cur.innerHTML = `<h2>Votação ${open.n}</h2><p class="question">${esc(open.spec.q)}</p>` + (wasMe
-          ? `<div class="msg ok"><b>Sua cédula está no quadro</b> (às ${fmtHM(b.t)}). Impressão digital da cédula: <span class="mono">${b.fp}</span>. Aguarde o encerramento.</div>`
+          ? `<div class="msg ok"><b>Sua cédula está no quadro</b> (às ${fmtHM(b.t)}). Impressão digital da cédula: <span class="mono">${b.fp}</span>. Aguarde o encerramento.</div><div class="row"><a class="btn small" target="_blank" rel="noopener" href="${BASE}#s=${sid}&c=${b.fp}">Ver minha cédula no quadro</a></div>`
           : `<div class="msg bad">Já há uma cédula com o seu link neste item, às ${fmtHM(b.t)}. Se não foi você, avise a mesa.</div>`) + `<p class="small muted">${open.ballots.length} de ${open.roll.size} votaram.</p>`;
       } else {
         const opts = open.options.map((l, j) => [j + 1, l]).concat([[0, "Abstenção"]]);
@@ -743,14 +752,21 @@ function viewBoard() {
     const blob = new Blob([JSON.stringify({ format: V.VERSION, session: sid, events: board.events }, null, 1)], { type: "application/json" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "ata-votacao-" + sid + ".json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   });
+  const target = /^[0-9a-f]{8}$/.test(H.get("c") || "") ? H.get("c") : null;
+  let scrolled = false;
   function render() {
     const st = board.st; if (board.missing) { $("fatal").hidden = false; $("fatal").textContent = "Reunião não encontrada: o link está errado ou o quadro já foi apagado."; return; }
     if (!st?.session) return;
+    const myFps = new Set(Object.values(LSread()["mine:" + sid] || {}));
     $("bTitle").textContent = st.session.title; $("bSecrecy").textContent = secrecyText(st.session);
     const [cls, txt] = checkText(); $("bCheck").className = "msg " + cls; $("bCheck").textContent = txt;
     $("bDelete").textContent = board.deleteAt ? deleteText(board.deleteAt) : "";
     const h = itemsHtml(st); $("bResults").hidden = !h; $("bResultsList").innerHTML = h;
-    $("bEvents").innerHTML = [...board.events].reverse().map((e) => `<li><span>${fmtTime(e.t)}</span><span>${describe(e, st)}</span></li>`).join("");
+    $("bEvents").innerHTML = [...board.events].reverse().map((e) => {
+      const fp = e.type === "cedula" ? V.ballotFingerprint(e.ballot) : null, cls = [fp && myFps.has(fp) ? "mine" : "", fp && fp === target ? "target" : ""].filter(Boolean).join(" ");
+      return `<li${cls ? ` class="${cls}"` : ""}${fp ? ` data-fp="${fp}"` : ""}><span>${fmtTime(e.t)}</span><span>${describe(e, st)}${fp && myFps.has(fp) ? ` · <b>sua cédula</b>` : ""}</span></li>`;
+    }).join("");
+    if (target && !scrolled) { const li = document.querySelector(`#bEvents li[data-fp="${target}"]`); if (li) { li.scrollIntoView({ block: "center" }); scrolled = true; } }
   }
   live(render);
 }
