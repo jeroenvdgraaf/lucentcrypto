@@ -382,3 +382,8 @@ test("Inmetro · certificado: confere com o arquivo, fica aberto sem rede, falha
   // Seed: a linha inmetro= só aparece com a fonte; sem ela, nada muda (vetores antigos continuam valendo).
   assert.notEqual(await C.seedV3(cert.commitment, { inmetro: "ab" }), await C.seedV3(cert.commitment, {}));
 });
+test("Inmetro · sorteio real com carimbos FreeTSA e DigiCert: confere", async () => {
+  const { cert } = JSON.parse(readFileSync(join(ROOT, "tests", "fixtures", "v3_inmetro_real.json"), "utf8"));
+  const rep = await C.verifyCertificate(cert, { inmetro: async () => ({ pulse: cert.randomness.inmetro, atT: false }) });
+  assert.equal(rep.verdict, "confere", JSON.stringify(rep.checks.filter((x) => x.status !== C.STATUS.PASS)));
+});

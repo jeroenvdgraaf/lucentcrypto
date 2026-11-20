@@ -8,8 +8,12 @@
   "observability": { "enabled": true },
   "build": { "command": "./build.sh" },
   // Relay embutido (/api/relay): só o próprio site pode chamá-lo pelo navegador.
-  // As TSAs e agendas OpenTimestamps vêm do padrão de relay/src/index.js (ICP-Brasil desligada).
-  "vars": { "ALLOWED_ORIGINS": "[\"https://lucentcrypto.org\", \"https://www.lucentcrypto.org\", \"https://lucentcrypto.jvdg-ufmg.workers.dev\"]" },
+  // TSAs RFC 3161: o padrão de relay/src/index.js (FreeTSA, DigiCert; ICP-Brasil desligada).
+  // Sem OpenTimestamps: o registro em Bitcoin leva horas e não acrescenta nada à prova do momento do lacre.
+  "vars": {
+    "ALLOWED_ORIGINS": "[\"https://lucentcrypto.org\", \"https://www.lucentcrypto.org\", \"https://lucentcrypto.jvdg-ufmg.workers.dev\"]",
+    "OTS_CALENDARS": "[]"
+  },
   "assets": {
     "directory": "dist",
     "binding": "ASSETS",

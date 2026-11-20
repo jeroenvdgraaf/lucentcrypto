@@ -7,6 +7,7 @@ import io
 import json
 import os
 import random
+import shutil
 import sys
 import tempfile
 import unittest
@@ -328,3 +329,16 @@ class Inmetro(unittest.TestCase):
         other = copy.deepcopy(self.pulse)
         other["outputValue"] = "00" + other["outputValue"][2:]
         self.assertEqual(v.verify_certificate(self.cert, {"inmetro": {"pulse": other, "atT": False}})["verdict"], "nao_confere")
+
+
+class InmetroReal(unittest.TestCase):
+    """Sorteio real (20/11/2026): lacre 19:15:16, carimbos FreeTSA e DigiCert 19:15:19, pulso do Inmetro 19:16:00."""
+
+    def test_real_draw(self):
+        cert = w.load("v3_inmetro_real.json")["cert"]
+        fetched = {"inmetro": {"pulse": cert["randomness"]["inmetro"], "atT": False}}
+        rep = v.verify_certificate(cert, fetched)
+        self.assertEqual(rep["verdict"], "confere", rep["checks"])
+        if shutil.which("openssl"):
+            rep = v.verify_certificate(cert, fetched, tsa_validator=v.openssl_tsa_validator())
+            self.assertEqual(rep["verdict"], "confere", [c for c in rep["checks"] if c["status"] != v.PASS])

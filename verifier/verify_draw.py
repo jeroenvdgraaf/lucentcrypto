@@ -29,6 +29,7 @@ from __future__ import annotations
 import argparse
 import base64
 import datetime as _dt
+import glob
 import hashlib
 import json
 import os
@@ -697,12 +698,13 @@ def openssl_tsa_validator(ca_files=()):
             if r.returncode != 0:
                 return FAIL, "assinatura da TSA inválida"
             # 2) cadeia até uma CA confiável
-            cas = [c for c in ca_files if c]
-            if not cas:
-                for c in ("/etc/ssl/certs/ca-certificates.crt", "/etc/pki/tls/certs/ca-bundle.crt", "/etc/ssl/cert.pem"):
-                    if os.path.exists(c):
-                        cas = [c]
-                        break
+            # As CAs pedidas (--tsa-ca), as que acompanham o verificador (tsa-ca/: a raiz da FreeTSA,
+            # que não está nas listas do sistema) e a lista de CAs do sistema (DigiCert e outras).
+            cas = [c for c in ca_files if c] + sorted(glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), "tsa-ca", "*.pem")))
+            for c in ("/etc/ssl/certs/ca-certificates.crt", "/etc/pki/tls/certs/ca-bundle.crt", "/etc/ssl/cert.pem"):
+                if os.path.exists(c):
+                    cas.append(c)
+                    break
             if not cas:
                 return WARN, "assinatura válida; cadeia não validada (nenhuma CA disponível)"
             bundle = os.path.join(d, "ca.pem")
