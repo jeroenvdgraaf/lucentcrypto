@@ -296,3 +296,35 @@ class OwnSeed(unittest.TestCase):
             bad = copy.deepcopy(cert)
             bad["randomness"]["own"]["value"] += " "
             self.assertEqual(v.verify_certificate(bad, {})["verdict"], "nao_confere")
+
+
+class Inmetro(unittest.TestCase):
+    """Farol do Inmetro (SPEC-v3 5.4): pulso real nº 1049644 e o certificado feito pela página."""
+
+    def setUp(self):
+        self.pulse = w.load("inmetro_pulse_1049644.json")["pulse"]
+        self.cert = w.load("v3_inmetro.json")["cert"]
+
+    def st(self, rep, cid):
+        return next(c["status"] for c in rep["checks"] if c["id"] == cid)
+
+    def test_intact(self):
+        self.assertTrue(v.inmetro_intact(self.pulse))
+        q = copy.deepcopy(self.pulse)
+        q["listValues"][0]["value"] = "00" + q["listValues"][0]["value"][2:]
+        self.assertFalse(v.inmetro_intact(q))
+        self.assertEqual(v.inmetro_minute_after(v.iso_to_ms("2026-11-20T18:33:00.000Z")), v.iso_to_ms("2026-11-20T18:34:00.000Z"))
+
+    def test_certificate(self):
+        rep = v.verify_certificate(self.cert, {"inmetro": {"pulse": self.pulse, "atT": False}})
+        self.assertEqual(self.st(rep, "inmetro"), v.PASS)
+        self.assertEqual(self.st(rep, "result"), v.PASS)
+        self.assertNotEqual(rep["verdict"], "nao_confere")
+        rep = v.verify_certificate(self.cert, {})
+        self.assertEqual(self.st(rep, "inmetro"), v.UNVERIFIED)
+        bad = copy.deepcopy(self.cert)
+        bad["randomness"]["inmetro"]["precommitmentValue"] = "00" + bad["randomness"]["inmetro"]["precommitmentValue"][2:]
+        self.assertEqual(v.verify_certificate(bad, {"inmetro": {"pulse": self.pulse, "atT": False}})["verdict"], "nao_confere")
+        other = copy.deepcopy(self.pulse)
+        other["outputValue"] = "00" + other["outputValue"][2:]
+        self.assertEqual(v.verify_certificate(self.cert, {"inmetro": {"pulse": other, "atT": False}})["verdict"], "nao_confere")

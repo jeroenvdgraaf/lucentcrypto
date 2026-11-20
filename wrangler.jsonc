@@ -1,13 +1,16 @@
-// Site estático no Cloudflare Workers. Build: ./build.sh (monta dist/); deploy: npx wrangler deploy.
+// Site no Cloudflare Workers: arquivos estáticos de dist/ e uma rota /api/inmetro (worker/index.js). Build: ./build.sh (monta dist/); deploy: npx wrangler deploy.
 // O relay de carimbo de tempo é outro Worker, com configuração própria em relay/wrangler.toml.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "lucentcrypto",
+  "main": "worker/index.js",
   "compatibility_date": "2026-11-18",
   "observability": { "enabled": true },
   "build": { "command": "./build.sh" },
   "assets": {
     "directory": "dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"],
     "html_handling": "auto-trailing-slash"
   }
 }

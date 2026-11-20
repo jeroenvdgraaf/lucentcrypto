@@ -349,3 +349,36 @@ test("semente própria · rápido = verificável, e independe do título e do ID
     assert.equal((await verify(other)).verdict, "nao_confere", "não combina com outras fontes");
   }
 });
+
+// ---- farol do Inmetro (SPEC-v3 5.4)
+test("Inmetro · outputValue = SHA-512 da serialização NIST (pulso real nº 1049644)", async () => {
+  const pulse = JSON.parse(readFileSync(join(ROOT, "tests", "fixtures", "inmetro_pulse_1049644.json"), "utf8")).pulse;
+  assert.equal(await C.inmetroIntact(pulse), true);
+  for (const mut of [(p) => { p.localRandomValue = "00" + p.localRandomValue.slice(2); }, (p) => { p.listValues[2].value = "ff" + p.listValues[2].value.slice(2); },
+    (p) => { p.timeStamp = "2026-11-20T18:34:00.000Z"; }, (p) => { p.pulseIndex += 1; }, (p) => { p.signatureValue = p.signatureValue.slice(0, -2) + "00"; }]) {
+    const q = clone(pulse); mut(q); assert.equal(await C.inmetroIntact(q), false);
+  }
+  assert.equal(C.inmetroMinuteAfter(Date.parse("2026-11-20T18:32:30Z")), Date.parse("2026-11-20T18:33:00Z"));
+  assert.equal(C.inmetroMinuteAfter(Date.parse("2026-11-20T18:33:00Z")), Date.parse("2026-11-20T18:34:00Z"), "estritamente depois");
+});
+test("Inmetro · certificado: confere com o arquivo, fica aberto sem rede, falha se alterado", async () => {
+  const { cert } = JSON.parse(readFileSync(join(ROOT, "tests", "fixtures", "v3_inmetro.json"), "utf8"));
+  const pulse = cert.randomness.inmetro;
+  const online = { inmetro: async () => ({ pulse, atT: false }) };
+  const st = (rep, id) => rep.checks.find((c) => c.id === id).status;
+  let rep = await C.verifyCertificate(cert, online);
+  assert.equal(st(rep, "inmetro"), C.STATUS.PASS);
+  assert.equal(st(rep, "result"), C.STATUS.PASS);
+  assert.notEqual(rep.verdict, "nao_confere");
+  rep = await C.verifyCertificate(cert, {});
+  assert.equal(st(rep, "inmetro"), C.STATUS.UNVERIFIED);
+  const other = clone(pulse); other.outputValue = "00" + other.outputValue.slice(2);
+  rep = await C.verifyCertificate(cert, { inmetro: async () => ({ pulse: other, atT: false }) });
+  assert.equal(rep.verdict, "nao_confere");
+  const bad = clone(cert); bad.randomness.inmetro.localRandomValue = "00" + bad.randomness.inmetro.localRandomValue.slice(2);
+  assert.equal((await C.verifyCertificate(bad, online)).verdict, "nao_confere");
+  const late = clone(cert); late.spec.sources.inmetro.notBefore = Date.parse("2026-11-20T18:33:10Z"); late.commitment = await C.commitmentOf(late.spec);
+  assert.equal((await C.verifyCertificate(late, online)).verdict, "nao_confere", "pulso anterior ao lacre");
+  // Seed: a linha inmetro= só aparece com a fonte; sem ela, nada muda (vetores antigos continuam valendo).
+  assert.notEqual(await C.seedV3(cert.commitment, { inmetro: "ab" }), await C.seedV3(cert.commitment, {}));
+});

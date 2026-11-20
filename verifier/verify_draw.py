@@ -234,7 +234,56 @@ def share_text(w: int, W: int) -> str:
 
 
 def seed_v3(C: str, values: dict) -> str:
-    return H("\n".join([V3, "seed", C] + [f"{k}={values.get(k) or '-'}" for k in SOURCE_ORDER]))
+    # A linha "inmetro=" entra só quando a fonte é usada (SPEC-v3 5.4): certificados antigos não mudam.
+    extra = [f"inmetro={values['inmetro']}"] if values.get("inmetro") else []
+    return H("\n".join([V3, "seed", C] + [f"{k}={values.get(k) or '-'}" for k in SOURCE_ORDER] + extra))
+
+
+# Farol do Inmetro (SPEC-v3 5.4): pulsos NIST (NISTIR 8213), um por minuto.
+INMETRO_BASE = "https://beacon.inmetro.gov.br/beacon/2.1"
+INMETRO_RULE = "first-pulse-after"
+INMETRO_LISTS = ("previous", "hour", "day", "month", "year")
+
+
+def inmetro_minute_after(ms: int) -> int:
+    """O primeiro minuto cheio estritamente depois de ms."""
+    return ms // 60000 * 60000 + 60000
+
+
+def inmetro_serialize(p: dict) -> bytes:
+    """Serialização NIST: textos/bytes com 4 bytes de tamanho; cipherSuite, period, statusCode em 4 bytes;
+    chainIndex, pulseIndex em 8 bytes; big-endian. Inclui a assinatura; não inclui o outputValue."""
+    import struct
+    out = []
+    u32 = lambda n: out.append(struct.pack(">I", n))  # noqa: E731
+    u64 = lambda n: out.append(struct.pack(">Q", n))  # noqa: E731
+
+    def b(x):
+        u32(len(x)); out.append(x)
+    s_ = lambda x: b(str(x).encode("utf-8"))  # noqa: E731
+    h_ = lambda x: b(bytes.fromhex(norm_hex(x)))  # noqa: E731
+    ext = p.get("external") or {}
+    lv = p.get("listValues") if isinstance(p.get("listValues"), list) else []
+    s_(p["uri"]); s_(p["version"]); u32(p["cipherSuite"]); u32(p["period"]); h_(p["certificateId"])
+    u64(p["chainIndex"]); u64(p["pulseIndex"]); s_(p["timeStamp"]); h_(p["localRandomValue"])
+    h_(ext["sourceId"]); u32(ext["statusCode"]); h_(ext["value"])
+    for t in INMETRO_LISTS:
+        e = next((x for x in lv if isinstance(x, dict) and x.get("type") == t), None)
+        if e is None:
+            raise ValueError("listValues sem " + t)
+        h_(e["value"])
+    h_(p["precommitmentValue"]); u32(p["statusCode"]); h_(p["signatureValue"])
+    return b"".join(out)
+
+
+def inmetro_intact(p) -> bool:
+    """O outputValue é o SHA-512 de todos os campos do pulso, assinatura incluída."""
+    try:
+        if not isinstance(p, dict) or not _is_int(p.get("pulseIndex")) or not _is_int(p.get("chainIndex")):
+            return False
+        return hashlib.sha512(inmetro_serialize(p)).hexdigest() == norm_hex(p.get("outputValue"))
+    except (KeyError, TypeError, ValueError, OverflowError, __import__("struct").error):
+        return False
 
 
 # Semente própria (SPEC-v3 5.3): sem acentos (NFKD), maiúsculas; só A-Z e 0-9 contam, o resto separa.
@@ -1238,7 +1287,7 @@ def validate_spec(spec) -> list:
     if not isinstance(src, dict) or not src:
         problems.append("sources vazio ou inválido")
         return problems
-    allowed = SOURCE_ORDER + ("own",) if v == V3 else SOURCE_ORDER if v == V2 else ("eth", "drand")
+    allowed = SOURCE_ORDER + ("own", "inmetro") if v == V3 else SOURCE_ORDER if v == V2 else ("eth", "drand")
     for k in src:
         if k not in allowed:
             problems.append(f"fonte desconhecida: {k}")
@@ -1268,6 +1317,14 @@ def validate_spec(spec) -> list:
                 problems.append("sources.drand: a cadeia não é a quicknet")
             if not _is_int(d.get("round")) or d.get("round", 0) < 1:
                 problems.append("sources.drand: rodada inválida")
+    if "inmetro" in src:
+        if len(src) != 1:
+            problems.append("o farol do Inmetro não se combina com outras fontes")
+        if need("inmetro", src["inmetro"], ("chain", "rule", "notBefore")):
+            i_ = src["inmetro"]
+            if not (_is_int(i_.get("chain")) and i_["chain"] >= 0 and i_.get("rule") == INMETRO_RULE
+                    and _is_int(i_.get("notBefore")) and i_["notBefore"] > 0):
+                problems.append('sources.inmetro precisa de chain (inteiro), rule "first-pulse-after" e notBefore (ms, inteiro)')
     if "own" in src:
         if len(src) != 1:
             problems.append("a semente própria não se combina com outras fontes")
@@ -1518,6 +1575,43 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
                 "Compare os números com a página oficial.",
                 f"números usados: {claimed[game]} · {link} · ({why})")
 
+    # 4c. farol do Inmetro
+    if "inmetro" in sources:
+        s = sources["inmetro"] if isinstance(sources["inmetro"], dict) else {}
+        p = rand.get("inmetro") if isinstance(rand.get("inmetro"), dict) else None
+        T = inmetro_minute_after(s["notBefore"]) if _is_int(s.get("notBefore")) else None
+        if T is not None:
+            rtimes["inmetro"] = T / 1000
+        if not p:
+            add("inmetro", missing, "Lacre: o pulso do Inmetro ainda não foi registrado." if is_seal
+                else "O pulso do Inmetro não está no certificado.")
+        else:
+            ts = iso_to_ms(p.get("timeStamp")) if isinstance(p.get("timeStamp"), str) else None
+            det = f"notBefore {ms_to_iso(s.get('notBefore') or 0)} · pulso {p.get('timeStamp')} · nº {p.get('pulseIndex')}"
+            if not inmetro_intact(p):
+                add("inmetro", FAIL, "O pulso do Inmetro foi alterado: o outputValue não é o SHA-512 dos seus campos.", det)
+            elif p.get("chainIndex") != s.get("chain"):
+                add("inmetro", FAIL, f"O pulso é da cadeia {p.get('chainIndex')} do Inmetro, mas o lacre previa a cadeia {s.get('chain')}.", det)
+            elif ts is None or not ts > s.get("notBefore", 0):
+                add("inmetro", FAIL, "O pulso do Inmetro não é posterior ao lacre.", det)
+            else:
+                claimed["inmetro"] = norm_hex(p["outputValue"])
+                rtimes["inmetro"] = ts / 1000
+                f = fetched.get("inmetro") or {}
+                if "error" in f or "pulse" not in f:
+                    title = (f"Pulso nº {p['pulseIndex']} do Inmetro íntegro e no minuto certo, mas não comparado com o arquivo do Inmetro"
+                             if ts == T else
+                             f"Pulso nº {p['pulseIndex']} do Inmetro íntegro, mas não foi possível confirmar no Inmetro que é o primeiro após o lacre")
+                    add("inmetro", UNVERIFIED, title, f"{f.get('error', 'não consultado')} · {det}")
+                elif not isinstance(f["pulse"], dict) or norm_hex(f["pulse"].get("outputValue")) != claimed["inmetro"]:
+                    add("inmetro", FAIL, f"O arquivo do Inmetro tem outro valor para o pulso nº {p['pulseIndex']}.", det)
+                elif ts != T and f.get("atT"):
+                    add("inmetro", FAIL, f"Há um pulso do Inmetro em {ms_to_iso(T)}, antes do pulso usado: não é o primeiro após o lacre.", det)
+                else:
+                    indep["inmetro"] = claimed["inmetro"]
+                    add("inmetro", PASS, f"Pulso nº {p['pulseIndex']} do Inmetro: íntegro, o primeiro após o lacre, e igual ao arquivo do Inmetro",
+                        f"{claimed['inmetro']} · {det}")
+
     # 5. Semente e ordem
     names = spec.get("candidates") if isinstance(spec.get("candidates"), list) else []
     used = {k: indep.get(k, claimed.get(k)) for k in sources}
@@ -1624,7 +1718,7 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         else:
             add("anchors", PASS, "Carimbos de tempo correspondem a este compromisso.", "; ".join(anchor_notes))
 
-    labels = {"eth": "bloco Ethereum", "drand": "rodada drand"}
+    labels = {"eth": "bloco Ethereum", "drand": "rodada drand", "inmetro": "pulso do Inmetro"}
     live = [k for k in sources if k in labels]
     if live:
         missing_t = [k for k in live if k not in rtimes]
@@ -1758,6 +1852,28 @@ def fetch_drand(round_: int, chain_hash: str = QUICKNET_HASH, session=None):
     return {"error": "Nenhum servidor drand respondeu" + (f" ({last})" if last else "")}
 
 
+def fetch_inmetro(chain: int, index: int, T=None, session=None):
+    """O pulso nº index da cadeia no arquivo do Inmetro e se existe um pulso exatamente em T (ms)."""
+    rq = session or _requests()
+    try:
+        r = rq.get(f"{INMETRO_BASE}/chain/{chain}/pulse/{index}", timeout=20, headers={"accept": "application/json"})
+        r.raise_for_status()
+        j = r.json()
+        pulse = j.get("pulse", j)
+    except Exception as e:
+        return {"error": f"Inmetro: {e}"}
+    at_t = False
+    if T is not None and iso_to_ms(pulse.get("timeStamp", "")) != T:
+        try:
+            r = rq.get(f"{INMETRO_BASE}/pulse/time/{T}", timeout=20, headers={"accept": "application/json"})
+            if r.status_code == 200:
+                q = r.json().get("pulse", {})
+                at_t = iso_to_ms(q.get("timeStamp", "")) == T and q.get("chainIndex") == chain
+        except Exception:
+            at_t = False
+    return {"pulse": pulse, "atT": at_t}
+
+
 def fetch_lottery(game: str, contest, relay: str = None, session=None):
     """contest inteiro: formato LucentDraw/2; texto: LucentDraw/3 (rota /v3/lottery do relay)."""
     rq = session or _requests()
@@ -1798,6 +1914,10 @@ def fetch_all(cert, rpcs=DEFAULT_RPCS, relay=None, session=None):
         out["eth"] = fetch_eth(rand["eth"]["number"], rpcs, session)
     if "drand" in src and _is_int(src["drand"].get("round")):
         out["drand"] = fetch_drand(src["drand"]["round"], session=session)
+    p = rand.get("inmetro")
+    if "inmetro" in src and isinstance(p, dict) and _is_int(p.get("pulseIndex")) and _is_int(p.get("chainIndex")):
+        nb = src["inmetro"].get("notBefore") if isinstance(src["inmetro"], dict) else None
+        out["inmetro"] = fetch_inmetro(p["chainIndex"], p["pulseIndex"], inmetro_minute_after(nb) if _is_int(nb) else None, session)
     for g in ("megasena", "federal"):
         c = src[g].get("contest") if g in src and isinstance(src[g], dict) else None
         if _is_int(c) or contest_ok_v3(c):

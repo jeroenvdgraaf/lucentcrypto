@@ -641,6 +641,7 @@ const STR = {
     own: ["Semente própria", "Números ou texto combinados antes: o resultado de uma loteria, dados lançados na sala… Resultado imediato."],
     eth: ["Bloco público Ethereum", "Hash do primeiro bloco após o lacre, com 1 confirmação. Cerca de 15–30 s."],
     drand: ["Farol drand", "Valor aleatório com assinatura BLS verificada aqui. Cerca de 6–9 s."],
+    inmetro: ["Farol do Inmetro", "Número público do Inmetro, o instituto federal de metrologia, publicado a cada minuto e assinado. Até 1 min."],
     "eth+drand": ["Bloco Ethereum + farol drand", "Primeiro o bloco, depois uma rodada drand. Nenhuma fonte sozinha decide. Cerca de 40 s."],
     federal: ["Loteria Federal", "Os 5 bilhetes premiados do concurso escolhido. Resultado após o concurso."],
     megasena: ["Mega-Sena", "As 6 dezenas do concurso escolhido. Resultado após o concurso."],
@@ -673,6 +674,9 @@ const STR = {
   statusTitle: "Andamento", cdLabel: "Aleatoriedade esperada em", cdSoon: "a qualquer momento",
   tlPrep: "Preparar", tlPrepD: "Opções e fonte", tlSeal: "Lacrar", tlSealD: "Registro travado e resumido",
   tlAnchor: "Carimbo de tempo", tlAnchorIdle: "Depois do lacre",
+  tlInmetro: "Farol do Inmetro", tlInmetroWait: (t) => "aguardando o pulso das " + t, tlInmetroDone: (i, h) => "pulso nº " + i + " · " + h + "…",
+  errInmetroFetch: (t, why) => "O pulso do Inmetro das " + t + " não pôde ser obtido: " + why + ". O lacre continua válido: recarregue a página para tentar de novo.",
+  factInmetro: "Farol do Inmetro", factInmetroPlan: (t) => "primeiro pulso após o lacre: o das " + t,
   tlEth: "Bloco público Ethereum", tlDrand: "Farol drand", tlMegasena: "Mega-Sena", tlFederal: "Loteria Federal",
   tlResult: "Resultado calculado", tlResultD: "A partir do lacre e da aleatoriedade",
   tlNotUsed: "Não usado neste sorteio",
@@ -757,8 +761,8 @@ const STR = {
   passMeansTitle: "O que significa passar",
   passMeans1: "O resultado decorre das opções e pesos lacrados e de valores aleatórios públicos que ninguém podia escolher depois de ver o lacre.",
   passMeans2: "O que o programa não prova sozinho: que o lacre foi divulgado antes da aleatoriedade. Os carimbos de tempo servem de prova; sem eles, confira onde e quando o lacre foi publicado. Para loterias, o carimbo precisa ser anterior ao dia do sorteio.",
-  passMeans3: "O valor drand é conferido com a chave pública da quicknet. Para o bloco Ethereum, a página confere que ele é o primeiro após o lacre e que continua na cadeia canônica, usando os servidores listados; para independência total, use o seu próprio nó.",
-  footer: "Lucent Sorteios · protocolo LucentDraw/3 · parte da família LucentCrypto. Tudo é calculado no seu navegador, sem cadastro e sem estatísticas de uso. Com semente própria ou no modo rápido, a página não se conecta a nada. Com Ethereum ou drand, ela só busca o valor aleatório público e o carimbo de tempo do lacre.",
+  passMeans3: "O valor drand é conferido com a chave pública da quicknet. Para o bloco Ethereum, a página confere que ele é o primeiro após o lacre e que continua na cadeia canônica, usando os servidores listados; para independência total, use o seu próprio nó. O pulso do Inmetro é conferido pelo seu outputValue (o SHA-512 de todos os campos) e comparado com o arquivo do Inmetro; a assinatura do pulso será conferida quando o Inmetro publicar o certificado.",
+  footer: "Lucent Sorteios · protocolo LucentDraw/3 · parte da família LucentCrypto. Tudo é calculado no seu navegador, sem cadastro e sem estatísticas de uso. Com semente própria ou no modo rápido, a página não se conecta a nada. Com drand, Ethereum ou o Inmetro, ela só busca o valor aleatório público e o carimbo de tempo do lacre.",
   footerHome: "LucentCrypto", footerSpec: "Especificação", footerVerifier: "Verificador em Python",
   // Conferência (SPEC 9)
   ck: {
@@ -828,7 +832,16 @@ const STR = {
     ownBadFormat: (m) => "A semente própria não tem o formato declarado: " + m,
     ownOpen: (label, v) => "Semente própria (" + label + "): " + v,
     ownOpenD: "informada pelo organizador; a origem não pode ser conferida automaticamente. Confira-a na fonte indicada.",
-    labels: { own: "semente própria", eth: "bloco Ethereum", drand: "rodada drand", megasena: "sorteio da Mega-Sena", federal: "sorteio da Loteria Federal" },
+    inmetroMissing: "O pulso do Inmetro não está no certificado.",
+    inmetroHash: "O pulso do Inmetro foi alterado: o outputValue não é o SHA-512 dos seus campos.",
+    inmetroChain: (c, s) => "O pulso é da cadeia " + c + " do Inmetro, mas o lacre previa a cadeia " + s + ".",
+    inmetroEarly: "O pulso do Inmetro não é posterior ao lacre.",
+    inmetroUnreach: (i) => "Pulso nº " + i + " do Inmetro íntegro e no minuto certo, mas não comparado com o arquivo do Inmetro",
+    inmetroUnreachGap: (i) => "Pulso nº " + i + " do Inmetro íntegro, mas não foi possível confirmar no Inmetro que é o primeiro após o lacre",
+    inmetroOther: (i) => "O arquivo do Inmetro tem outro valor para o pulso nº " + i + ".",
+    inmetroNotFirst: (t) => "Há um pulso do Inmetro em " + t + ", antes do pulso usado: não é o primeiro após o lacre.",
+    inmetroOk: (i) => "Pulso nº " + i + " do Inmetro: íntegro, o primeiro após o lacre, e igual ao arquivo do Inmetro",
+    labels: { own: "semente própria", inmetro: "pulso do Inmetro", eth: "bloco Ethereum", drand: "rodada drand", megasena: "sorteio da Mega-Sena", federal: "sorteio da Loteria Federal" },
     specOkV3: (n, W, sum) => n + (n === 1 ? " opção" : " opções") + " · W = " + W + " · " + sum,
     weightsD: (ws, ints) => "pesos (digitado → inteiro): " + ws.slice(0, 12).map((w, i) => w + " → " + ints[i]).join(", ") + (ws.length > 12 ? ", …" : ""),
     resultMissing: "Faltam valores de aleatoriedade para recalcular o resultado.",
@@ -871,7 +884,9 @@ const STR = {
       candNotNorm: (i) => "participante " + i + " não está normalizado (NFC, sem espaços nas pontas)",
       dups: (l) => "nomes repetidos: " + l,
       noSources: "sources vazio ou inválido",
-      ownAlone: "a semente própria não se combina com outras fontes",
+      inmetroAlone: "o farol do Inmetro não se combina com outras fontes",
+    inmetroBad: "sources.inmetro precisa de chain (inteiro), rule \"first-pulse-after\" e notBefore (ms, inteiro)",
+    ownAlone: "a semente própria não se combina com outras fontes",
     ownFormat: "formato da semente própria desconhecido (megasena, federal ou outro)",
     unknownSource: (k) => "fonte desconhecida: " + k,
       srcNotObj: (k) => "sources." + k + " não é um objeto",
@@ -905,6 +920,7 @@ const STR = {
     count: "Número de participantes", contrib: "Contribuição dos presentes", none: "(nenhuma)",
     commit: "Lacre (compromisso SHA-256 do registro lacrado)",
     sources: "Fontes de aleatoriedade e valores usados",
+    inmetro: (i, c, t, v) => "Farol do Inmetro: pulso nº " + i + " (cadeia " + c + "), publicado às " + t + ", valor " + v,
     eth: (n, h, t) => "Bloco público Ethereum #" + n + " (horário do bloco " + t + "), hash " + h,
     drand: (r, v) => "Farol drand quicknet, rodada " + r + ", valor " + v + " (assinatura BLS verificada no sorteio)",
     megasena: (c, v, d) => "Mega-Sena, concurso " + c + " (" + d + "), dezenas " + v,
@@ -984,6 +1000,41 @@ function b64ToBytes(s) {
   return out;
 }
 async function sha256Bytes(bytes) { return new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)); }
+async function sha512Bytes(bytes) { return new Uint8Array(await crypto.subtle.digest("SHA-512", bytes)); }
+
+// ---- Farol do Inmetro (SPEC-v3 5.4): pulsos no formato NIST (NISTIR 8213), um por minuto, encadeados e assinados.
+const INMETRO = {
+  base: "https://beacon.inmetro.gov.br/beacon/2.1", proxy: "/api/inmetro", page: "https://beacon.inmetro.gov.br/",
+  chain: 2, rule: "first-pulse-after", period: 60000,
+};
+// O primeiro minuto cheio ESTRITAMENTE depois de ms: é ali que cai o pulso que decide.
+const inmetroMinuteAfter = (ms) => Math.floor(ms / 60000) * 60000 + 60000;
+const INMETRO_LISTS = ["previous", "hour", "day", "month", "year"];
+// Serialização NIST do pulso (sem o outputValue): textos e bytes com prefixo de 4 bytes de tamanho;
+// cipherSuite, period e statusCode em 4 bytes; chainIndex e pulseIndex em 8 bytes; tudo big-endian.
+function inmetroSerialize(p) {
+  const te = new TextEncoder(), parts = [];
+  const u32 = (n) => { const b = new Uint8Array(4); new DataView(b.buffer).setUint32(0, n); parts.push(b); };
+  const u64 = (n) => { const b = new Uint8Array(8); new DataView(b.buffer).setBigUint64(0, BigInt(n)); parts.push(b); };
+  const bytes = (b) => { u32(b.length); parts.push(b); };
+  const str = (x) => bytes(te.encode(String(x)));
+  const hex = (x) => bytes(hexToBytes(normHex(String(x))));
+  const ext = p.external || {}, lv = Array.isArray(p.listValues) ? p.listValues : [];
+  str(p.uri); str(p.version); u32(p.cipherSuite); u32(p.period); hex(p.certificateId); u64(p.chainIndex); u64(p.pulseIndex);
+  str(p.timeStamp); hex(p.localRandomValue); hex(ext.sourceId); u32(ext.statusCode); hex(ext.value);
+  for (const t of INMETRO_LISTS) { const e = lv.find((x) => x && x.type === t); if (!e) throw new Error("listValues sem " + t); hex(e.value); }
+  hex(p.precommitmentValue); u32(p.statusCode); hex(p.signatureValue);
+  const out = new Uint8Array(parts.reduce((n, b) => n + b.length, 0)); let o = 0;
+  for (const b of parts) { out.set(b, o); o += b.length; }
+  return out;
+}
+// O pulso está íntegro: o outputValue é o SHA-512 de todos os campos, assinatura incluída.
+async function inmetroIntact(p) {
+  try {
+    if (!p || typeof p !== "object" || !Number.isSafeInteger(p.pulseIndex) || !Number.isSafeInteger(p.chainIndex)) return false;
+    return bytesToHex(await sha512Bytes(inmetroSerialize(p))) === normHex(String(p.outputValue));
+  } catch { return false; }
+}
 async function sha256hex(str) { return bytesToHex(await sha256Bytes(enc.encode(str))); }
 
 // ---- canonical encoding (SPEC 3.1)
@@ -1114,7 +1165,8 @@ function ownFormatError(format, c) {
   return "format";
 }
 const seedOwn = (value) => sha256hex([V3, "own", value].join("\n"));
-const seedV3 = (C, values) => sha256hex([V3, "seed", C].concat(SOURCE_ORDER.map((k) => k + "=" + (values[k] || "-"))).join("\n"));
+// A linha "inmetro=" entra só quando a fonte é usada: certificados antigos não mudam.
+const seedV3 = (C, values) => sha256hex([V3, "seed", C].concat(SOURCE_ORDER.map((k) => k + "=" + (values[k] || "-")), values.inmetro ? ["inmetro=" + values.inmetro] : []).join("\n"));
 const pickHash = (seed, j) => sha256hex(V3 + "\npick\n" + seed + "\n" + j);
 // Escolha (SPEC-v3 3). Devolve os índices e, para cada escolha, r, x, W e o índice (para a barra de intervalos).
 async function selectPicks(seed, task) {
@@ -1225,6 +1277,7 @@ function sourceValues(randomness, v = VERSION) {
   const r = randomness || {}, out = {};
   if (r.eth) out.eth = normHex(r.eth.hash);
   if (r.drand) out.drand = normHex(r.drand.randomness);
+  if (r.inmetro && typeof r.inmetro.outputValue === "string") out.inmetro = normHex(r.inmetro.outputValue);
   for (const g of ["megasena", "federal"]) if (r[g]) out[g] = lotteryValue(g, r[g].contest, r[g], v);
   return out;
 }
@@ -1264,11 +1317,12 @@ const drawDayStart = (dateStr) => brtMs(dateStr, "00:00");
 
 // ---- montagem do spec no lacre (SPEC 3.2, 4)
 const PRESETS = {
-  live: ["own", "eth", "drand"],
+  live: ["own", "drand", "eth", "inmetro"],
   scheduled: ["federal", "megasena"],
 };
 function planSources(preset, sealMs, lottery) {
   const parts = preset.split("+"), sources = {};
+  if (preset === "inmetro") return { inmetro: { chain: INMETRO.chain, rule: INMETRO.rule, notBefore: sealMs } };
   if (parts.includes("eth")) {
     sources.eth = { chain: ETH.chain, rule: ETH.rule, notBefore: Math.floor(sealMs / 1000), confirmations: ETH.confirmations };
   }
@@ -1331,7 +1385,7 @@ function validateSpec(spec) {
   }
   const src = spec.sources;
   if (!src || typeof src !== "object" || Array.isArray(src) || !Object.keys(src).length) { problems.push(P.noSources); return problems; }
-  const allowed = v === V3 ? [...SOURCE_ORDER, "own"] : v === VERSION ? SOURCE_ORDER : ["eth", "drand"];
+  const allowed = v === V3 ? [...SOURCE_ORDER, "own", "inmetro"] : v === VERSION ? SOURCE_ORDER : ["eth", "drand"];
   for (const k of Object.keys(src)) if (!allowed.includes(k)) problems.push(P.unknownSource(k));
   const strict = v === VERSION || v === V3;
   const need = (name, obj, fields) => {
@@ -1354,6 +1408,13 @@ function validateSpec(spec) {
     if (need("drand", d, ["chain", "chainHash", "round"])) {
       if (d.chainHash !== QUICKNET.hash || (strict && d.chain !== "quicknet")) problems.push(P.drandChain);
       if (!isInt(d.round) || d.round < 1) problems.push(P.drandRound);
+    }
+  }
+  if ("inmetro" in src) {
+    if (Object.keys(src).length !== 1) problems.push(P.inmetroAlone);
+    if (need("inmetro", src.inmetro, ["chain", "rule", "notBefore"])) {
+      const s = src.inmetro;
+      if (!Number.isSafeInteger(s.chain) || s.chain < 0 || s.rule !== INMETRO.rule || !Number.isSafeInteger(s.notBefore) || s.notBefore <= 0) problems.push(P.inmetroBad);
     }
   }
   if ("own" in src) {
@@ -1614,6 +1675,7 @@ function taskSummary(task) {
 const certFileName = (id) => "certificado-sorteio-" + String(id).replace(/[^\p{L}\p{N}._-]+/gu, "_") + ".json";
 const links = {
   eth: (n) => "https://etherscan.io/block/" + n,
+  inmetro: (c, i) => INMETRO.base + "/chain/" + c + "/pulse/" + i,
   drand: (r) => QUICKNET.endpoints[0] + "/" + QUICKNET.hash + "/public/" + r,
   lottery: (g) => LOTTERY.games[g].page,
 };
@@ -1639,6 +1701,7 @@ function ataText(cert) {
   L.push(A.commit + ":", cert.commitment, "");
   L.push(A.sources + ":");
   if (s.sources && s.sources.own && r.own) L.push("- " + A.own(s.sources.own.label, r.own.value, r.own.reading), A.ownNote);
+  if (r.inmetro) L.push("- " + A.inmetro(r.inmetro.pulseIndex, r.inmetro.chainIndex, fmtBrt(Date.parse(r.inmetro.timeStamp)), normHex(r.inmetro.outputValue)), A.link + links.inmetro(r.inmetro.chainIndex, r.inmetro.pulseIndex));
   if (r.eth) L.push("- " + A.eth(r.eth.number, r.eth.hash, fmtUnix(r.eth.timestamp)), A.link + links.eth(r.eth.number));
   if (r.drand) L.push("- " + A.drand(r.drand.round, r.drand.randomness), A.link + links.drand(r.drand.round));
   for (const g of ["megasena", "federal"]) {
@@ -1756,6 +1819,28 @@ async function verifyCertificate(cert, deps = {}, opts = {}) {
     }
   }
 
+  if ("inmetro" in sources) {
+    const s = obj(sources.inmetro) || {}, p = obj(rand.inmetro);
+    const T = isInt(s.notBefore) ? inmetroMinuteAfter(s.notBefore) : null;
+    if (T !== null) rtimes.inmetro = T / 1000;
+    if (!p) add("inmetro", missing, isSeal ? K.sealPending(K.labels.inmetro) : K.inmetroMissing);
+    else {
+      const ts = Date.parse(p.timeStamp), det = "notBefore " + msToIso(s.notBefore || 0) + " · pulso " + p.timeStamp + " · nº " + p.pulseIndex;
+      if (!(await inmetroIntact(p))) add("inmetro", STATUS.FAIL, K.inmetroHash, det);
+      else if (p.chainIndex !== s.chain) add("inmetro", STATUS.FAIL, K.inmetroChain(p.chainIndex, s.chain), det);
+      else if (!(ts > s.notBefore)) add("inmetro", STATUS.FAIL, K.inmetroEarly, det);
+      else {
+        claimed.inmetro = normHex(p.outputValue); rtimes.inmetro = ts / 1000;
+        let f = null, err = null;
+        try { if (!deps.inmetro) throw new Error("não consultado"); f = await deps.inmetro(p.chainIndex, p.pulseIndex, T); } catch (e) { err = e; }
+        if (err) add("inmetro", STATUS.UNVERIFIED, ts === T ? K.inmetroUnreach(p.pulseIndex) : K.inmetroUnreachGap(p.pulseIndex), err.message + " · " + det);
+        else if (!f.pulse || normHex(String(f.pulse.outputValue)) !== claimed.inmetro) add("inmetro", STATUS.FAIL, K.inmetroOther(p.pulseIndex), det);
+        else if (ts !== T && f.atT) add("inmetro", STATUS.FAIL, K.inmetroNotFirst(msToIso(T)), det);
+        else { indep.inmetro = claimed.inmetro; add("inmetro", STATUS.PASS, K.inmetroOk(p.pulseIndex), claimed.inmetro + " · " + det); }
+      }
+    }
+  }
+
   for (const game of ["megasena", "federal"]) {
     if (!(game in sources)) continue;
     const label = LOTTERY.games[game].label, contest = sources[game].contest, ev = obj(rand[game]), link = LOTTERY.games[game].page;
@@ -1831,7 +1916,7 @@ async function verifyCertificate(cert, deps = {}, opts = {}) {
     if (bad.length) add("anchors", STATUS.FAIL, K.anchorsBad, bad.concat(notes).join("; "));
     else add("anchors", STATUS.PASS, K.anchorsOk, notes.join("; "));
   }
-  const live = keys.filter((k) => k === "eth" || k === "drand");
+  const live = keys.filter((k) => k === "eth" || k === "drand" || k === "inmetro");
   if (live.length) {
     const tkeys = live.filter((k) => k in rtimes), noTime = live.filter((k) => !(k in rtimes));
     const deadline = tkeys.length ? Math.min(...tkeys.map((k) => rtimes[k])) : null;
@@ -1887,6 +1972,7 @@ const CORE = Object.freeze({
   // LucentDraw/3
   V3, TASK_PRESETS, DIE_FACES, COIN, DECK, parseWeight, integerWeights, shareText, seedV3, pickHash, selectPicks,
   canonOwnSeed, ownFormatError, seedOwn, OWN_FORMATS, buildSpecV3, quickDrawOwn,
+  INMETRO, inmetroMinuteAfter, inmetroSerialize, inmetroIntact,
   quickDraw, presetTask, validateTask, buildSpecV3, contestOkV3, federalOkV3, megasenaValueV3, federalValueV3,
   lotteryEvidenceOk, isDone, taskSummary, boolPathsOf,
 });
@@ -1983,6 +2069,27 @@ async function drandLib() { if (!drandMod) drandMod = await import("drand-client
 const drandClient = makeDrandClient(fetchJson);
 async function getDrand(round) { return fetchVerifiedBeacon(await drandLib(), drandClient, round); }
 const getLottery = (game, contest, fj = fetchJson) => fetchLottery(fj, game, contest, settings.relay);
+// Inmetro: primeiro direto; se o navegador bloquear (CORS) ou falhar, pela rota do próprio site.
+async function inmetroGet(path) {
+  try { return await fetchJson(INMETRO.base + path, { timeout: 10000 }); }
+  catch (e) {
+    if (e && e.status === 404) throw e;
+    if (!/^https?:$/.test(location.protocol)) throw e;
+    return await fetchJson(INMETRO.proxy + path, { timeout: 15000 });
+  }
+}
+const inmetroPulse = (j) => (j && j.pulse ? j.pulse : j);
+async function getInmetroAt(ms) { return inmetroPulse(await inmetroGet("/pulse/time/" + ms)); }
+async function getInmetroByIndex(chain, idx) { return inmetroPulse(await inmetroGet("/chain/" + chain + "/pulse/" + idx)); }
+// Para a conferência: o pulso do arquivo do Inmetro e se existe um pulso exatamente no minuto T.
+async function inmetroEvidence(chain, idx, T) {
+  const pulse = await getInmetroByIndex(chain, idx);
+  let atT = false;
+  if (T !== null && Date.parse(pulse.timeStamp) !== T) {
+    try { const q = await getInmetroAt(T); atT = !!q && Date.parse(q.timeStamp) === T && q.chainIndex === chain; } catch { atT = false; }
+  }
+  return { pulse, atT };
+}
 async function ethEvidence(n) { const [head, block, parent] = [await ethRpc.head(), await ethRpc.block(n), await ethRpc.block(n - 1)]; return { head, block, parent }; }
 
 // ---- utilidades
@@ -2318,16 +2425,17 @@ function renderSaved() {
 }
 
 // ---- linha do tempo
-const TL = ["prep", "seal", "anchor", "eth", "drand", "megasena", "federal", "result"];
+const TL = ["prep", "seal", "anchor", "drand", "eth", "inmetro", "megasena", "federal", "result"];
 function renderTimeline() {
   const ol = $("timeline"); ol.replaceChildren();
-  const names = { prep: [STR.tlPrep, STR.tlPrepD], seal: [STR.tlSeal, STR.tlSealD], anchor: [STR.tlAnchor, STR.tlAnchorIdle], eth: [STR.tlEth, STR.tlNotUsed], drand: [STR.tlDrand, STR.tlNotUsed], megasena: [STR.tlMegasena, STR.tlNotUsed], federal: [STR.tlFederal, STR.tlNotUsed], result: [STR.tlResult, STR.tlResultD] };
+  const names = { prep: [STR.tlPrep, STR.tlPrepD], seal: [STR.tlSeal, STR.tlSealD], anchor: [STR.tlAnchor, STR.tlAnchorIdle], eth: [STR.tlEth, STR.tlNotUsed], drand: [STR.tlDrand, STR.tlNotUsed], inmetro: [STR.tlInmetro, STR.tlNotUsed], megasena: [STR.tlMegasena, STR.tlNotUsed], federal: [STR.tlFederal, STR.tlNotUsed], result: [STR.tlResult, STR.tlResultD] };
   const used = current ? Object.keys(current.spec.sources) : [];
   for (const k of TL) {
-    if (["eth", "drand", "megasena", "federal"].includes(k) && current && !used.includes(k)) continue;
+    if (["eth", "drand", "inmetro", "megasena", "federal"].includes(k) && current && !used.includes(k)) continue;
+    if (["eth", "drand", "inmetro"].includes(k) && !current && !isQuick() && preset() !== k) continue;
     if (["megasena", "federal"].includes(k) && !current) continue;
     const ownNow = used.includes("own") || (!current && preset() === "own" && !isQuick());
-    if (["anchor", "eth", "drand"].includes(k) && ownNow) continue;
+    if (["anchor", "eth", "drand", "inmetro"].includes(k) && ownNow) continue;
     ol.append(el("li", { id: "tl-" + k }, el("span", { className: "dot" }), el("div", {}, el("div", { className: "t", textContent: names[k][0] }), el("div", { className: "d", textContent: names[k][1] }))));
     $("tl-" + k).dataset.s = k === "prep" ? "active" : "idle";
   }
@@ -2414,6 +2522,7 @@ function showSeal() {
   const s = spec.sources, v3 = spec.v === V3;
   const facts = [[STR.factId, spec.id], v3 ? [STR.factTask, STR.task.presetName[spec.task.preset] + " · " + taskSummary(spec.task)] : [STR.factCount, String(spec.candidates.length)], [STR.factSealed, fmtBrt(Date.parse(sealedAt))]];
   if (s.eth) facts.push([STR.factEth, STR.factEthPlan(fmtBrt(s.eth.notBefore * 1000), s.eth.confirmations)]);
+  if (s.inmetro) facts.push([STR.factInmetro, STR.factInmetroPlan(fmtBrt(inmetroMinuteAfter(s.inmetro.notBefore)))]);
   if (s.drand) facts.push([STR.factDrand, STR.factDrandPlan(s.drand.round, fmtBrt(drandRoundTime(s.drand.round)))]);
   for (const g of ["megasena", "federal"]) if (s[g]) facts.push([LOTTERY.games[g].label, STR.factLotteryPlan(s[g].contest), LOTTERY.games[g].page]);
   kv($("sealFacts"), facts);
@@ -2477,6 +2586,7 @@ function expectedMs() {
   const s = current.spec.sources, t = [];
   if (s.eth) t.push(ethNextSlotTime(s.eth.notBefore) + s.eth.confirmations * ETH.slot * 1000 + 4000);
   if (s.drand) t.push(drandRoundTime(s.drand.round));
+  if (s.inmetro) t.push(inmetroMinuteAfter(s.inmetro.notBefore) + 5000);
   return t.length ? Math.max(...t) : null;
 }
 function fmtLeft(sec) {
@@ -2498,6 +2608,23 @@ function errWhy(e) {
   const c = e && e.cause ? e.cause : e;
   const m = (c && c.message) || String(c || "desconhecido");
   return /failed to fetch|networkerror|load failed|import/i.test(m) ? "a página não conseguiu acessar a internet (" + m + ")" : m;
+}
+async function waitInmetro(src, onStatus) {
+  const T = inmetroMinuteAfter(src.notBefore);
+  while (Date.now() < T + 2500) await sleep(Math.min(30000, T + 2500 - Date.now()));
+  let last;
+  for (let i = 0; i < 90; i++) {
+    try {
+      const p = await getInmetroAt(T), ts = Date.parse(p.timeStamp);
+      if (p.chainIndex === src.chain && ts > src.notBefore) {
+        if (!(await inmetroIntact(p))) throw new Error("pulso recebido não confere (outputValue)");
+        return p;
+      }
+      last = new Error("o pulso das " + fmtBrt(T) + " ainda não saiu");
+    } catch (e) { last = e; if (/não confere/.test(e.message)) throw e; }
+    onStatus(last); await sleep(4000);
+  }
+  throw new Error(STR.errInmetroFetch(fmtBrt(T), last ? last.message : "tempo esgotado"));
 }
 async function waitDrand(round) {
   const due = drandRoundTime(round);
@@ -2531,6 +2658,12 @@ async function waitAndDraw() {
   try {
     if (r.eth) setStep("eth", "done", STR.tlEthDone(r.eth.number, r.eth.hash.slice(0, 16)));
     if (r.drand) setStep("drand", "done", STR.tlDrandDone(r.drand.round, r.drand.randomness.slice(0, 16)));
+    if (r.inmetro) setStep("inmetro", "done", STR.tlInmetroDone(r.inmetro.pulseIndex, normHex(r.inmetro.outputValue).slice(0, 16)));
+    if (s.inmetro && !r.inmetro) {
+      setStep("inmetro", "active", STR.tlInmetroWait(fmtBrt(inmetroMinuteAfter(s.inmetro.notBefore))));
+      jobs.push(waitInmetro(s.inmetro, (e) => setStep("inmetro", "active", STR.tlRetryingWhy(errWhy(e))))
+        .then((p) => { r.inmetro = p; persist(); setStep("inmetro", "done", STR.tlInmetroDone(p.pulseIndex, normHex(p.outputValue).slice(0, 16))); }));
+    }
     for (const g of ["megasena", "federal"]) if (r[g]) setStep(g, "done", STR.tlLotteryDone(r[g].contest, lotteryValue(g, r[g].contest, r[g], v).split(":")[1]));
     if (s.drand && !r.drand) jobs.push(waitDrand(s.drand.round).then((d) => { r.drand = d; persist(); setStep("drand", "done", STR.tlDrandDone(d.round, d.randomness.slice(0, 16))); }));
     if (s.eth && !r.eth) jobs.push(waitEthTarget(ethRpc, s.eth, {
@@ -2789,6 +2922,7 @@ async function renderDone() {
   const facts = [[STR.factCommit, current.commitment]];
   if (r.own) facts.push([STR.factOwn, spec.sources.own.label + ": " + r.own.value]);
   if (r.eth) facts.push([STR.factEth, "#" + r.eth.number + " · " + r.eth.hash, links.eth(r.eth.number)]);
+  if (r.inmetro) facts.push([STR.factInmetro, "nº " + r.inmetro.pulseIndex + " · " + fmtBrt(Date.parse(r.inmetro.timeStamp)) + " · " + normHex(r.inmetro.outputValue), links.inmetro(r.inmetro.chainIndex, r.inmetro.pulseIndex)]);
   if (r.drand) facts.push([STR.factDrand, "#" + r.drand.round + " · " + r.drand.randomness, links.drand(r.drand.round)]);
   for (const g of ["megasena", "federal"]) if (r[g]) facts.push([LOTTERY.games[g].label, lotteryValue(g, r[g].contest, r[g], spec.v) + (r[g].drawDate ? " · " + r[g].drawDate : "") + (r[g].source === "manual" ? " · inserido manualmente" : ""), links.lottery(g)]);
   facts.push([STR.factSeed, current.seed]);
@@ -2879,7 +3013,7 @@ $("verifyBtn").addEventListener("click", async () => {
   $("verifyBtn").disabled = true; $("verifyBtn").textContent = STR.verifying;
   try {
     if (cert && cert.spec && typeof cert.spec.id === "string") { $("verifyHead").hidden = false; $("vDrawId").textContent = cert.spec.id; }
-    const rep = await verifyCertificate(cert, { eth: ethEvidence, drand: getDrand, lottery: (g, c) => getLottery(g, c) }, { lotteryConfirmed: $("lotteryEye").checked });
+    const rep = await verifyCertificate(cert, { eth: ethEvidence, drand: getDrand, inmetro: inmetroEvidence, lottery: (g, c) => getLottery(g, c) }, { lotteryConfirmed: $("lotteryEye").checked });
     for (const c of rep.checks) {
       const body = el("div", { textContent: c.title });
       if (c.detail) body.append(el("small", { textContent: c.detail }));
