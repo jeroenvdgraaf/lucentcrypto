@@ -25,7 +25,12 @@ Interface language is Portuguese; terms in *italics* are the interface words.
 - `s_i` = the secret of voter number *i* (so the admin can resend any voter's link after a reload);
 - `kr` = an AES-GCM key for the parts of the roll kept private (section 5).
 
-The page MUST say plainly: *Guarde uma cópia deste link. Ele conduz a reunião e guarda metade da chave: sem ele, os resultados não podem ser apurados; com ele, qualquer pessoa conduz a reunião.* It offers *Copiar link*, *QR*, and send-to-myself by WhatsApp or e-mail (buttons only when the admin entered a phone number or address for themself).
+The page MUST say plainly: *Guarde uma cópia deste link. Ele conduz a reunião e guarda metade da chave: sem ele, os resultados não podem ser apurados; com ele, qualquer pessoa conduz a reunião.* (In the opt-out mode of section 3.1, without *e guarda metade da chave*.)
+
+Keeping the admin link should need no understanding of cryptography:
+
+- **Backup before anything else (MUST).** After *Criar*, the page shows the admin link with *Copiar link*, *QR*, and send-to-myself by WhatsApp or e-mail (buttons only when the admin entered a phone number or address for themself). The voter links appear only after the admin has used one of these.
+- **Remembered on the device.** The admin link is also kept in the browser's local storage, so reopening `/votacao/` on the same phone or computer brings the session back without the link. The backup matters only if the device is lost or changed. Local storage is cleared at deletion time (section 8) or by *Esquecer esta reunião neste aparelho*.
 
 ## 2. Flow
 
@@ -63,6 +68,15 @@ The page MUST say plainly: *Guarde uma cópia deste link. Ele conduz a reunião 
 - `n_j·B = S(T_j) − D_j^A − D_j^W`; `n_j` is found by trying 0…50.
 - *Abstenção* = accepted ballots − Σ n_j. *Não votaram* = size of the frozen roll − accepted ballots.
 
+### 3.1 Key modes (chosen at creation, fixed for the session)
+
+| Mode | Interface | Key |
+|---|---|---|
+| **Split** (default) | *Guardar metade da chave comigo (recomendado)*, checked | `K = A + W` as above; both partial decryptions needed |
+| **Worker only** (opt-out) | the same box unchecked | `K = W`; no `A`, no admin proof; the Worker's partial decryption alone gives the counts |
+
+Ballots, proofs, board and verification are otherwise identical. The mode is recorded in the `criada` event and shown on the voter, projector and board pages (section 9), since the admin chooses it on the voters' behalf.
+
 **What the Worker decrypts (MUST).** The Worker computes `D^W` only for the totals `T_j` that it computes itself from the board, for an item that is closed. It MUST NOT decrypt any ciphertext submitted to it. Otherwise the admin could submit one voter's ballot as a "total" and read it.
 
 ## 4. Item types (pt-BR)
@@ -82,7 +96,7 @@ The board is an append-only list of **events**. Each event has a sequence number
 
 | Event | Content |
 |---|---|
-| `criada` | title, admin's name, display mode (names or fingerprints), `A` and its proof, `W` and its proof, SHA-256(`t`) |
+| `criada` | title, admin's name, display mode (names or fingerprints), key mode (section 3.1), `A` and its proof (split mode only), `W` and its proof, SHA-256(`t`) |
 | `eleitor-incluido` | voter number *i*, fingerprint `f_i`, name (only in names mode), `privado`: AES-GCM under `kr` of {name, contact} |
 | `eleitor-excluido` | voter number *i* |
 | `item-aberto` | item number, type, question, label, numbering, m, the frozen roll (list of fingerprints) |
@@ -104,10 +118,10 @@ The board is an append-only list of **events**. Each event has a sequence number
 The board, voter and projector pages verify, from the event list alone:
 
 1. the hash chain;
-2. both proofs of knowledge, and `K = A + W`;
+2. the proofs of knowledge, and `K = A + W` (split) or `K = W` (Worker only);
 3. each ballot: on the item's frozen roll, at most one per fingerprint, valid proof, posted while the item was open;
 4. the totals `T_j`, recomputed from the accepted ballots;
-5. both partial-decryption proofs, and the counts.
+5. the partial-decryption proofs, and the counts.
 
 Any failure is shown as *O quadro não confere* with the reason; no result is shown for that item. *Baixar a ata* downloads the full event list as JSON, so that the results can be verified after the board is deleted (a stand-alone verifier can come later).
 
@@ -119,15 +133,15 @@ Any failure is shown as *O quadro não confere* with the reason; no result is sh
 
 ## 8. Deletion (MUST)
 
-The Durable Object deletes everything, including `w`, at **the first midnight (America/Sao_Paulo) after the session ends, plus 24 hours**. If the admin never ends the session, the same rule applies from the last event. After deletion nobody can decrypt any individual ballot, not even the admin and LucentCrypto together; the downloaded *ata* still verifies.
+The Durable Object deletes everything, including `w`, at **the first midnight (America/Sao_Paulo) after the session ends, plus 24 hours**. If the admin never ends the session, the same rule applies from the last event. After deletion no individual ballot can be decrypted by anyone; the downloaded *ata* still verifies.
 
 ## 9. What it guarantees, and what not (shown on the page)
 
-- **Secret vote:** nobody alone can read a ballot. The admin and LucentCrypto **together** could, until deletion.
+- **Secret vote.** Split mode: *Sigilo: a chave é dividida entre o organizador e a LucentCrypto; nenhum dos dois, sozinho, consegue ler uma cédula. Só os totais são abertos.* Worker-only mode: *Sigilo: a chave fica com a LucentCrypto, que abre só os totais. Tudo é apagado um dia após a reunião.* These sentences appear on the voter page under the item, and on the board.
 - **Counted as cast:** each voter sees their ballot on the board; anyone can check that the published result is the decryption of the sum of exactly the accepted ballots.
 - **Who voted is visible** (by name or fingerprint, with the time); how they voted is not.
 - **The admin controls the roll.** Every inclusion and exclusion is public, so participants can notice an unknown name, but only in names mode.
-- **Not protected:** a voter who votes under someone's eyes, or who shares their link; malware on a phone; a lost admin link (the open items can never be tallied).
+- **Not protected:** a voter who votes under someone's eyes, or who shares their link; malware on a phone; a lost admin link (in split mode the open items can never be tallied; in either mode the meeting can no longer be run).
 - **No legal value:** *Esta é uma demonstração. Nenhum valor jurídico pode ser atribuído a estas votações.* Plus the same *sem garantias* notice as Segredo.
 
 ## 10. Site
