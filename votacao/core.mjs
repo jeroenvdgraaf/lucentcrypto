@@ -1,0 +1,294 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 Jeroen van de Graaf
+//
+// Lucent Votação (LucentVote/1, spec/VOTACAO.md): núcleo do protocolo, sem DOM e sem rede.
+// Usado pela página (votacao/index.html), pelo Worker (worker/votacao.js) e pelos testes.
+//
+// Grupo: ristretto255. Cédula: um ElGamal "no expoente" por opção (0 ou 1), com provas disjuntivas
+// de Chaum–Pedersen (Cramer–Damgård–Schoenmakers) de que cada opção é 0 ou 1 e de que a soma é 0 ou 1
+// (tudo 0 = abstenção). Apuração: soma das cédulas aceitas, decifração parcial com prova por quem
+// tem cada metade da chave, contagem por busca de 0 a 50.
+import { RistrettoPoint as P, ed25519, sha256, sha512, hmac } from "./vendor/noble.mjs";
+
+export const VERSION = "LucentVote/1";
+export const MAX_VOTERS = 50, MAX_ITEMS = 100, MAX_QUESTION = 300, MAX_TEXT = 128;
+export const L = ed25519.CURVE.n;
+const B = P.BASE, ZERO = P.ZERO;
+const te = new TextEncoder();
+
+// ---- utilidades
+export const hex = (b) => Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+export const unhex = (h) => { if (!/^([0-9a-f]{2})*$/.test(h)) throw new Error("hex"); return Uint8Array.from(h.match(/../g) || [], (x) => parseInt(x, 16)); };
+const cat = (...a) => { const o = new Uint8Array(a.reduce((n, x) => n + x.length, 0)); let i = 0; for (const x of a) { o.set(x, i); i += x.length; } return o; };
+const bytesToInt = (b) => { let x = 0n; for (const v of b) x = (x << 8n) | BigInt(v); return x; };
+export const mod = (x) => ((x % L) + L) % L;
+export const sHex = (k) => mod(k).toString(16).padStart(64, "0");
+export const sOf = (h) => { if (!/^[0-9a-f]{64}$/.test(h)) throw new Error("escalar"); const k = BigInt("0x" + h); if (k >= L) throw new Error("escalar"); return k; };
+export const pHex = (p) => p.toHex();
+export const pOf = (h) => { if (!/^[0-9a-f]{64}$/.test(h)) throw new Error("ponto"); return P.fromHex(h); };
+// Pontos fixos da sessão (K, A, W) com tabela pré-calculada: multiplicação ~10× mais rápida.
+const FIXED = new Map();
+const fixedPoint = (h) => { let p = FIXED.get(h); if (!p) { p = pOf(h); p.ep.precompute(8); FIXED.set(h, p); if (FIXED.size > 32) FIXED.delete(FIXED.keys().next().value); } return p; };
+export const randBytes = (n) => crypto.getRandomValues(new Uint8Array(n));
+export const randScalar = () => { for (;;) { const k = mod(bytesToInt(randBytes(64))); if (k) return k; } };
+const mulB = (k) => (k === 0n ? ZERO : B.multiply(k));
+export const mulBase = (k) => B.multiply(mod(k));
+const mulV = (p, k) => p.multiplyUnsafe(mod(k)); // só com dados públicos (conferência)
+const mulS = (p, k) => (k === 0n ? ZERO : p.multiply(k)); // com segredos
+
+// JSON canônico: chaves em ordem, sem espaços (como no Embaralhamento).
+export function canon(x) {
+  if (Array.isArray(x)) return "[" + x.map(canon).join(",") + "]";
+  if (x && typeof x === "object") return "{" + Object.keys(x).filter((k) => x[k] !== undefined).sort().map((k) => JSON.stringify(k) + ":" + canon(x[k])).join(",") + "}";
+  return JSON.stringify(x);
+}
+// Hash para escalar: SHA-512("LucentVote/1/" ‖ domínio ‖ 0x00 ‖ JSON canônico) mod ℓ
+export const hs = (domain, obj) => mod(bytesToInt(sha512(cat(te.encode(VERSION + "/" + domain), new Uint8Array([0]), te.encode(canon(obj))))));
+export const sha256hex = (s) => hex(sha256(typeof s === "string" ? te.encode(s) : s));
+
+// ---- o segredo do admin m (32 bytes) gera tudo (seção 1)
+export function deriveAdmin(mHex) {
+  const m = unhex(mHex);
+  const lab = (s) => te.encode(VERSION + "/" + s);
+  const a = mod(bytesToInt(hmac(sha512, m, lab("chave")))) || 1n;
+  const t = hex(hmac(sha256, m, lab("controle")));
+  return {
+    a, t, th: sha256hex(t),
+    kr: hmac(sha256, m, lab("rol")),
+    voterSecret: (i) => hex(hmac(sha256, m, lab("eleitor/" + i)).subarray(0, 16)),
+  };
+}
+export const fingerprint = (sHexStr) => hex(sha256(cat(te.encode(VERSION + "/eleitor"), unhex(sHexStr)))).slice(0, 32);
+
+// ---- prova de conhecimento (Schnorr) de x em X = x·B
+export function provePok(sid, x, X) {
+  const k = randScalar(), R = B.multiply(k), c = hs("pok", { sid, X: pHex(X), R: pHex(R) });
+  return { R: pHex(R), z: sHex(k + c * x) };
+}
+export function verifyPok(sid, Xh, pr) {
+  try {
+    const X = pOf(Xh), R = pOf(pr.R), z = sOf(pr.z), c = hs("pok", { sid, X: Xh, R: pr.R });
+    return mulB(z).equals(R.add(mulV(X, c)));
+  } catch { return false; }
+}
+
+// ---- tipos de item (seção 4)
+export function optionLabels(item) {
+  if (item.type === "simnao") return ["Sim", "Não"];
+  const marks = item.numbering === "ABC" ? ["A", "B", "C"] : ["1", "2", "3"];
+  return marks.slice(0, item.m).map((x) => item.label + " " + x);
+}
+export function checkItem(it) {
+  const LABELS = ["Candidato", "Proposta", "Opção", "Alternativa"];
+  if (!it || typeof it.q !== "string" || !it.q.trim() || it.q.length > MAX_QUESTION) return "pergunta";
+  if (it.type === "simnao") return it.m === 2 ? null : "m";
+  if (it.type !== "escolha") return "tipo";
+  if (!LABELS.includes(it.label) || !["123", "ABC"].includes(it.numbering) || ![2, 3].includes(it.m)) return "opções";
+  return null;
+}
+
+// ---- cédula
+// Ramo de uma prova disjuntiva: (R, S) cifra o valor v, com R = r·B e S = r·K + v·B.
+// Para o ramo verdadeiro: a = w·B, b = w·K. Para os simulados: z, c aleatórios,
+// a = z·B − c·R, b = z·K − c·(S − v·B). O desafio de cada prova é dividido entre os ramos;
+// um só hash (domínio "cedula") cobre o enunciado e todos os compromissos da cédula.
+function orCommit(K, R, S, values, truth, r) {
+  const br = values.map((v, j) => {
+    if (j === truth) { const w = randScalar(); return { w, a: B.multiply(w), b: K.multiply(w) }; }
+    const c = randScalar(), z = randScalar();
+    return { c, z, a: mulB(z).subtract(mulV(R, c)), b: mulV(K, z).subtract(mulV(S.subtract(mulB(BigInt(v))), c)) };
+  });
+  return { br, finish: (cg) => {
+    const others = br.reduce((s, x, j) => (j === truth ? s : s + x.c), 0n);
+    return br.map((x, j) => (j === truth ? (() => { const c = mod(cg - others); return [sHex(c), sHex(x.w + c * r)]; })() : [sHex(x.c), sHex(x.z)]));
+  } };
+}
+function orRecompute(K, R, S, values, pr) {
+  if (!Array.isArray(pr) || pr.length !== values.length) throw new Error("prova");
+  return pr.map(([ch, zh], j) => {
+    const c = sOf(ch), z = sOf(zh);
+    return { c, a: mulB(z).subtract(mulV(R, c)), b: mulV(K, z).subtract(mulV(S.subtract(mulB(BigInt(values[j]))), c)) };
+  });
+}
+const ballotStatement = (sid, item, f, m, cts, commits) => ({ sid, item, f, m, c: cts, a: commits });
+
+// choice: 0 = abstenção, 1..m = opção
+export function makeBallot(sid, Kh, item, m, f, choice) {
+  const K = fixedPoint(Kh), rs = [], cts = [], ors = [];
+  for (let j = 0; j < m; j++) {
+    const r = randScalar(), v = choice === j + 1 ? 1n : 0n, R = B.multiply(r), S = K.multiply(r).add(mulB(v));
+    rs.push(r); cts.push([R, S]); ors.push(orCommit(K, R, S, [0, 1], Number(v), r));
+  }
+  const RS = cts.reduce((s, [R]) => s.add(R), ZERO), SS = cts.reduce((s, [, S]) => s.add(S), ZERO), rsum = mod(rs.reduce((s, r) => s + r, 0n));
+  ors.push(orCommit(K, RS, SS, [0, 1], choice ? 1 : 0, rsum));
+  const c = cts.map(([R, S]) => [pHex(R), pHex(S)]);
+  const commits = ors.map((o) => o.br.map((x) => [pHex(x.a), pHex(x.b)]));
+  const cg = hs("cedula", ballotStatement(sid, item, f, m, c, commits));
+  return { c, p: ors.map((o) => o.finish(cg)) };
+}
+export function verifyBallot(sid, Kh, item, m, f, ballot) {
+  try {
+    const K = fixedPoint(Kh);
+    if (!ballot || !Array.isArray(ballot.c) || ballot.c.length !== m || !Array.isArray(ballot.p) || ballot.p.length !== m + 1) return false;
+    const cts = ballot.c.map(([R, S]) => [pOf(R), pOf(S)]);
+    const RS = cts.reduce((s, [R]) => s.add(R), ZERO), SS = cts.reduce((s, [, S]) => s.add(S), ZERO);
+    const recs = cts.map(([R, S], j) => orRecompute(K, R, S, [0, 1], ballot.p[j]));
+    recs.push(orRecompute(K, RS, SS, [0, 1], ballot.p[m]));
+    const commits = recs.map((rc) => rc.map((x) => [pHex(x.a), pHex(x.b)]));
+    const cg = hs("cedula", ballotStatement(sid, item, f, m, ballot.c, commits));
+    return recs.every((rc) => mod(rc.reduce((s, x) => s + x.c, 0n)) === cg);
+  } catch { return false; }
+}
+export const ballotFingerprint = (ballot) => sha256hex(canon(ballot)).slice(0, 8);
+
+// ---- apuração
+export function sumBallots(ballots, m) {
+  const T = Array.from({ length: m }, () => [ZERO, ZERO]);
+  for (const b of ballots) b.c.forEach(([R, S], j) => { T[j] = [T[j][0].add(pOf(R)), T[j][1].add(pOf(S))]; });
+  return T.map(([R, S]) => [pHex(R), pHex(S)]);
+}
+// Decifração parcial D_j = x·R(T_j), com uma prova de Chaum–Pedersen por opção e um só desafio.
+export function partialDecrypt(sid, item, x, Xh, T) {
+  const ks = T.map(() => randScalar()), Rs = T.map(([R]) => pOf(R));
+  const D = Rs.map((R) => pHex(mulS(R, x)));
+  const a = ks.map((k, j) => [pHex(B.multiply(k)), pHex(mulS(Rs[j], k))]);
+  const c = hs("decifra", { sid, item, X: Xh, T, D, a });
+  return { D, c: sHex(c), z: ks.map((k) => sHex(k + c * x)) };
+}
+export function verifyPartial(sid, item, Xh, T, pd) {
+  try {
+    if (!pd || pd.D.length !== T.length || pd.z.length !== T.length) return false;
+    const X = fixedPoint(Xh), c = sOf(pd.c);
+    const a = T.map(([R], j) => {
+      const z = sOf(pd.z[j]), Rp = pOf(R), D = pOf(pd.D[j]);
+      return [pHex(mulB(z).subtract(mulV(X, c))), pHex(mulV(Rp, z).subtract(mulV(D, c)))];
+    });
+    return hs("decifra", { sid, item, X: Xh, T, D: pd.D, a }) === c;
+  } catch { return false; }
+}
+// Contagem: n_j·B = S(T_j) − ΣD_j; n_j entre 0 e max.
+export function counts(T, partials, max = MAX_VOTERS) {
+  const table = [ZERO]; for (let i = 1; i <= max; i++) table.push(table[i - 1].add(B));
+  return T.map(([, S], j) => {
+    let M = pOf(S); for (const pd of partials) M = M.subtract(pOf(pd.D[j]));
+    const n = table.findIndex((X) => X.equals(M));
+    if (n < 0) throw new Error("contagem fora do intervalo");
+    return n;
+  });
+}
+
+// ---- quadro: cadeia de hashes e conferência completa (seções 5 e 6)
+export const ZERO_HASH = "0".repeat(64);
+export const eventHash = (prevHex, ev) => { const { h, ...body } = ev; return hex(sha256(cat(unhex(prevHex), te.encode(canon(body))))); };
+
+// Delete: primeira meia-noite (America/Sao_Paulo, UTC−3) depois de t, mais 24 horas.
+export function deletionTime(t) {
+  const DAY = 864e5, OFF = 3 * 36e5;
+  return Math.floor((t - OFF) / DAY) * DAY + DAY + OFF + DAY;
+}
+
+// Confere o quadro inteiro, a partir só da lista de eventos. Devolve o estado e os problemas.
+// cache (opcional): Map hash-do-evento → true para cédulas e provas já conferidas (páginas ao vivo).
+export function verifyBoard(events, cache = new Map()) {
+  const st = { ok: true, problems: [], session: null, roll: new Map(), items: new Map(), order: [], open: null, head: ZERO_HASH, ended: false, last: 0 };
+  const bad = (msg) => { st.ok = false; st.problems.push(msg); };
+  let prev = ZERO_HASH;
+  for (let i = 0; i < events.length; i++) {
+    const ev = events[i];
+    if (ev.n !== i + 1) { bad("Evento fora de ordem (nº " + ev.n + ")."); break; }
+    const h = eventHash(prev, ev);
+    if (ev.h !== h) { bad("A cadeia de hashes não confere no evento " + ev.n + "."); break; }
+    prev = h; st.head = h; st.last = ev.t;
+    try { apply(st, ev, cache); } catch (e) { bad("Evento " + ev.n + " (" + ev.type + "): " + e.message); }
+  }
+  return st;
+}
+function apply(st, ev, cache) {
+  const S = st.session;
+  if (ev.n === 1) {
+    if (ev.type !== "criada") throw new Error("o primeiro evento deve ser a criação");
+    const split = ev.keyMode === "dividida";
+    if (!split && ev.keyMode !== "lucent") throw new Error("modo de chave");
+    if (!verifyPok(ev.sid, ev.W, ev.pokW)) throw new Error("prova da chave da LucentCrypto não confere");
+    if (split && !verifyPok(ev.sid, ev.A, ev.pokA)) throw new Error("prova da chave do organizador não confere");
+    const K = split ? pOf(ev.A).add(pOf(ev.W)) : pOf(ev.W);
+    st.session = { sid: ev.sid, title: ev.title, by: ev.by, display: ev.display, keyMode: ev.keyMode, A: ev.A, W: ev.W, K: pHex(K), th: ev.th, created: ev.t };
+    return;
+  }
+  if (!S) throw new Error("sem criação");
+  if (st.ended && ev.type !== "reuniao-encerrada") throw new Error("depois do fim da reunião");
+  switch (ev.type) {
+    case "eleitor-incluido": {
+      if (!Number.isInteger(ev.i) || ev.i < 1 || [...st.roll.values()].some((v) => v.i === ev.i)) throw new Error("número de eleitor");
+      if (!/^[0-9a-f]{32}$/.test(ev.f) || st.roll.has(ev.f)) throw new Error("impressão digital");
+      if (st.roll.size >= MAX_VOTERS) throw new Error("mais de " + MAX_VOTERS + " eleitores");
+      st.roll.set(ev.f, { i: ev.i, f: ev.f, name: ev.name || null, priv: ev.priv || null, added: ev.t });
+      return;
+    }
+    case "eleitor-excluido": {
+      const e = [...st.roll.values()].find((v) => v.i === ev.i);
+      if (!e) throw new Error("eleitor inexistente");
+      st.roll.delete(e.f); return;
+    }
+    case "item-aberto": {
+      if (st.open) throw new Error("já há um item aberto");
+      if (st.items.has(ev.item) || ev.item !== st.order.length + 1) throw new Error("número do item");
+      const err = checkItem(ev.spec); if (err) throw new Error("item inválido (" + err + ")");
+      const roll = [...st.roll.keys()].sort();
+      if (canon(roll) !== canon(ev.roll)) throw new Error("o rol congelado não é o rol atual");
+      st.items.set(ev.item, { n: ev.item, spec: ev.spec, options: optionLabels(ev.spec), roll: new Set(roll), state: "aberto", ballots: [], opened: ev.t });
+      st.order.push(ev.item); st.open = ev.item; return;
+    }
+    case "cedula": {
+      const it = st.items.get(ev.item);
+      if (!it || it.state !== "aberto") throw new Error("item não está aberto");
+      if (!it.roll.has(ev.f)) throw new Error("eleitor fora do rol deste item");
+      if (it.ballots.some((b) => b.f === ev.f)) throw new Error("segunda cédula do mesmo eleitor");
+      const key = "c:" + ev.h;
+      const ok = cache.get(key) ?? verifyBallot(S.sid, S.K, ev.item, it.spec.m, ev.f, ev.ballot);
+      cache.set(key, ok);
+      if (!ok) throw new Error("prova da cédula não confere");
+      it.ballots.push({ f: ev.f, t: ev.t, ballot: ev.ballot, fp: ballotFingerprint(ev.ballot) });
+      return;
+    }
+    case "item-encerrado": {
+      const it = st.items.get(ev.item);
+      if (!it || it.state !== "aberto") throw new Error("item não está aberto");
+      const T = sumBallots(it.ballots.map((b) => b.ballot), it.spec.m);
+      if (canon(T) !== canon(ev.T)) throw new Error("os totais cifrados não conferem");
+      const key = "w:" + ev.h, ok = cache.get(key) ?? verifyPartial(S.sid, ev.item, S.W, T, ev.dW);
+      cache.set(key, ok);
+      if (!ok) throw new Error("a decifração da LucentCrypto não confere");
+      Object.assign(it, { state: "encerrado", T, dW: ev.dW, closed: ev.t }); st.open = null;
+      if (S.keyMode === "lucent") finish(it, [ev.dW]);
+      return;
+    }
+    case "item-apurado": {
+      const it = st.items.get(ev.item);
+      if (!it || it.state !== "encerrado" || S.keyMode !== "dividida") throw new Error("item não está aguardando apuração");
+      const key = "a:" + ev.h, ok = cache.get(key) ?? verifyPartial(S.sid, ev.item, S.A, it.T, ev.dA);
+      cache.set(key, ok);
+      if (!ok) throw new Error("a decifração do organizador não confere");
+      it.dA = ev.dA; finish(it, [it.dW, ev.dA]);
+      if (canon(it.result.counts) !== canon(ev.counts)) throw new Error("a contagem publicada não confere");
+      return;
+    }
+    case "item-cancelado": {
+      const it = st.items.get(ev.item);
+      if (!it || !["aberto", "encerrado"].includes(it.state)) throw new Error("item não pode ser cancelado");
+      if (st.open === ev.item) st.open = null;
+      it.state = "cancelado"; it.cancelled = ev.t; return;
+    }
+    case "reuniao-encerrada": {
+      if (st.ended) throw new Error("reunião já encerrada");
+      st.ended = true; st.endedAt = ev.t; return;
+    }
+    default: throw new Error("tipo desconhecido");
+  }
+}
+function finish(it, partials) {
+  const c = counts(it.T, partials), n = it.ballots.length, sum = c.reduce((a, b) => a + b, 0);
+  if (sum > n) throw new Error("contagem maior que o número de cédulas");
+  it.state = "apurado";
+  it.result = { counts: c, abst: n - sum, ballots: n, eligible: it.roll.size, notVoted: it.roll.size - n };
+}

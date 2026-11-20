@@ -146,7 +146,7 @@ The Durable Object deletes everything, including `w`, at **the first midnight (A
 
 ## 10. Site
 
-- Page `/votacao/` (one HTML file, no external requests except to `/api/votacao/`), card on the home page, *em breve* line pointing to the full application.
+- Page `/votacao/`: `index.html` plus the protocol module `core.mjs` and the vendored `vendor/noble.mjs`, all from the same origin; no other external requests except to `/api/votacao/`. The same `core.mjs` runs in the Worker and in the tests. Card on the home page, *em breve* line pointing to the full application.
 - Worker route `/api/votacao/<sessão>/…` → Durable Object class `Sessao` (SQLite storage), WebSocket for live updates, alarm for deletion.
 - Creating sessions is open to anyone; limits in section 5 and deletion keep the cost small. If abused, add Cloudflare Turnstile to *Criar*.
 - Tests: proofs and tallies in Node (as for Segredo); a Worker test with a local Durable Object; an end-to-end browser test with an admin, three voters and a projector.
