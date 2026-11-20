@@ -105,3 +105,6 @@ como MUST.
 ## Pendente: Amigo Oculto
 - Coluna "Celular ou e-mail" por participante (como no Lucent Segredo): "Enviar pelo WhatsApp" direto ao número, "Enviar por e-mail" ao endereço.
 - "Colar uma lista": uma pessoa por linha, nome e, opcionalmente, celular ou e-mail (cabeçalho de planilha ignorado).
+
+## Pendente: Embaralhamento, símbolos que assustam
+- O Δ (e σ, ρ, h^Δ) aparece na seção técnica (linha "Resposta ao 0…") e na mensagem de erro "Número errado de valores Δ." Assusta o leitor comum. Rever: esconder a notação na parte técnica recolhida, ou trocar por palavras ("diferença de sorteio"), e tirar o Δ das mensagens de erro.
