@@ -1,0 +1,10 @@
+{
+ "secret": "o segredo: 42 · ação ✓",
+ "k": 3,
+ "links": [
+  "https://lucentcrypto.org/segredo/#p=LS2.AgGhssPU5fYHGAMEJlwNVGVzdGUgZGEgZGljYQNBbmEFQnJ1bm8FQ2FybGEFRGllZ28JRXZhIMOcbmFs0DK8-xsjkbJT37OkQLPAeMjHpVoq5yKigl62gaCT0wb4SXV5nP6nZ5L3T5NT6ySK6-i242AzGDecPkHmkKuJomdULWmP0H-gUBdSJR2cS4p1xuVh&h=LS2:b64url,last4=CRC32(all-before);v.x.hdr.y;hdr=id8.k.n.day2(since-2000-01-01).title.by.names*n,text=len1.utf8;Shamir:GF256/11b,Lagrange@0,bytewise=P;P=X.Y32;r=Y(xor)H(X);M=X(xor)G(r);G,H=MGF1-SHA256(label.h.seed.ctr4),label=LS2/G,LS2/H,h=SHA256(hdr);M=len2.text.randpad.0*16",
+  "https://lucentcrypto.org/segredo/#p=LS2.AgKhssPU5fYHGAMEJlwNVGVzdGUgZGEgZGljYQNBbmEFQnJ1bm8FQ2FybGEFRGllZ28JRXZhIMOcbmFsmH1nv5DiU1Zvq1nPxMW2c15e4yuatL2pzfPHsVEidrjFTilvUhB169mgr__EpXb_Lb1U8TZUgpi1Yt0R8RlD6dAkPRFMFg7ndRgaopg0JyvKookh&h=LS2:b64url,last4=CRC32(all-before);v.x.hdr.y;hdr=id8.k.n.day2(since-2000-01-01).title.by.names*n,text=len1.utf8;Shamir:GF256/11b,Lagrange@0,bytewise=P;P=X.Y32;r=Y(xor)H(X);M=X(xor)G(r);G,H=MGF1-SHA256(label.h.seed.ctr4),label=LS2/G,LS2/H,h=SHA256(hdr);M=len2.text.randpad.0*16",
+  "https://lucentcrypto.org/segredo/#p=LS2.AgOhssPU5fYHGAMEJlwNVGVzdGUgZGEgZGljYQNBbmEFQnJ1bm8FQ2FybGEFRGllZ28JRXZhIMOcbmFs88QsOkjikasDRJj_Uu8BmCqAzK1xW4mMwxEbvvVINqrxjMOUqlPb6bq3ZkEsJvSKDYVQYDRPPeq3D4F5gTVqOuYJLfNS-DuczrWc2k1HACeU78hf&h=LS2:b64url,last4=CRC32(all-before);v.x.hdr.y;hdr=id8.k.n.day2(since-2000-01-01).title.by.names*n,text=len1.utf8;Shamir:GF256/11b,Lagrange@0,bytewise=P;P=X.Y32;r=Y(xor)H(X);M=X(xor)G(r);G,H=MGF1-SHA256(label.h.seed.ctr4),label=LS2/G,LS2/H,h=SHA256(hdr);M=len2.text.randpad.0*16",
+  "https://lucentcrypto.org/segredo/#p=LS2.AgShssPU5fYHGAMEJlwNVGVzdGUgZGEgZGljYQNBbmEFQnJ1bm8FQ2FybGEFRGllZ28JRXZhIMOcbmFsBDbUiqiTGbCJftrOZgEI_Es6hIQZlHpQYVQTdLZozUFBaRdDUVAdfDTDYnCjhAx6sn7wsZHj9gB0sH2MK5WPztHfvauZ_3qmLUQahMG27iXI_SQA&h=LS2:b64url,last4=CRC32(all-before);v.x.hdr.y;hdr=id8.k.n.day2(since-2000-01-01).title.by.names*n,text=len1.utf8;Shamir:GF256/11b,Lagrange@0,bytewise=P;P=X.Y32;r=Y(xor)H(X);M=X(xor)G(r);G,H=MGF1-SHA256(label.h.seed.ctr4),label=LS2/G,LS2/H,h=SHA256(hdr);M=len2.text.randpad.0*16"
+ ]
+}

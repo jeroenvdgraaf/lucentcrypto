@@ -94,6 +94,9 @@ table.g td.del { width: 40px; }
 .x { border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 8px; width: 34px; height: 34px; cursor: pointer; }
 .k-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-weight: 600; }
 .k-line select { width: auto; }
+label.check { display: flex; gap: 8px; align-items: baseline; margin: 10px 0; font-size: 0.95rem; }
+label.check input { width: auto; flex: none; }
+label.check small { color: var(--muted); }
 .msg { border-radius: 10px; padding: 10px 12px; font-size: 14px; border: 1px solid var(--line); background: var(--bg); }
 .msg.ok { border-color: var(--ok); background: var(--ok-soft); }
 .msg.warn { border-color: var(--warn); background: var(--warn-soft); }
@@ -169,11 +172,12 @@ code { font-family: var(--mono); font-size: 12.5px; }
 <!-- Dividir -->
 <section id="viewSplit" role="tabpanel" aria-labelledby="tabSplit" class="panel">
   <h2>1. O segredo</h2>
-  <label class="f"><span>Nome do segredo <small>aparece para os guardiões, por exemplo “Senhas da família”</small></span><input type="text" id="title" maxlength="60" autocomplete="off"></label>
-  <label class="f"><span>Seu nome <small>quem divide; aparece para os guardiões</small></span><input type="text" id="by" maxlength="40" autocomplete="off"></label>
+  <label class="f"><span>Nome do segredo <small>aparece para os guardiões, por exemplo “Senhas da família”</small></span><input type="text" id="title" maxlength="128" autocomplete="off"></label>
+  <label class="f"><span>Seu nome <small>quem divide; aparece para os guardiões</small></span><input type="text" id="by" maxlength="128" autocomplete="off"></label>
   <label class="f"><span>O segredo <small id="secretCount">até 1.000 caracteres simples; não sai deste aparelho</small></span><textarea id="secret" rows="4" spellcheck="false" autocomplete="off"></textarea></label>
 
   <h2>2. Os guardiões</h2>
+  <p class="small muted">No máximo 12. Os nomes aparecem em todas as partes, para que os guardiões saibam a quem pedir as outras; os contatos, não.</p>
   <table class="g">
     <thead><tr><th></th><th>Nome</th><th>Celular ou e-mail <small>(opcional, para enviar)</small></th><th></th></tr></thead>
     <tbody id="gRows"></tbody>
@@ -187,13 +191,14 @@ code { font-family: var(--mono); font-size: 12.5px; }
   </div>
   <div class="k-line">Quantos guardiões precisam se juntar para recuperar? <select id="kSel" aria-label="Número necessário"></select> <span id="kOf"></span></div>
   <p class="small muted" id="kHint"></p>
+  <label class="check"><input type="checkbox" id="rehearse"><span>Vou fazer um ensaio com os guardiões <small>(a mensagem avisa que você vai pedir as partes de volta para conferir, sem mostrar o segredo)</small></span></label>
 
   <div class="row"><button class="btn primary" id="splitBtn" type="button">Dividir o segredo</button></div>
   <div class="msg bad" id="splitErr" hidden role="alert"></div>
 
   <div id="out" hidden>
     <h2>3. Entregar as partes</h2>
-    <p class="small muted">Cada guardião recebe só a sua parte. Envie pelo WhatsApp, por e-mail ou copie o link (para o Signal, por exemplo). Ou entregue pessoalmente: mostre o QR na tela e o guardião fotografa ou escaneia; nada passa por mensagem.</p>
+    <p class="small muted" id="sendIntro"></p>
     <div class="shares" id="shares"></div>
     <div class="msg warn" id="afterSend"><b>Depois de enviar:</b> apague as mensagens enviadas e os e-mails da sua caixa de saída. Juntas, elas contêm todas as partes, e quem as lesse poderia recuperar o segredo. Ao fechar esta página, o segredo não fica guardado em lugar nenhum.</div>
     <div class="row"><button class="btn" id="clearAll" type="button">Apagar tudo desta página</button></div>
@@ -204,6 +209,7 @@ code { font-family: var(--mono); font-size: 12.5px; }
 <section id="viewOpen" role="tabpanel" aria-labelledby="tabOpen" class="panel" hidden>
   <h2>Juntar as partes</h2>
   <p class="small muted">Cole aqui os links (ou os textos das partes) dos guardiões, um por linha. Com o número combinado de partes, o segredo é recuperado, e a página confere se alguma parte foi alterada. Com uma parte a mais, ela também encontra e descarta a parte errada.</p>
+  <label class="check"><input type="checkbox" id="rehearsal"><span>Ensaio: conferir sem mostrar o segredo <small>(confere que as partes recuperam o segredo; quem tem estas partes também poderia recuperá-lo de verdade)</small></span></label>
   <textarea class="mono" id="pasteIn" rows="4" spellcheck="false" placeholder="https://lucentcrypto.org/segredo/#p=LS2.…"></textarea>
   <div class="row"><button class="btn primary" id="addShares" type="button">Adicionar partes</button><button class="btn" id="resetOpen" type="button">Recomeçar</button></div>
   <div class="msg bad" id="openErr" hidden role="alert"></div>
@@ -236,7 +242,7 @@ code { font-family: var(--mono); font-size: 12.5px; }
 </section>
 
 <footer>
-  <p>Formato LS2 · o segredo é completado até um múltiplo de 32 bytes (para não revelar o tamanho exato), recebe 16 bytes zero de conferência e é embrulhado à moda OAEP (G e H: MGF1 com SHA-256); o pacote é dividido por Shamir sobre GF(2<sup>8</sup>), byte a byte. Partes erradas a mais são encontradas por Berlekamp–Welch ou por busca entre subconjuntos. Cada parte traz um CRC-32 contra erros de cópia (não é assinatura). Gerador de QR: qrcode-generator, de Kazuhiko Arase (licença MIT).</p>
+  <p>Formato LS2 · o segredo é completado até um múltiplo de 32 bytes (para não revelar o tamanho exato), recebe 16 bytes zero de conferência e é embrulhado à moda OAEP (G e H: MGF1 com SHA-256); o pacote é dividido por Shamir sobre GF(2<sup>8</sup>), byte a byte. O cabeçalho da parte (nome do segredo, nomes dos guardiões etc.) entra no hash, e assim também fica conferido. Partes erradas a mais são encontradas por Berlekamp–Welch ou por busca entre subconjuntos. Cada parte traz um CRC-32 contra erros de cópia (não é assinatura). Cada link leva, depois da parte, uma dica curta do formato (<code>&amp;h=…</code>), para que um programador possa recuperar o segredo mesmo sem esta página. Gerador de QR: qrcode-generator, de Kazuhiko Arase (licença MIT).</p>
   <p>Para usar sem internet, salve esta página e abra o arquivo salvo. Para conferir que um arquivo salvo é o oficial, compare <code>shasum -a 256</code> com a impressão digital publicada junto com o código.</p>
   <p><a href="/">LucentCrypto</a> · <a href="https://grifortis.com" target="_blank" rel="noopener">Grifortis · DuraShare</a></p>
 </footer>
@@ -246,10 +252,6 @@ code { font-family: var(--mono); font-size: 12.5px; }
   <div class="qrwrap">
     <h2 id="qrTitle"></h2>
     <div class="qrbox" id="qrBox"></div>
-    <div class="row" role="radiogroup" aria-label="Conteúdo do QR">
-      <label><input type="radio" name="qrMode" value="link" checked> Com o endereço (abre no celular)</label>
-      <label><input type="radio" name="qrMode" value="raw"> Só a parte (sem internet)</label>
-    </div>
     <p class="small muted" id="qrNote"></p>
     <button class="btn primary" id="qrClose" type="button">Fechar</button>
   </div>
@@ -265,10 +267,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 (() => {
   "use strict";
 // SEGREDO-CORE-BEGIN
-// Núcleo do Lucent Segredo (LucentSegredo/1): Shamir sobre GF(2^8), byte a byte, sem acesso ao DOM.
+// Núcleo do Lucent Segredo (formato LS2): Shamir sobre GF(2^8), byte a byte, sem acesso ao DOM.
 // Os testes (tests/segredo.test.mjs) extraem este bloco e o executam no Node.
 const LS_VERSION = "LS2";
-const LS_MAX_BYTES = 1000, LS_MAX_N = 20;
+const LS_MAX_BYTES = 1000, LS_MAX_N = 12;
 // GF(2^8) com o polinômio do AES (x^8 + x^4 + x^3 + x + 1) e gerador 3.
 const GF_EXP = new Uint8Array(512), GF_LOG = new Uint8Array(256);
 (() => { let x = 1; for (let i = 0; i < 255; i++) { GF_EXP[i] = x; GF_LOG[x] = i; x ^= (x << 1) ^ ((x & 0x80) ? 0x11b : 0); x &= 0xff; } for (let i = 255; i < 512; i++) GF_EXP[i] = GF_EXP[i - 255]; })();
@@ -279,35 +281,38 @@ const gfPolyEval = (c, x) => { let y = 0; for (let i = c.length - 1; i >= 0; i--
 // Pacote dividido (LS2): o texto é embrulhado à moda OAEP antes da divisão de Shamir.
 //   M  = tamanho (2 bytes) ‖ texto UTF-8 ‖ enchimento aleatório até múltiplo de 32 ‖ 16 bytes zero
 //   r  = 32 bytes aleatórios;  X = M ⊕ G(r);  Y = r ⊕ H(X);  pacote = X ‖ Y
-// G e H: MGF1 com SHA-256 e rótulos próprios. Ao abrir, os 16 zeros conferem o pacote inteiro: qualquer parte
-// alterada embaralha tudo (o hash impede mirar a mudança), então a alteração é detectada já com k partes.
-// O teste só existe com o pacote completo (k partes): k-1 partes não permitem adivinhar o segredo.
+// G e H: MGF1 com SHA-256, SHA-256(rótulo ‖ h ‖ semente ‖ contador de 4 bytes), com rótulos "LS2/G" e "LS2/H"
+// e h = SHA-256 do cabeçalho comum (tudo menos o nº da parte): título, nomes etc. ficam amarrados ao pacote.
+// Ao recuperar, os 16 zeros conferem o pacote e o cabeçalho: qualquer alteração embaralha tudo (o hash impede
+// mirar a mudança), então ela é percebida já com o número combinado de partes. O teste só existe com o pacote
+// completo: com menos partes não há como testar palpites sobre o segredo.
 const LS_ZEROS = 16, LS_R = 32;
-async function mgf1(label, seed, len) {
-  const out = new Uint8Array(len), lab = new TextEncoder().encode(label);
+const sha256 = async (b) => new Uint8Array(await crypto.subtle.digest("SHA-256", b));
+async function mgf1(label, h, seed, len) {
+  const out = new Uint8Array(len), lab = new TextEncoder().encode(label), pre = lab.length + h.length;
   for (let c = 0, o = 0; o < len; c++) {
-    const buf = new Uint8Array(lab.length + seed.length + 4); buf.set(lab); buf.set(seed, lab.length);
-    new DataView(buf.buffer).setUint32(lab.length + seed.length, c);
-    const h = new Uint8Array(await crypto.subtle.digest("SHA-256", buf)); out.set(h.subarray(0, Math.min(32, len - o)), o); o += 32;
+    const buf = new Uint8Array(pre + seed.length + 4); buf.set(lab); buf.set(h, lab.length); buf.set(seed, pre);
+    new DataView(buf.buffer).setUint32(pre + seed.length, c);
+    const d = await sha256(buf); out.set(d.subarray(0, Math.min(32, len - o)), o); o += 32;
   }
   return out;
 }
-async function lsSeal(text, rand) {
+async function lsSeal(text, rand, h) {
   const b = new TextEncoder().encode(text);
   if (!b.length) throw new Error("vazio");
   if (b.length > LS_MAX_BYTES) throw new Error("longo");
   const body = Math.max(32, Math.ceil((b.length + 2) / 32) * 32), M = new Uint8Array(body + LS_ZEROS);
   M.set(rand(body)); M[0] = b.length >> 8; M[1] = b.length & 0xff; M.set(b, 2); M.fill(0, body);
-  const r = rand(LS_R), g = await mgf1("LS2/G", r, M.length), X = M.map((v, i) => v ^ g[i]);
-  const h = await mgf1("LS2/H", X, LS_R), Y = r.map((v, i) => v ^ h[i]), pkg = new Uint8Array(X.length + LS_R);
+  const r = rand(LS_R), g = await mgf1("LS2/G", h, r, M.length), X = M.map((v, i) => v ^ g[i]);
+  const hh = await mgf1("LS2/H", h, X, LS_R), Y = r.map((v, i) => v ^ hh[i]), pkg = new Uint8Array(X.length + LS_R);
   pkg.set(X); pkg.set(Y, X.length);
   return pkg;
 }
-// Devolve o texto, ou lança "alterada" se o pacote não confere.
-async function lsOpen(pkg) {
+// Devolve o texto, ou lança "alterada" se o pacote (ou o cabeçalho h) não confere.
+async function lsOpen(pkg, h) {
   if (pkg.length < 32 + LS_ZEROS + LS_R) throw new Error("alterada");
   const X = pkg.subarray(0, pkg.length - LS_R), Y = pkg.subarray(pkg.length - LS_R);
-  const h = await mgf1("LS2/H", X, LS_R), r = Y.map((v, i) => v ^ h[i]), g = await mgf1("LS2/G", r, X.length);
+  const hh = await mgf1("LS2/H", h, X, LS_R), r = Y.map((v, i) => v ^ hh[i]), g = await mgf1("LS2/G", h, r, X.length);
   const M = X.map((v, i) => v ^ g[i]), body = M.length - LS_ZEROS;
   if (M.subarray(body).some((v) => v)) throw new Error("alterada");
   const n = (M[0] << 8) | M[1];
@@ -397,10 +402,10 @@ function lsBerlekampWelch(xs, ys, k, e) {
 // 2) Senão, Berlekamp–Welch corrige até ⌊(m-k)/2⌋ partes erradas.
 // 3) Senão, procura um subconjunto de k partes cujo pacote confere (com OAEP, k+1 partes já bastam para
 //    achar uma parte errada). Limite de 5.000 subconjuntos.
-async function lsRecover(pts, k) {
+async function lsRecoverSame(pts, k, h) {
   const m = pts.length;
   if (m < k) return { error: "faltam" };
-  const tryOpen = async (sub) => { try { return await lsOpen(lsLagrange0(sub)); } catch { return null; } };
+  const tryOpen = async (sub) => { try { return await lsOpen(lsLagrange0(sub), h); } catch { return null; } };
   const disagree = (c, set) => set.filter((p) => { for (let j = 0; j < p.y.length; j++) if (gfPolyEval(c[j], p.x) !== p.y[j]) return true; return false; }).map((p) => p.x);
   const coeffsOf = (sub) => { const xs = sub.map((p) => p.x), out = []; for (let j = 0; j < sub[0].y.length; j++) out.push(lsInterpCoeffs(xs, sub.map((p) => p.y[j]))); return out; };
   const first = pts.slice(0, k);
@@ -423,7 +428,7 @@ async function lsRecover(pts, k) {
       pts.forEach((p, i) => { if (gfPolyEval(c, p.x) !== ys[i]) bad.add(p.x); });
       pkg[j] = c[0];
     }
-    if (ok && bad.size <= e) { try { return { text: await lsOpen(pkg), checked: true, bad: [...bad].sort((a, b) => a - b) }; } catch {} }
+    if (ok && bad.size <= e) { try { return { text: await lsOpen(pkg, h), checked: true, bad: [...bad].sort((a, b) => a - b) }; } catch {} }
   }
   // Busca por subconjuntos de k partes
   const idx = [...Array(k).keys()]; let tries = 0;
@@ -437,9 +442,35 @@ async function lsRecover(pts, k) {
   }
 }
 
+// Recupera com partes { x, y, hdr }: agrupa pelo cabeçalho (e tamanho de y); uma parte com cabeçalho alterado
+// fica num grupo à parte e é apontada como errada. { text, checked, bad, hdr } ou { error }.
+async function lsRecover(pts, k) {
+  if (pts.length < k) return { error: "faltam" };
+  const groups = new Map();
+  for (const p of pts) {
+    const key = b64u(p.hdr) + ":" + p.y.length;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(p);
+  }
+  let last = { error: "alterada" };
+  for (const g of [...groups.values()].sort((a, b) => b.length - a.length)) {
+    if (g.length < k) break;
+    const r = await lsRecoverSame(g.map((p) => ({ x: p.x, y: p.y })), k, await sha256(g[0].hdr));
+    if (!r.error) return { ...r, hdr: g[0].hdr, bad: [...r.bad, ...pts.filter((p) => !g.includes(p)).map((p) => p.x)].sort((a, b) => a - b) };
+    last = r;
+  }
+  return last;
+}
+
 // ---- formato da parte (LS2): "LS2." + base64url( binário ), com CRC-32 no fim (só contra erros de cópia)
-//   versão 0x02 · id (8 bytes) · k · n · x · data (2 bytes: dias desde 2000-01-01)
-//   · nome do segredo · quem dividiu · guardião (cada um: 1 byte de tamanho + UTF-8) · y (o resto) · CRC-32 (4 bytes)
+//   versão 0x02 · x (nº da parte) · cabeçalho comum · y (o resto) · CRC-32 (4 bytes, sobre todos os bytes anteriores)
+//   cabeçalho comum: id (8 bytes) · k · n · data (2 bytes: dias desde 2000-01-01) · nome do segredo · quem dividiu
+//   · os n nomes dos guardiões, em ordem (cada texto: 1 byte de tamanho + UTF-8, no máximo 128 bytes)
+// Junto da parte, o link leva uma dica (&h=…) que descreve o formato para quem precisar recuperar sem esta página.
+const LS_MAX_TEXT = 128;
+const LS_HINT = "LS2:b64url,last4=CRC32(all-before);v.x.hdr.y;hdr=id8.k.n.day2(since-2000-01-01).title.by.names*n,text=len1.utf8;" +
+  "Shamir:GF256/11b,Lagrange@0,bytewise=P;P=X.Y32;r=Y(xor)H(X);M=X(xor)G(r);G,H=MGF1-SHA256(label.h.seed.ctr4),label=LS2/G,LS2/H,h=SHA256(hdr);" +
+  "M=len2.text.randpad.0*16";
 const b64u = (bytes) => { let s = ""; for (const x of bytes) s += String.fromCharCode(x); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
 const unb64u = (s) => { const t = s.replace(/-/g, "+").replace(/_/g, "/"); const bin = atob(t + "===".slice((t.length + 3) % 4)); return Uint8Array.from(bin, (c) => c.charCodeAt(0)); };
 const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
@@ -447,15 +478,23 @@ const crc32 = (b) => { let c = 0xffffffff; for (const x of b) c = CRC_T[(c ^ x) 
 const LS_EPOCH = Date.UTC(2000, 0, 1);
 const dayOf = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ""); return m ? Math.round((Date.UTC(+m[1], m[2] - 1, +m[3]) - LS_EPOCH) / 864e5) : 0; };
 const isoOf = (d) => new Date(LS_EPOCH + d * 864e5).toISOString().slice(0, 10);
-const utf8Cut = (s, max) => { let b = new TextEncoder().encode(String(s)); while (b.length > max) { s = String(s).slice(0, -1); b = new TextEncoder().encode(s); } return b; };
+const utf8Len = (s) => new TextEncoder().encode(String(s)).length;
+// Cabeçalho comum a todas as partes de um mesmo segredo (é ele que entra no hash h).
+function lsHeader(meta) {
+  const texts = [meta.title, meta.by, ...meta.guardians].map((t) => new TextEncoder().encode(String(t)));
+  if (texts.some((t) => t.length > LS_MAX_TEXT)) throw new Error("texto longo");
+  if (meta.guardians.length !== meta.n || !(meta.k >= 2 && meta.k <= meta.n && meta.n <= LS_MAX_N)) throw new Error("k/n");
+  const day = dayOf(meta.date), out = new Uint8Array(8 + 4 + texts.reduce((a, t) => a + 1 + t.length, 0));
+  out.set(Uint8Array.from(meta.id.match(/../g), (h) => parseInt(h, 16)));
+  out[8] = meta.k; out[9] = meta.n; out[10] = day >> 8; out[11] = day & 0xff;
+  let o = 12; for (const t of texts) { out[o++] = t.length; out.set(t, o); o += t.length; }
+  return out;
+}
+const lsHeaderHash = (meta) => sha256(lsHeader(meta));
 function lsEncodeShare(meta, x, y) {
-  const t = utf8Cut(meta.title, 120), by = utf8Cut(meta.by, 80), g = utf8Cut(meta.guardians[x - 1] || "", 80), day = dayOf(meta.date);
-  const len = 1 + 8 + 3 + 2 + 3 + t.length + by.length + g.length + y.length, out = new Uint8Array(len + 4);
-  let o = 0; const put = (b) => { out.set(b, o); o += b.length; };
-  out[o++] = 2; put(Uint8Array.from(meta.id.match(/../g), (h) => parseInt(h, 16)));
-  out[o++] = meta.k; out[o++] = meta.n; out[o++] = x; out[o++] = day >> 8; out[o++] = day & 0xff;
-  for (const b of [t, by, g]) { out[o++] = b.length; put(b); }
-  put(y); new DataView(out.buffer).setUint32(o, crc32(out.subarray(0, o)));
+  const hdr = lsHeader(meta), out = new Uint8Array(2 + hdr.length + y.length + 4);
+  out[0] = 2; out[1] = x; out.set(hdr, 2); out.set(y, 2 + hdr.length);
+  new DataView(out.buffer).setUint32(out.length - 4, crc32(out.subarray(0, out.length - 4)));
   return LS_VERSION + "." + b64u(out);
 }
 // Aceita um link inteiro ou só o texto da parte.
@@ -463,17 +502,20 @@ function lsDecodeShare(text) {
   const m = String(text).match(/LS2\.([A-Za-z0-9_-]+)/);
   if (!m) return { error: "formato" };
   let b; try { b = unb64u(m[1]); } catch { return { error: "formato" }; }
-  if (b.length < 1 + 8 + 5 + 3 + 4) return { error: "copia" };
+  if (b.length < 2 + 12 + 2 + 4) return { error: "copia" };
   const body = b.subarray(0, b.length - 4);
   if (crc32(body) !== new DataView(b.buffer, b.byteOffset).getUint32(b.length - 4)) return { error: "copia" };
   if (body[0] !== 2) return { error: "formato" };
-  let o = 1; const id = [...body.subarray(o, o + 8)].map((v) => v.toString(16).padStart(2, "0")).join(""); o += 8;
-  const k = body[o++], n = body[o++], x = body[o++], day = (body[o] << 8) | body[o + 1]; o += 2;
-  const str = () => { const l = body[o++]; if (o + l > body.length) throw new Error(); const s = new TextDecoder("utf-8", { fatal: true }).decode(body.subarray(o, o + l)); o += l; return s; };
-  let title, by, guardian; try { title = str(); by = str(); guardian = str(); } catch { return { error: "formato" }; }
-  const y = body.slice(o);
-  if (!(k >= 2 && k <= n && n <= LS_MAX_N && x >= 1 && x <= n) || !y.length || (y.length - LS_ZEROS - LS_R) % 32 || y.length < 32 + LS_ZEROS + LS_R) return { error: "formato" };
-  return { share: { id, title, by, date: isoOf(day), k, n, x, guardian, y, text: m[0] } };
+  const x = body[1], id = [...body.subarray(2, 10)].map((v) => v.toString(16).padStart(2, "0")).join("");
+  const k = body[10], n = body[11], day = (body[12] << 8) | body[13];
+  if (!(k >= 2 && k <= n && n <= LS_MAX_N && x >= 1 && x <= n)) return { error: "formato" };
+  let o = 14;
+  const str = () => { const l = body[o++]; if (l > LS_MAX_TEXT || o + l > body.length) throw new Error(); const s = new TextDecoder("utf-8", { fatal: true }).decode(body.subarray(o, o + l)); o += l; return s; };
+  let title, by, names = [];
+  try { title = str(); by = str(); for (let i = 0; i < n; i++) names.push(str()); } catch { return { error: "formato" }; }
+  const hdr = body.slice(2, o), y = body.slice(o);
+  if (y.length < 32 + LS_ZEROS + LS_R || (y.length - LS_ZEROS - LS_R) % 32) return { error: "formato" };
+  return { share: { id, title, by, date: isoOf(day), k, n, x, names, guardian: names[x - 1], hdr, y, text: m[0] } };
 }
 // SEGREDO-CORE-END
 
@@ -482,8 +524,9 @@ function lsDecodeShare(text) {
   const rand = (n) => crypto.getRandomValues(new Uint8Array(n));
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const BASE = /^https?:$/.test(location.protocol) ? location.origin + location.pathname : "https://lucentcrypto.org/segredo/";
-  const linkOf = (shareText) => BASE + "#p=" + shareText;
+  const linkOf = (shareText) => BASE + "#p=" + shareText + "&h=" + LS_HINT;
   const fmtDate = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ""); return m ? m[3] + "/" + m[2] + "/" + m[1] : iso; };
+  const listPt = (a, conj = "e") => a.length <= 1 ? (a[0] || "") : a.slice(0, -1).join(", ") + " " + conj + " " + a[a.length - 1];
   const todayIso = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
   async function copyText(text, note) {
     try { await navigator.clipboard.writeText(text); note.textContent = "Copiado."; }
@@ -516,7 +559,7 @@ function lsDecodeShare(text) {
     const tb = $("gRows"); tb.innerHTML = "";
     rows.forEach((r, i) => {
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td class="num">${i + 1}</td><td><input type="text" maxlength="40" aria-label="Nome do guardião ${i + 1}" value="${esc(r.name)}"></td>` +
+      tr.innerHTML = `<td class="num">${i + 1}</td><td><input type="text" maxlength="128" aria-label="Nome do guardião ${i + 1}" value="${esc(r.name)}"></td>` +
         `<td><input type="text" maxlength="80" aria-label="Celular ou e-mail do guardião ${i + 1}" value="${esc(r.contact)}" placeholder="(31) 99999-0000 ou nome@exemplo.com"></td>` +
         `<td class="del"><button class="x" type="button" title="Excluir guardião" aria-label="Excluir guardião ${i + 1}">✕</button></td>`;
       const [nameIn, contactIn] = tr.querySelectorAll("input"), del = tr.querySelector("button");
@@ -539,7 +582,7 @@ function lsDecodeShare(text) {
     $("kOf").textContent = "de " + n + " guardiões";
     const k = +sel.value;
     $("kHint").textContent = (k - 1 === 1 ? "Um guardião sozinho não descobre nada." : "Até " + (k - 1) + " guardiões juntos não descobrem nada.") +
-      (n - k === 0 ? " Todos precisam participar: se um perder a sua parte, o segredo se perde." : " Se até " + (n - k) + (n - k === 1 ? " guardião perder a sua parte" : " guardiões perderem as suas partes") + ", ainda dá para abrir.");
+      (n - k === 0 ? " Todos precisam participar: se um perder a sua parte, o segredo se perde." : " Se até " + (n - k) + (n - k === 1 ? " guardião perder a sua parte" : " guardiões perderem as suas partes") + ", ainda dá para recuperar.");
   }
   $("kSel").addEventListener("change", () => { kChosen = +$("kSel").value; renderK(); });
   function updateCount() {
@@ -561,7 +604,7 @@ function lsDecodeShare(text) {
         const ph = line.match(/(\+?\(?\d[\d\s().-]{7,}\d)\s*$/);
         if (ph && ph[1].replace(/\D/g, "").length >= 8) { contact = ph[1].trim(); name = line.slice(0, ph.index); }
       }
-      name = name.replace(/[<>()]/g, " ").replace(/[\s;,:\t|-]+$/, "").replace(/^[\s;,:\t|-]+/, "").replace(/\s+/g, " ").trim().slice(0, 40);
+      name = name.replace(/[<>()]/g, " ").replace(/[\s;,:\t|-]+$/, "").replace(/^[\s;,:\t|-]+/, "").replace(/\s+/g, " ").trim();
       if (name) out.push({ name, contact });
     }
     return out;
@@ -592,31 +635,43 @@ function lsDecodeShare(text) {
     if (new TextEncoder().encode(secret).length > LS_MAX_BYTES) return showErr("splitErr", "O segredo é longo demais (máximo de " + LS_MAX_BYTES + " bytes).");
     if (!by) return showErr("splitErr", "Digite o seu nome: ele aparece para os guardiões.");
     const names = rows.map((r) => r.name.trim());
+    if (utf8Len(title) > LS_MAX_TEXT) return showErr("splitErr", "O nome do segredo é longo demais (máximo de " + LS_MAX_TEXT + " bytes).");
+    if (utf8Len(by) > LS_MAX_TEXT) return showErr("splitErr", "O seu nome é longo demais (máximo de " + LS_MAX_TEXT + " bytes).");
+    const longName = names.find((x) => utf8Len(x) > LS_MAX_TEXT);
+    if (longName) return showErr("splitErr", "O nome «" + longName.slice(0, 30) + "…» é longo demais (máximo de " + LS_MAX_TEXT + " bytes).");
     if (names.some((x) => !x)) return showErr("splitErr", "Dê um nome a cada guardião (ou exclua as linhas vazias).");
     if (new Set(names.map((x) => x.toLowerCase())).size !== names.length) return showErr("splitErr", "Há dois guardiões com o mesmo nome; diferencie-os.");
     const n = rows.length, k = +$("kSel").value;
     const meta = { id: [...rand(8)].map((x) => x.toString(16).padStart(2, "0")).join(""), title, by, date: todayIso(), k, n, guardians: names };
-    const shares = lsSplit(await lsSeal(secret, rand), k, n, rand);
-    current = { meta, shares: shares.map((s, i) => ({ name: names[i], contact: rows[i].contact.trim(), text: lsEncodeShare(meta, s.x, s.y) })) };
+    const shares = lsSplit(await lsSeal(secret, rand, await lsHeaderHash(meta)), k, n, rand);
+    current = { meta, rehearse: $("rehearse").checked, shares: shares.map((s, i) => ({ name: names[i], contact: rows[i].contact.trim(), text: lsEncodeShare(meta, s.x, s.y) })) };
     locked = true; $("secret").value = ""; updateCount();
-    ["title", "by", "secret", "splitBtn"].forEach((id) => { $(id).disabled = true; });
+    ["title", "by", "secret", "splitBtn", "rehearse"].forEach((id) => { $(id).disabled = true; });
     renderRows(); renderShares(); $("out").hidden = false; $("out").scrollIntoView({ behavior: "smooth", block: "start" });
   });
+  const contactOf = (c) => {
+    const isMail = /@/.test(c), digits = c.replace(/\D/g, "");
+    return { mail: isMail ? c : "", phone: !isMail && digits.length >= 10 ? (digits.length <= 11 ? "55" + digits : digits) : "" };
+  };
   function renderShares() {
     const box = $("shares"); box.innerHTML = "";
-    const { meta } = current;
+    const { meta } = current, cs = current.shares.map((s) => contactOf(s.contact));
+    const ways = [cs.some((c) => c.phone) && "pelo WhatsApp", cs.some((c) => c.mail) && "por e-mail"].filter(Boolean);
+    $("sendIntro").textContent = "Cada guardião recebe só a sua parte. " + (ways.length ? "Envie " + ways.join(" ou ") + ", ou copie o link" : "Copie o link") +
+      " (para o Signal, por exemplo). Ou entregue pessoalmente: mostre o QR na tela e o guardião escaneia; nada passa por mensagem.";
     current.shares.forEach((s, i) => {
-      const link = linkOf(s.text);
-      const msg = "Olá, " + s.name + ". " + meta.by + " dividiu o segredo «" + meta.title + "» entre " + meta.n + " guardiões, e você é um deles: com " + meta.k + " partes juntas, ele pode ser recuperado. Guarde este link e não o encaminhe a ninguém:\n" + link;
-      const isMail = /@/.test(s.contact), digits = s.contact.replace(/\D/g, "");
-      const phone = !isMail && digits.length >= 10 ? (digits.length <= 11 ? "55" + digits : digits) : "";
-      const wa = "https://wa.me/" + phone + "?text=" + encodeURIComponent(msg);
-      const mail = "mailto:" + (isMail ? encodeURIComponent(s.contact) : "") + "?subject=" + encodeURIComponent("Sua parte do segredo «" + meta.title + "»") + "&body=" + encodeURIComponent(msg);
+      const link = linkOf(s.text), c = cs[i];
+      const others = meta.guardians.filter((_, j) => j !== i);
+      const msg = "Olá, " + s.name + ". " + meta.by + " dividiu o segredo «" + meta.title + "» entre " + meta.n + " guardiões, e você é um deles; os outros são " + listPt(others) + ". Com " + meta.k + " partes juntas, ele pode ser recuperado." +
+        (current.rehearse ? " " + meta.by + " vai pedir sua parte de volta para um ensaio, que confere as partes sem mostrar o segredo." : "") +
+        " Guarde este link e não o encaminhe a ninguém:\n" + link;
+      const wa = "https://wa.me/" + c.phone + "?text=" + encodeURIComponent(msg);
+      const mail = "mailto:" + encodeURIComponent(c.mail) + "?subject=" + encodeURIComponent("Sua parte do segredo «" + meta.title + "»") + "&body=" + encodeURIComponent(msg);
       const el = document.createElement("div"); el.className = "share";
       el.innerHTML = `<span class="pill">parte ${i + 1}</span><span class="who">${esc(s.name)} ${s.contact ? `<small>· ${esc(s.contact)}</small>` : ""}</span>
         <div class="row">
-          <a class="btn small primary" target="_blank" rel="noopener" href="${esc(wa)}">Enviar pelo WhatsApp</a>
-          <a class="btn small" href="${esc(mail)}">Enviar por e-mail</a>
+          ${c.phone ? `<a class="btn small primary" target="_blank" rel="noopener" href="${esc(wa)}">Enviar pelo WhatsApp</a>` : ""}
+          ${c.mail ? `<a class="btn small${c.phone ? "" : " primary"}" href="${esc(mail)}">Enviar por e-mail</a>` : ""}
           <button class="btn small" type="button" data-a="copy">Copiar link</button>
           <button class="btn small" type="button" data-a="qr">Entregar pessoalmente (QR)</button>
           <span class="small muted" role="status"></span>
@@ -631,6 +686,7 @@ function lsDecodeShare(text) {
   $("clearAll").addEventListener("click", () => {
     current = null; locked = false; kChosen = null;
     ["title", "by", "secret"].forEach((id) => { $(id).value = ""; $(id).disabled = false; });
+    $("rehearse").disabled = false; $("rehearse").checked = false;
     $("splitBtn").disabled = false; $("out").hidden = true; $("shares").innerHTML = "";
     rows = [{ name: "", contact: "" }, { name: "", contact: "" }, { name: "", contact: "" }];
     renderRows(); updateCount(); window.scrollTo({ top: 0 });
@@ -639,20 +695,17 @@ function lsDecodeShare(text) {
   // ---- QR (entrega pessoal)
   let qrShare = null;
   function drawQr() {
-    const raw = document.querySelector('input[name="qrMode"]:checked').value === "raw";
-    const data = raw ? qrShare : linkOf(qrShare);
+    const data = linkOf(qrShare);
     try {
       const q = qrcode(0, data.length > 1200 ? "L" : "M"); q.addData(data, "Byte"); q.make();
       $("qrBox").innerHTML = q.createSvgTag({ cellSize: 4, margin: 4, scalable: true });
-      $("qrNote").textContent = raw ? "O QR contém só a parte, sem endereço: guarde a foto. Para recuperar, cole o texto da parte na aba “Recuperar um segredo”."
-        : "O guardião escaneia com a câmera do celular e guarda o link que abrir. A parte não passa por nenhuma mensagem.";
-    } catch { $("qrBox").innerHTML = ""; $("qrNote").textContent = "Esta parte é longa demais para um QR. Use o link."; }
+      $("qrNote").textContent = "O guardião escaneia com a câmera do celular e guarda o link que abrir. A parte não passa por nenhuma mensagem.";
+    } catch { $("qrBox").innerHTML = ""; $("qrNote").textContent = "Esta parte é longa demais para um QR. Use “Copiar link”."; }
   }
   function showQr(shareText, name) {
     qrShare = shareText; $("qrTitle").textContent = name ? "Parte de " + name : "Sua parte";
     drawQr(); $("qrDlg").showModal();
   }
-  document.querySelectorAll('input[name="qrMode"]').forEach((r) => r.addEventListener("change", drawQr));
   $("qrClose").addEventListener("click", () => { $("qrDlg").close(); $("qrBox").innerHTML = ""; qrShare = null; });
 
   // ---- abrir
@@ -667,7 +720,7 @@ function lsDecodeShare(text) {
       if (d.error) { problems.push(d.error === "copia" ? "Uma parte está incompleta ou foi alterada ao copiar." : "Um dos textos não é uma parte válida."); continue; }
       const s = d.share;
       if (set && s.id !== set.id) { problems.push("A parte de " + (s.guardian || "nº " + s.x) + " é de outro segredo («" + s.title + "»)."); continue; }
-      if (!set) set = { id: s.id, k: s.k, n: s.n, title: s.title, by: s.by, date: s.date };
+      if (!set) set = { id: s.id, k: s.k, n: s.n, title: s.title, by: s.by, date: s.date, names: s.names };
       const prev = got.get(s.x);
       if (prev && prev.text !== s.text) { problems.push("Há duas partes diferentes com o nº " + s.x + "; ficou a primeira."); continue; }
       got.set(s.x, s);
@@ -676,11 +729,16 @@ function lsDecodeShare(text) {
     renderGot();
   }
   $("addShares").addEventListener("click", () => { addShareTexts($("pasteIn").value); $("pasteIn").value = ""; });
+  function showProgress() {
+    const m = got.size, missing = set.names.filter((_, i) => !got.has(i + 1));
+    $("progress").textContent = m + " de " + set.k + " partes necessárias · «" + set.title + "», dividido por " + set.by + " em " + fmtDate(set.date) + " entre " + set.n + " guardiões" +
+      (m < set.k && missing.length ? ". Falta" + (set.k - m === 1 ? " mais 1 parte" : "m mais " + (set.k - m) + " partes") + ", de: " + listPt(missing, "ou") : "");
+  }
   function renderGot(bad = []) {
     if (!set) { $("gotWrap").hidden = true; return; }
     $("gotWrap").hidden = false;
     const m = got.size;
-    $("progress").textContent = m + " de " + set.k + " partes necessárias · «" + set.title + "», dividido por " + set.by + " em " + fmtDate(set.date) + " entre " + set.n + " guardiões";
+    showProgress();
     const ul = $("got"); ul.innerHTML = "";
     [...got.values()].sort((a, b) => a.x - b.x).forEach((s) => {
       const li = document.createElement("li"); if (bad.includes(s.x)) li.className = "bad";
@@ -690,20 +748,28 @@ function lsDecodeShare(text) {
     if (m >= set.k) tryOpen(); else $("openResult").hidden = true;
   }
   async function tryOpen() {
-    const pts = [...got.values()].sort((a, b) => a.x - b.x).map((s) => ({ x: s.x, y: s.y }));
-    if (pts.some((p) => p.y.length !== pts[0].y.length)) return failOpen("As partes têm tamanhos diferentes: alguma foi alterada.");
-    const r = await lsRecover(pts, set.k), m = got.size;
+    const shares = [...got.values()].sort((a, b) => a.x - b.x), m = shares.length;
+    const r = await lsRecover(shares.map((s) => ({ x: s.x, y: s.y, hdr: s.hdr })), set.k);
     if (r.error) return failOpen(r.error === "alterada"
       ? "Alguma das " + m + " partes foi alterada: o segredo não confere. Com uma parte a mais, a página encontra qual é a errada."
       : "Há partes erradas demais para encontrar o segredo com as partes disponíveis. Junte mais partes.");
-    const st = $("openStatus");
+    const good = shares.find((s) => !r.bad.includes(s.x));
+    set = { ...set, title: good.title, by: good.by, date: good.date, names: good.names, n: good.n };
+    showProgress();
+    const nameOf = (x) => set.names[x - 1] ? " (" + set.names[x - 1] + ")" : "";
+    const rehearsal = $("rehearsal").checked, st = $("openStatus");
+    const done = rehearsal ? "Ensaio: as partes conferem, e o segredo pode ser recuperado. Ele não foi mostrado." : "Recuperado e conferido";
     if (r.bad.length) {
-      const who = r.bad.map((x) => "nº " + x + (got.get(x).guardian ? " (" + got.get(x).guardian + ")" : "")).join(", ");
-      st.className = "msg warn"; st.textContent = (r.bad.length === 1 ? "A parte " + who + " está errada e foi descartada" : "As partes " + who + " estão erradas e foram descartadas") + "; o segredo foi recuperado e conferido com as demais.";
+      const who = r.bad.map((x) => "nº " + x + nameOf(x)).join(", ");
+      st.className = "msg warn"; st.textContent = (r.bad.length === 1 ? "A parte " + who + " está errada e foi descartada" : "As partes " + who + " estão erradas e foram descartadas") +
+        (rehearsal ? ". " + done : "; o segredo foi recuperado e conferido com as demais.");
       renderGotOnly(r.bad);
-    } else { st.className = "msg ok"; st.textContent = "Recuperado e conferido" + (m > set.k ? ": as " + m + " partes concordam entre si." : " com " + m + " partes."); }
-    $("secretOut").textContent = r.text; $("secretOut").hidden = false; $("openResult").hidden = false; $("hideSecret").textContent = "Esconder";
+    } else { st.className = "msg ok"; st.textContent = rehearsal ? done : done + (m > set.k ? ": as " + m + " partes concordam entre si." : " com " + m + " partes."); }
+    $("secretOut").textContent = rehearsal ? "" : r.text; $("secretOut").hidden = rehearsal;
+    document.querySelectorAll("#copySecret, #hideSecret").forEach((b) => { b.hidden = rehearsal; });
+    $("openResult").hidden = false; $("hideSecret").textContent = "Esconder";
   }
+  $("rehearsal").addEventListener("change", () => { if (set && got.size >= set.k) tryOpen(); });
   function renderGotOnly(bad) { [...$("got").children].forEach((li) => { const x = +li.textContent.match(/nº (\d+)/)[1]; if (bad.includes(x)) { li.className = "bad"; li.lastChild.textContent = "errada, descartada"; } }); }
   function failOpen(text) { const st = $("openStatus"); st.className = "msg bad"; st.textContent = text; $("secretOut").textContent = ""; $("secretOut").hidden = true; $("openResult").hidden = false; }
   $("copySecret").addEventListener("click", () => copyText($("secretOut").textContent, $("copySecretNote")));
@@ -722,7 +788,9 @@ function lsDecodeShare(text) {
     }
     const s = d.share;
     $("gTitle").textContent = (s.guardian ? s.guardian + ", você" : "Você") + " guarda uma parte do segredo «" + s.title + "»";
-    $("gText").textContent = s.by + " dividiu este segredo em " + fmtDate(s.date) + " entre " + s.n + " pessoas de confiança. São precisas " + s.k + " partes juntas para recuperar.";
+    const others = s.names.filter((_, j) => j !== s.x - 1);
+    $("gText").textContent = s.by + " dividiu este segredo em " + fmtDate(s.date) + " entre " + s.n + " pessoas de confiança. Os outros guardiões são " + listPt(others) + ". " +
+      "Para recuperar, juntem " + s.k + " partes (os links) na aba “Recuperar um segredo”.";
     $("gCopy").addEventListener("click", () => copyText(linkOf(s.text), $("gNote")));
     $("gQr").addEventListener("click", () => showQr(s.text, s.guardian));
     $("gOpen").addEventListener("click", () => { selectTab("open"); addShareTexts(s.text); $("viewOpen").scrollIntoView({ behavior: "smooth" }); });
