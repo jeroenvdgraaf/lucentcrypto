@@ -2,7 +2,7 @@
 // O relay de carimbo de tempo é outro Worker, com configuração própria em relay/wrangler.toml.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "sorteiolucido",
+  "name": "lucentcrypto",
   "compatibility_date": "2026-11-18",
   "observability": { "enabled": true },
   "build": { "command": "./build.sh" },
