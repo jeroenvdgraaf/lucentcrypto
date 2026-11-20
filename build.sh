@@ -14,6 +14,7 @@ case "$OUT" in ""|/|.|..) echo "pasta de saída inválida: $OUT" >&2; exit 1 ;; 
 rm -rf "$OUT"
 mkdir -p "$OUT/sorteios" "$OUT/amigo-oculto" "$OUT/spec" "$OUT/verifier"
 cp site/index.html site/robots.txt site/sitemap.xml "$OUT/"
+mkdir -p "$OUT/embaralhamento" && cp embaralhamento/index.html "$OUT/embaralhamento/index.html"
 mkdir -p "$OUT/og" && cp site/og/*.png "$OUT/og/"
 cp LucentSorteios.html "$OUT/sorteios/index.html"
 cp amigo-oculto/index.html "$OUT/amigo-oculto/index.html"

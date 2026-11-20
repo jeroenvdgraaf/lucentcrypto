@@ -5,15 +5,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LucentCrypto · sorteios verificáveis e amigo secreto online</title>
-<meta name="description" content="Sorteios online que qualquer pessoa pode conferir (vagas de garagem, listas, moeda, dados) e amigo secreto (amigo oculto) pelo WhatsApp. Grátis, no navegador, sem cadastro.">
+<title>LucentCrypto · sorteios e provas verificáveis</title>
+<meta name="description" content="Resultados que qualquer pessoa pode conferir: sorteios verificáveis (vagas de garagem, listas, moeda, dados) e provas de embaralhamento. Grátis, no navegador, sem cadastro.">
 <link rel="canonical" href="https://lucentcrypto.org/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23a85d08'/%3E%3Cpath d='M22 14h8v28h16v8H22z' fill='%23fff'/%3E%3C/svg%3E">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:site_name" content="LucentCrypto">
-<meta property="og:title" content="LucentCrypto · sorteios verificáveis e amigo secreto online">
-<meta property="og:description" content="Sorteios online que qualquer pessoa pode conferir (vagas de garagem, listas, moeda, dados) e amigo secreto (amigo oculto) pelo WhatsApp. Grátis, no navegador, sem cadastro.">
+<meta property="og:title" content="LucentCrypto · sorteios e provas verificáveis">
+<meta property="og:description" content="Resultados que qualquer pessoa pode conferir: sorteios verificáveis (vagas de garagem, listas, moeda, dados) e provas de embaralhamento. Grátis, no navegador, sem cadastro.">
 <meta property="og:url" content="https://lucentcrypto.org/">
 <meta property="og:image" content="https://lucentcrypto.org/og/lucentcrypto.png">
 <meta property="og:image:width" content="1200">
@@ -32,6 +32,7 @@
 }
 :root[data-theme="dark"] { --bg: #0d1417; --surface: #141f24; --ink: #e2ebee; --muted: #98abb2; --line: #26363d; --accent: #f0a443; --pine: #4fb487; color-scheme: dark; }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 var(--body); padding: 40px 16px 48px; }
 main { max-width: 760px; margin: 0 auto; display: grid; gap: 28px; }
 .family { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
@@ -44,6 +45,26 @@ a.card:focus-visible { outline: 2px solid var(--c); outline-offset: 3px; }
 a.card h2 { font: 700 22px/1.2 var(--display); margin: 0; color: var(--c); }
 a.card p { margin: 0; font-size: 15px; }
 a.card .go { font-weight: 600; color: var(--c); }
+section h2.sec { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+.how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; counter-reset: s; }
+.how div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+.how b { display: block; font: 700 16px var(--display); color: var(--accent); margin-bottom: 4px; }
+.how b::before { counter-increment: s; content: counter(s) ". "; }
+.how p { margin: 0; font-size: 14.5px; }
+@media (max-width: 620px) { .how { grid-template-columns: 1fr; } }
+.tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--c); color: var(--c); font: 600 11px var(--body); vertical-align: 3px; }
+.soon { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.soon > * { border: 1px dashed var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 4px; }
+.soon b { font: 700 16px var(--display); }
+.soon p { margin: 0; font-size: 14.5px; color: var(--muted); }
+.soon a { color: var(--accent); font-weight: 600; }
+.season { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; justify-content: space-between; border-radius: 12px; padding: 12px 16px; border: 1px solid var(--line); background: var(--surface); text-decoration: none; color: inherit; }
+.season.on { border: 2px solid var(--pine); }
+.season b { color: var(--pine); font: 700 16px var(--display); }
+.season p { margin: 0; font-size: 14.5px; }
+.season .go { font-weight: 600; color: var(--pine); white-space: nowrap; }
+.who p { margin: 0; font-size: 14.5px; }
+.who a { color: var(--accent); }
 footer { color: var(--muted); font-size: 13px; }
 </style>
 </head>
@@ -51,22 +72,62 @@ footer { color: var(--muted); font-size: 13px; }
 <main>
   <header>
     <div class="family">LucentCrypto</div>
-    <h1>Sorteios em que dá para confiar</h1>
-    <p class="lead">Ferramentas pequenas, abertas e gratuitas que funcionam no seu navegador, sem cadastro e sem guardar seus dados em servidor.</p>
+    <h1>Resultados que qualquer pessoa pode conferir</h1>
+    <p class="lead">Com criptografia, não é preciso confiar em quem organiza: a matemática permite conferir. Ferramentas gratuitas, que funcionam no seu navegador, sem cadastro e sem guardar seus dados em servidor.</p>
   </header>
+
+  <a class="season on" id="season" href="/amigo-oculto/" hidden>
+    <div><b>É época de amigo secreto 🎁</b><p>Lucent Amigo Oculto: cada pessoa recebe o seu amigo pelo próprio link, no WhatsApp.</p></div>
+    <span class="go">Organizar o amigo secreto →</span>
+  </a>
+
+  <section>
+    <h2 class="sec">Como funciona</h2>
+    <div class="how">
+      <div><b>Lacrar</b><p>Tudo o que decide o resultado é fixado e publicado antes: as opções, os pesos, os dados.</p></div>
+      <div><b>Prova pública</b><p>O acaso vem de uma fonte pública, ou quem publica apresenta uma prova matemática.</p></div>
+      <div><b>Conferir</b><p>Depois, qualquer pessoa confere com o certificado. A especificação e um verificador independente são públicos.</p></div>
+    </div>
+  </section>
+
   <div class="cards">
     <a class="card" href="/sorteios/" style="--c: var(--accent)">
       <h2>Lucent Sorteios</h2>
-      <p>Listas com pesos, moeda, dados e cartas. No modo verificável, as opções são lacradas antes do sorteio e o resultado vem de uma fonte pública; qualquer pessoa confere depois com o certificado.</p>
+      <p>Sorteios que qualquer pessoa pode conferir: vagas de garagem, ordem de uma lista com pesos, moeda, dados e cartas. As opções são lacradas antes, e o certificado mostra que ninguém mexeu.</p>
       <span class="go">Abrir Lucent Sorteios →</span>
     </a>
-    <a class="card" href="/amigo-oculto/" style="--c: var(--pine)">
-      <h2>Lucent Amigo Oculto</h2>
-      <p>Sorteie o amigo oculto da família ou do trabalho e mande a cada pessoa um link só dela. Ninguém, nem quem organiza, precisa ver o resultado.</p>
-      <span class="go">Abrir Lucent Amigo Oculto →</span>
+    <a class="card" href="/embaralhamento/" style="--c: var(--accent)">
+      <h2>Embaralhamento verificável <span class="tag">demonstração</span></h2>
+      <p>Prove que uma lista publicada sem nomes, como salários ou lances de uma licitação, corresponde exatamente aos dados lacrados, sem revelar quem é quem.</p>
+      <span class="go">Ver a demonstração →</span>
     </a>
   </div>
-  <footer>LucentCrypto · <a href="/spec/SPEC-v3.md" style="color:inherit">especificação do protocolo</a> · <a href="/verifier/verify_draw.py" style="color:inherit">verificador em Python</a></footer>
+
+  <section>
+    <h2 class="sec">Em breve</h2>
+    <div class="soon">
+      <div><b>Lucent Votações e Credenciais</b><p>Votações verificáveis para condomínios, cooperativas e conselhos, com controle de procurações. <a href="mailto:info@lucentcrypto.org?subject=Lucent%20Vota%C3%A7%C3%B5es">Quero saber quando lançar</a></p></div>
+      <div><b>Sorteio com valor jurídico</b><p>Lacre com carimbo do tempo ICP-Brasil, antes de um concurso futuro da Loteria Federal, com ata assinada. <a href="mailto:info@lucentcrypto.org?subject=Or%C3%A7amento%3A%20sorteio%20com%20valor%20jur%C3%ADdico">Pedir orçamento</a></p></div>
+    </div>
+  </section>
+
+  <a class="season" id="seasonOff" href="/amigo-oculto/">
+    <div><b>Lucent Amigo Oculto</b><p>Para o fim do ano: cada pessoa recebe o seu amigo secreto pelo próprio link, no WhatsApp.</p></div>
+    <span class="go">Abrir →</span>
+  </a>
+
+  <section class="who">
+    <h2 class="sec">Quem faz</h2>
+    <p>O LucentCrypto é desenvolvido por Jeroen van de Graaf, professor do Departamento de Ciência da Computação da UFMG, com mais de duas décadas de pesquisa em sistemas de votação e criptografia. É coautor de um artigo sobre sorteios públicos verificáveis (SBSeg 2017). <a href="http://lattes.cnpq.br/0069989873499216">Currículo Lattes</a> · <a href="https://scholar.google.com.br/citations?user=-w8olWwAAAAJ">Google Scholar</a></p>
+  </section>
+
+  <footer>LucentCrypto · <a href="/spec/SPEC-v3.md" style="color:inherit">especificação do protocolo</a> · <a href="/verifier/verify_draw.py" style="color:inherit">verificador em Python</a> · <a href="mailto:info@lucentcrypto.org" style="color:inherit">info@lucentcrypto.org</a></footer>
 </main>
+<script>
+// Amigo Oculto em destaque de 15/11 a 6/1; no resto do ano, discreto no fim da página.
+(() => { const d = new Date(), m = d.getMonth() + 1, day = d.getDate();
+  const on = (m === 11 && day >= 15) || m === 12 || (m === 1 && day <= 6);
+  document.getElementById("season").hidden = !on; document.getElementById("seasonOff").hidden = on; })();
+</script>
 </body>
 </html>

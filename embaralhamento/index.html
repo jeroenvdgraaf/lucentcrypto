@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<!-- Copyright (C) 2026 Jeroen van de Graaf -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Embaralhamento verificável · LucentCrypto</title>
+<meta name="description" content="Prove que uma lista publicada sem nomes (salários, lances de licitação) corresponde exatamente aos valores lacrados, sem revelar quem tem qual valor. Demonstração interativa de prova de conhecimento zero, no navegador.">
+<link rel="canonical" href="https://lucentcrypto.org/embaralhamento/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23a85d08'/%3E%3Cpath d='M22 14h8v28h16v8H22z' fill='%23fff'/%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="LucentCrypto">
+<meta property="og:title" content="Embaralhamento verificável · LucentCrypto">
+<meta property="og:description" content="Prove que uma lista publicada sem nomes corresponde exatamente aos valores lacrados, sem revelar quem tem qual valor.">
+<meta property="og:url" content="https://lucentcrypto.org/embaralhamento/">
+<meta property="og:image" content="https://lucentcrypto.org/og/embaralhamento.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root {
+  --bg: #eef2f3; --surface: #ffffff; --sunk: #e3e9eb; --ink: #13232b; --muted: #50646d; --line: #cdd8dc;
+  --accent: #a85d08; --accent-ink: #ffffff; --accent-soft: #fbeedd;
+  --ok: #1d7a4e; --ok-soft: #dff2e8; --bad: #b3261e; --bad-soft: #fbe3e1;
+  --display: "Avenir Next", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1417; --surface: #141f24; --sunk: #0f181c; --ink: #e2ebee; --muted: #98abb2; --line: #26363d;
+    --accent: #f0a443; --accent-ink: #1a1206; --accent-soft: #2e2416;
+    --ok: #5cc995; --ok-soft: #12291f; --bad: #f08a80; --bad-soft: #2e1715; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1417; --surface: #141f24; --sunk: #0f181c; --ink: #e2ebee; --muted: #98abb2; --line: #26363d;
+  --accent: #f0a443; --accent-ink: #1a1206; --accent-soft: #2e2416;
+  --ok: #5cc995; --ok-soft: #12291f; --bad: #f08a80; --bad-soft: #2e1715; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding: 24px max(16px, env(safe-area-inset-left, 0px)) 48px; }
+[hidden] { display: none !important; }
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 18px; }
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
+.kicker { font: 500 12px var(--mono); letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+.kicker a { color: inherit; text-decoration: none; } .kicker a:hover { text-decoration: underline; }
+h1 { font: 800 clamp(28px, 5vw, 42px)/1.05 var(--display); letter-spacing: -.02em; margin: 4px 0 8px; }
+h1 span { color: var(--accent); }
+h2 { font: 700 20px var(--display); margin: 0; display: flex; gap: 10px; align-items: center; }
+h3 { margin: 0; }
+p { margin: 0; max-width: 72ch; }
+.muted { color: var(--muted); }
+.intro p { color: var(--muted); }
+button.theme { font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+.n { display: inline-grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: 50%; border: 2px solid var(--accent); color: var(--accent); font: 700 14px var(--display); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.btn { font: 600 14px var(--body); border-radius: 10px; padding: 8px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+select { font: inherit; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+textarea { width: 100%; font: 12px/1.45 var(--mono); padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); resize: vertical; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.mono { font-family: var(--mono); font-size: 12.5px; }
+.banner { border: 1px solid var(--bad); background: var(--bad-soft); color: var(--bad); border-radius: 10px; padding: 8px 12px; font-size: 13.5px; }
+
+/* passos */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.step { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--bg); display: grid; gap: 6px; align-content: start; }
+.step.active { border-color: var(--accent); background: var(--accent-soft); }
+.step .who { font: 500 11px var(--mono); color: var(--muted); letter-spacing: .06em; }
+.step b { font: 700 15px var(--display); }
+.step p { font-size: 13.5px; color: var(--muted); }
+@media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
+
+/* diagrama: três colunas; os cabeçalhos dividem uma linha, para as linhas de dados ficarem alinhadas */
+.scroll { overflow-x: auto; }
+.diagram { position: relative; display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: auto auto; column-gap: 72px; min-width: 700px; }
+.diagram > .col { display: grid; grid-template-rows: subgrid; grid-row: span 2; position: relative; z-index: 1; min-width: 0; }
+.diagram svg.links { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 2; }
+.colhead { display: grid; gap: 4px; padding-bottom: 10px; align-content: start; }
+.colhead b { font: 700 15px var(--display); }
+.colhead > span { font-size: 12.5px; color: var(--muted); }
+.ctl { display: grid; gap: 8px; font-size: 13px; padding: 10px; border: 1px dashed var(--accent); border-radius: 10px; background: var(--accent-soft); margin-top: 4px; }
+.ctl label { display: inline-flex; gap: 6px; align-items: center; }
+.ctl .row { gap: 6px; flex-wrap: nowrap; }
+.ctl .btn { padding: 5px 10px; font-size: 13px; white-space: nowrap; }
+.ctl select { padding: 4px 6px; }
+.rows { display: grid; gap: 6px; align-content: start; }
+.item { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 36px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: 13.5px; transition: background .2s, border-color .2s; }
+.item .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.item .meta { display: flex; align-items: center; gap: 6px; flex: none; }
+.pub { font: 11.5px var(--mono); padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line); white-space: nowrap; }
+.priv { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; padding: 1px 6px; border-radius: 5px; border: 1px dashed var(--accent); color: var(--accent); white-space: nowrap; }
+.priv .v { display: none; font-family: var(--mono); }
+.priv:hover .h, .priv:focus-visible .h { display: none; }
+.priv:hover .v, .priv:focus-visible .v { display: inline; }
+.secret { font: 500 11.5px var(--mono); padding: 1px 6px; border-radius: 5px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.secret.fake, .priv.fake:hover { background: var(--bad-soft); color: var(--bad); border-color: var(--bad); }
+.box { border-style: dashed; border-color: var(--accent); background: var(--accent-soft); }
+.box.open { border-style: solid; background: var(--surface); }
+.val { font: 500 13.5px var(--mono); font-variant-numeric: tabular-nums; }
+.lock { width: 12px; height: 12px; flex: none; }
+.item.ok { border-color: var(--ok); background: var(--ok-soft); }
+.item.bad { border-color: var(--bad); background: var(--bad-soft); }
+.mark { font-weight: 700; width: 14px; text-align: center; }
+.mark.ok { color: var(--ok); } .mark.bad { color: var(--bad); }
+.dim .item { opacity: .45; }
+.placeholder { border: 1px dashed var(--line); border-radius: 8px; padding: 12px; color: var(--muted); font-size: 13.5px; }
+
+/* colar dados */
+.paste { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--bg); display: grid; gap: 10px; }
+.paste ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--bad); }
+
+/* veredito */
+.verdicts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.verdict { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--bg); display: grid; gap: 4px; }
+.verdict b { font: 700 15px var(--display); }
+.verdict p { font-size: 14px; }
+.verdict.ok { border-color: var(--ok); background: var(--ok-soft); }
+.verdict.bad { border-color: var(--bad); background: var(--bad-soft); }
+@media (max-width: 760px) { .verdicts { grid-template-columns: 1fr; } }
+
+/* faixa de rodadas */
+.strip { display: grid; grid-template-columns: repeat(20, minmax(20px, 1fr)); gap: 4px; }
+.cell { aspect-ratio: 1; border-radius: 4px; display: grid; place-items: center; font: 11px var(--mono); background: var(--bg); border: 1px solid var(--line); color: var(--muted); }
+.cell.ok { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+.cell.bad { background: var(--bad); border-color: var(--bad); color: #fff; }
+@media (max-width: 560px) { .strip { grid-template-columns: repeat(10, 1fr); } }
+
+details.panel > summary { cursor: pointer; list-style: none; }
+details.panel > summary::-webkit-details-marker { display: none; }
+details.panel > summary h2::after { content: "▸"; color: var(--accent); font-size: 16px; }
+details.panel[open] > summary h2::after { content: "▾"; }
+.fakerow { max-width: 560px; }
+.scope { border-left: 4px solid var(--accent); }
+footer { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
+footer a { color: inherit; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <div class="kicker"><a href="/">LucentCrypto</a> · demonstração</div>
+    <h1>Embaralhamento <span>verificável</span></h1>
+  </div>
+  <button class="theme" id="themeBtn" type="button"></button>
+</header>
+<section class="intro">
+  <p>Quem publica uma lista sem nomes, como os salários de uma empresa ou os lances de uma licitação, lacra também, para cada participante, um envelope com o valor dele. Depois prova que os envelopes contêm exatamente a lista publicada, em outra ordem, sem revelar quem tem qual valor.</p>
+</section>
+
+<section class="panel" aria-labelledby="h1sec">
+  <h2 id="h1sec"><span class="n">1</span>Os dados e uma rodada da prova</h2>
+  <p class="banner" id="cheatBanner" hidden></p>
+
+  <div class="steps">
+    <div class="step" id="st1"><span class="who">PASSO 1 · QUEM PROVA</span><b>Embaralhar e lacrar</b>
+      <p>Escolhe uma ordem secreta e põe cada valor da lista numa caixa nova, lacrada com um acaso novo: <span class="mono">D = g<sup>valor</sup>·h<sup>r′</sup></span>.</p>
+      <div class="row"><button class="btn primary" id="newRound" type="button">Embaralhar e lacrar</button></div></div>
+    <div class="step" id="st2"><span class="who">PASSO 2 · QUEM CONFERE</span><b>Tirar cara ou coroa</b>
+      <p><b>0</b>: mostrar qual caixa é de quem, sem abrir nenhuma. <b>1</b>: abrir as caixas e mostrar como batem com a lista pública.</p>
+      <div class="row"><button class="btn primary" id="flip" type="button">Jogar a moeda</button><button class="btn" id="ask0" type="button">Pedir 0</button><button class="btn" id="ask1" type="button">Pedir 1</button></div></div>
+    <div class="step" id="st3"><span class="who">PASSO 3 · QUEM CONFERE</span><b>Conferir a resposta</b><p id="st3text">Aguardando a moeda.</p></div>
+  </div>
+
+  <div class="paste" id="pasteBox" hidden>
+    <b>Colar meus dados</b>
+    <p class="muted" style="font-size:13.5px">Uma linha por participante: o nome e o valor. Pode colar duas colunas de uma planilha, ou escrever <span class="mono">Ana; 7.400</span>. O último número da linha é o valor; o resto é o nome. Centavos são ignorados. De 2 a 20 linhas. Os dados ficam no seu navegador.</p>
+    <textarea id="pasteText" rows="7" spellcheck="false" placeholder="Ana	7.400&#10;Bruno	R$ 12.300,00&#10;Carla; 5.200"></textarea>
+    <p id="pastePreview" class="muted" style="font-size:13.5px" aria-live="polite"></p>
+    <ul id="pasteErrors"></ul>
+    <div class="row"><button class="btn primary" id="pasteUse" type="button" disabled>Usar estes dados</button><button class="btn" id="pasteCancel" type="button">Cancelar</button></div>
+  </div>
+
+  <div class="scroll">
+    <div class="diagram" id="diagram">
+      <svg class="links" id="links" aria-hidden="true"></svg>
+      <div class="col" id="colPeople">
+        <div class="colhead">
+          <b id="peopleTitle"></b><span id="peopleSub"></span>
+          <div class="ctl">
+            <div class="row">
+              <label>Exemplo <select id="kindSel"><option value="salarios">Salários</option><option value="licitacao">Lances de licitação</option><option value="meus" hidden>Meus dados</option></select></label>
+              <label><select id="nsel"><option>5</option><option>6</option><option selected>8</option><option>12</option><option>20</option></select> <span id="nLabel">pessoas</span></label>
+            </div>
+            <div class="row">
+              <button class="btn" id="newSetup" type="button">Novos dados</button>
+              <button class="btn" id="pasteOpen" type="button">Colar meus dados</button>
+            </div>
+            <label><input type="checkbox" id="showSecret"> mostrar o segredo de quem prova</label>
+          </div>
+        </div>
+        <div class="rows" id="people"></div>
+      </div>
+      <div class="col" id="colBoxes">
+        <div class="colhead"><b>Caixas desta rodada</b><span>Envelopes novos D, numa ordem embaralhada. Conteúdo secreto.</span></div>
+        <div class="rows" id="boxes"></div>
+      </div>
+      <div class="col" id="colList">
+        <div class="colhead"><b id="listTitle"></b><span id="listSub"></span></div>
+        <div class="rows" id="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="verdicts">
+    <div class="verdict" id="verdict"></div>
+    <div class="verdict" id="learned"></div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="h2sec">
+  <h2 id="h2sec"><span class="n">2</span>Repetir a rodada</h2>
+  <p class="muted">Uma rodada pega uma mentira com chance ½. Depois de <i>k</i> rodadas independentes, uma mentira passa com chance 2<sup>−k</sup>. Aqui a moeda é sorteada de verdade a cada rodada.</p>
+  <div class="row"><select id="ksel" aria-label="Rodadas"><option value="10">10 rodadas</option><option value="20">20 rodadas</option><option value="40" selected>40 rodadas</option><option value="80">80 rodadas</option></select><button class="btn primary" id="runMany" type="button">Rodar</button></div>
+  <div class="strip" id="strip"></div>
+  <p id="summary"></p>
+</section>
+
+<section class="panel" aria-labelledby="h3sec">
+  <h2 id="h3sec"><span class="n">3</span>Certificado (Fiat–Shamir)</h2>
+  <p class="muted">Sem ninguém para jogar a moeda: quem prova lacra as caixas das 80 rodadas primeiro e calcula o SHA-256 de tudo o que é público (o grupo, os participantes, a lista, os envelopes C e todas as caixas D). O bit <i>t</i> desse hash é a moeda da rodada <i>t</i>. Qualquer pessoa recalcula o hash e confere as 80 respostas depois.</p>
+  <p class="muted">Para enganar, seria preciso refazer as caixas até o hash cair nas moedas preparadas: cerca de 2<sup>80</sup> tentativas.</p>
+  <div class="row"><button class="btn primary" id="mkCert" type="button">Gerar certificado de 80 rodadas</button><button class="btn" id="copyCert" type="button" disabled>Copiar</button><button class="btn" id="checkMine" type="button" disabled>Conferir este certificado</button></div>
+  <p class="muted" style="font-size:13.5px">O certificado contém os nomes e a lista pública de valores, que já são públicos. Ele nunca diz quem tem qual valor.</p>
+  <p id="certStatus"></p>
+  <label class="muted" for="certText" style="font-size:13px">Certificado (JSON). Cole um aqui para conferi-lo, ou altere-o para ver a conferência falhar.</label>
+  <textarea id="certText" rows="8" spellcheck="false"></textarea>
+  <div class="row"><button class="btn primary" id="verifyCert" type="button">Conferir certificado colado</button></div>
+  <div class="verdict" id="certVerdict"><b>Nenhum certificado conferido ainda</b><p>Gere um acima, ou cole um.</p></div>
+</section>
+
+<details class="panel" id="lieBox">
+  <summary><h2><span class="n">4</span><span id="lieTitle"></span></h2></summary>
+  <p id="lieText"></p>
+  <label class="btn" style="justify-self:start"><input type="checkbox" id="cheatToggle"> <span id="cheatLabel"></span></label>
+  <div id="fakeRow"></div>
+  <p class="muted" style="font-size:13.5px">Em cada rodada, quem mente só consegue se preparar para uma das duas perguntas. Se a moeda cair na outra, a mentira aparece.</p>
+  <div class="row"><button class="btn primary" id="runLie" type="button"></button></div>
+  <div class="strip" id="strip2"></div>
+  <p id="summary2"></p>
+</details>
+
+<section class="panel scope">
+  <h2>O que esta prova garante, e o que não garante</h2>
+  <p>Ela prova que os valores lacrados nos envelopes são exatamente a lista pública, em outra ordem. Não revela quem tem qual valor, e não diz se os valores em si são verdadeiros: isso depende de quem publica. Usamos a técnica de "cortar e escolher" porque ela pode ser acompanhada passo a passo; sistemas reais costumam usar provas compactas, equivalentes, mas muito mais técnicas.</p>
+</section>
+
+<footer>
+  <p>Envelopes de Pedersen de verdade, calculados no seu navegador; nada é enviado. Grupo: o subgrupo de ordem <i>q</i> de ℤ<sub>p</sub><sup>*</sup> para o primo seguro de 1536 bits <i>p</i> = 2<i>q</i>+1 da RFC 3526 (grupo MODP 5), com <i>g</i> = 4. <i>h</i> é o SHA-256 de "lucent-embaralhamento/pedersen-h" expandido para 1792 bits, reduzido mod <i>p</i> e elevado ao quadrado, para que ninguém conheça log<sub>g</sub> h. A conferência compara quadrados, o que põe qualquer valor no subgrupo. Valores em hexadecimal aparecem abreviados.</p>
+  <p>Resposta ao 0: σ(i) = ρ(π(i)) e Δ<sub>i</sub> = r′<sub>σ(i)</sub> − r<sub>i</sub> mod q; confere-se D<sub>σ(i)</sub> = C<sub>i</sub>·h<sup>Δ<sub>i</sub></sup>. Resposta ao 1: ρ e a abertura (valor, r′) de cada caixa. O hash de Fiat–Shamir é calculado sobre o JSON canônico (chaves em ordem) do enunciado e de todas as caixas.</p>
+  <p><a href="/">LucentCrypto</a> · <a href="/sorteios/">Lucent Sorteios</a></p>
+</footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  // ---------- grupo e envelopes de Pedersen ----------
+  // RFC 3526, grupo MODP de 1536 bits: p é primo seguro, p = 2q + 1. Trabalhamos no subgrupo de ordem q (os quadrados).
+  const P = BigInt("0xffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f14374fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7edee386bfb5a899fa5ae9f24117c4b1fe649286651ece45b3dc2007cb8a163bf0598da48361c55d39a69163fa8fd24cf5f83655d23dca3ad961c62f356208552bb9ed529077096966d670c354e4abc9804f1746c08ca237327ffffffffffffffff");
+  const Q = (P - 1n) / 2n;
+  const G = 4n;
+
+  // ---------- SHA-256 (síncrono, sem dependências) ----------
+  const SHA_K = new Uint32Array([0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2]);
+  function sha256(msg) {
+    const len = msg.length, total = ((len + 9 + 63) >> 6) << 6;
+    const buf = new Uint8Array(total); buf.set(msg); buf[len] = 0x80;
+    const bits = len * 8; const dv = new DataView(buf.buffer);
+    dv.setUint32(total - 8, Math.floor(bits / 2 ** 32)); dv.setUint32(total - 4, bits >>> 0);
+    const Hs = new Uint32Array([0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19]);
+    const W = new Uint32Array(64);
+    const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+    for (let off = 0; off < total; off += 64) {
+      for (let i = 0; i < 16; i++) W[i] = dv.getUint32(off + 4 * i);
+      for (let i = 16; i < 64; i++) {
+        const s0 = rotr(W[i - 15], 7) ^ rotr(W[i - 15], 18) ^ (W[i - 15] >>> 3);
+        const s1 = rotr(W[i - 2], 17) ^ rotr(W[i - 2], 19) ^ (W[i - 2] >>> 10);
+        W[i] = (W[i - 16] + s0 + W[i - 7] + s1) >>> 0;
+      }
+      let [a, b, c, d, e, f, g, h] = Hs;
+      for (let i = 0; i < 64; i++) {
+        const t1 = (h + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + SHA_K[i] + W[i]) >>> 0;
+        const t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) >>> 0;
+        h = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+      }
+      Hs[0] += a; Hs[1] += b; Hs[2] += c; Hs[3] += d; Hs[4] += e; Hs[5] += f; Hs[6] += g; Hs[7] += h;
+    }
+    const out = new Uint8Array(32); const ov = new DataView(out.buffer);
+    for (let i = 0; i < 8; i++) ov.setUint32(4 * i, Hs[i]);
+    return out;
+  }
+  const enc = new TextEncoder();
+  const toHex = bytes => [...bytes].map(x => x.toString(16).padStart(2, "0")).join("");
+  function mpow(b, e, m) { let r = 1n; b %= m; while (e > 0n) { if (e & 1n) r = r * b % m; b = b * b % m; e >>= 1n; } return r; }
+
+  // h "sem nada na manga": SHA-256(semente || i), i = 0..6, reduzido mod p e elevado ao quadrado.
+  const H_SEED = "lucent-embaralhamento/pedersen-h";
+  const H = (() => {
+    const seed = enc.encode(H_SEED); let hex = "";
+    for (let i = 0; i < 7; i++) { const m = new Uint8Array(seed.length + 1); m.set(seed); m[seed.length] = i; hex += toHex(sha256(m)); }
+    const x = BigInt("0x" + hex) % P; return x * x % P;
+  })();
+  // Tabela de base fixa para h (janela de 6 bits).
+  const HW = 6, HB = 1 << HW, HMASK = BigInt(HB - 1), HWB = BigInt(HW);
+  const HT = (() => {
+    const rows = []; let base = H;
+    for (let i = 0; i < Math.ceil(1536 / HW); i++) {
+      const row = new Array(HB); row[0] = 1n;
+      for (let j = 1; j < HB; j++) row[j] = row[j - 1] * base % P;
+      rows.push(row); base = row[HB - 1] * base % P;
+    }
+    return rows;
+  })();
+  function hpow(e) { let r = 1n, i = 0; while (e > 0n) { const d = Number(e & HMASK); if (d) r = r * HT[i][d] % P; e >>= HWB; i++; } return r; }
+  const md = x => ((x % Q) + Q) % Q;
+  const sq = x => x * x % P; // compara quadrados: ±x viram o mesmo elemento do subgrupo
+  function randInt(n) { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; }
+  function randQ() { const a = new Uint8Array(208); crypto.getRandomValues(a); return BigInt("0x" + toHex(a)) % Q; }
+  function com(v, r) { return mpow(G, BigInt(v), P) * hpow(r) % P; }
+  function perm(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = randInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  const hx = x => x.toString(16);
+  const short = x => { const s = x.toString(16); return s.slice(0, 4) + "…" + s.slice(-4); };
+  const fmt = v => Number(v).toLocaleString("pt-BR");
+  const esc = s => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  // JSON canônico: chaves em ordem, sem espaços (como no lacre dos Lucent Sorteios).
+  const canon = (v) => Array.isArray(v) ? "[" + v.map(canon).join(",") + "]"
+    : v && typeof v === "object" ? "{" + Object.keys(v).sort().map((k) => JSON.stringify(k) + ":" + canon(v[k])).join(",") + "}"
+    : JSON.stringify(v);
+
+  // ---------- exemplos e rótulos ----------
+  const PEOPLE = ["Ana", "Bruno", "Carla", "Diego", "Elisa", "Fábio", "Gabriela", "Heitor", "Isabela", "João",
+    "Larissa", "Marcelo", "Natália", "Otávio", "Patrícia", "Rafael", "Sofia", "Tiago", "Vanessa", "Wagner"];
+  const FIRMS = ["Construtora Alfa", "Engenharia Beta", "Obras Gama", "Delta Construções", "Épsilon Engenharia", "Zeta Obras",
+    "Construtora Ômega", "Sigma Engenharia", "Kappa Construções", "Lambda Obras", "Construtora Norte", "Sul Engenharia",
+    "Leste Obras", "Oeste Construções", "Construtora Serra", "Vale Engenharia", "Rio Obras", "Mar Construções", "Construtora Sol", "Lua Engenharia"];
+  const KINDS = {
+    salarios: { names: PEOPLE, who: "Pessoas", whoOne: "pessoa", noun: "salário", list: "Lista pública de salários",
+      listSub: "Salários mensais em ordem crescente. Pública, sem nomes.", prover: "a empresa", lie: "E se a empresa mentir?",
+      liar: "Simular uma empresa desonesta", def: 8,
+      gen: (n) => distinct(n, () => 2800 + randInt(221) * 100) },
+    licitacao: { names: FIRMS, who: "Empresas", whoOne: "empresa", noun: "lance", list: "Lista pública de lances",
+      listSub: "Lances em ordem crescente, em reais. Pública, sem nomes.", prover: "o órgão", lie: "E se o órgão mentir?",
+      liar: "Simular um órgão desonesto", def: 5,
+      gen: (n) => distinct(n, () => 100000 + randInt(901) * 1000) },
+    meus: { names: [], who: "Participantes", whoOne: "participante", noun: "valor", list: "Lista pública de valores",
+      listSub: "Valores em ordem crescente. Pública, sem nomes.", prover: "quem publica", lie: "E se quem publica mentir?",
+      liar: "Simular quem publica mentindo", def: 0, gen: null },
+  };
+  function distinct(n, f) { const s = new Set(); while (s.size < n) s.add(f()); return [...s]; }
+
+  // ---------- estado ----------
+  // data: os dados (nomes, valores) e o tipo; setup: os envelopes; cheating: troca um valor por outro fora da lista.
+  let data = null, cheating = false, setup = null, round = null, challenge = null, result = null;
+  const K = () => KINDS[data.kind];
+
+  function newData(kind, n) { const k = KINDS[kind]; const vals = k.gen(n); data = { kind, names: k.names.slice(0, n), values: vals }; }
+  function makeSetup() {
+    const n = data.values.length;
+    const S = data.values.slice().sort((a, b) => a - b);          // lista pública
+    // pi: participante i -> posição na lista (com valores repetidos, cada um ganha uma posição própria)
+    const used = new Array(n).fill(false);
+    const pi = data.values.map((v) => { const k = S.findIndex((x, j) => x === v && !used[j]); used[k] = true; return k; });
+    const v = data.values.slice();
+    let cheater = -1;
+    if (cheating) {
+      cheater = randInt(n);
+      const span = Math.max(1, Math.round((S[n - 1] - S[0]) / 10));
+      let fake; do { fake = S[n - 1] + span + randInt(50) * Math.max(1, Math.round(span / 10)); } while (S.includes(fake));
+      v[cheater] = fake;
+    }
+    const r = v.map(() => randQ());
+    const C = v.map((val, i) => com(val, r[i]));
+    return { S, pi, v, r, C, cheater, n };
+  }
+
+  // Uma rodada: tudo o que quem prova preparou. "bet": para qual pergunta quem mente se preparou.
+  function makeRound(s) {
+    const N = s.n, bet = s.cheater < 0 ? null : randInt(2);
+    const boxVal = new Array(N), boxR = new Array(N), D = new Array(N);
+    let rho, sigma, delta;
+    if (bet === null || bet === 1) {
+      rho = perm(N);
+      for (let k = 0; k < N; k++) { const j = rho[k]; boxVal[j] = s.S[k]; boxR[j] = randQ(); D[j] = com(boxVal[j], boxR[j]); }
+      sigma = s.pi.map((k) => rho[k]);
+      delta = sigma.map((j, i) => md(boxR[j] - s.r[i]));
+    } else {
+      // Quem mente apostou no 0: as caixas são cópias realeatorizadas dos envelopes C.
+      sigma = perm(N); delta = new Array(N);
+      for (let i = 0; i < N; i++) { const j = sigma[i]; delta[i] = randQ(); D[j] = s.C[i] * hpow(delta[i]) % P; boxVal[j] = s.v[i]; boxR[j] = md(s.r[i] + delta[i]); }
+      rho = new Array(N); const used = new Set();
+      for (let k = 0; k < N; k++) { const j = boxVal.findIndex((x, jj) => x === s.S[k] && !used.has(jj)); if (j >= 0) { rho[k] = j; used.add(j); } }
+      const left = [...Array(N).keys()].filter((j) => !used.has(j));
+      for (let k = 0; k < N; k++) if (rho[k] === undefined) rho[k] = left.shift();
+    }
+    return { bet, boxVal, boxR, D, rho, sigma, delta };
+  }
+
+  function verify(s, rd, b) {
+    const N = s.n;
+    if (b === 1) {
+      const boxOk = new Array(N), listOk = new Array(N);
+      for (let k = 0; k < N; k++) { const j = rd.rho[k]; const ok = sq(com(rd.boxVal[j], rd.boxR[j])) === sq(rd.D[j]) && rd.boxVal[j] === s.S[k]; boxOk[j] = ok; listOk[k] = ok; }
+      return { pass: boxOk.every(Boolean), boxOk, listOk };
+    }
+    const personOk = s.C.map((c, i) => sq(rd.D[rd.sigma[i]]) === sq(c * hpow(rd.delta[i]) % P));
+    const boxOk = new Array(N); personOk.forEach((ok, i) => { boxOk[rd.sigma[i]] = ok; });
+    return { pass: personOk.every(Boolean), personOk, boxOk };
+  }
+
+  // ---------- certificado (Fiat–Shamir) ----------
+  const PROTOCOL = "lucent-embaralhamento/v1";
+  const tick = () => new Promise((r) => setTimeout(r, 0));
+  const GROUP = { p: hx(P), q: hx(Q), g: hx(G), h: hx(H) };
+  function fsCoins(c) {
+    const transcript = canon({ protocol: c.protocol, group: { p: c.group.p, q: c.group.q, g: c.group.g, h: c.group.h },
+      participants: c.participants, values: c.values, commitments: c.commitments, boxes: c.boxes });
+    const digest = sha256(enc.encode(transcript)), coins = [];
+    for (let t = 0; t < c.boxes.length; t++) coins.push((digest[t >> 3] >> (7 - (t & 7))) & 1);
+    return { digest: toHex(digest), coins };
+  }
+  async function makeCert(s, k, progress) {
+    const rounds = [];
+    for (let t = 0; t < k; t++) { rounds.push(makeRound(s)); if (progress) { progress(t + 1, k); await tick(); } }
+    const cert = {
+      protocol: PROTOCOL,
+      statement: "Os valores lacrados nos envelopes C são uma permutação da lista pública de valores.",
+      group: { ...GROUP, h_derivation: "h = (int(SHA256(semente||0)||...||SHA256(semente||6)) mod p)^2 mod p, semente = \"" + H_SEED + "\"" },
+      participants: data.names.slice(0, s.n), values: s.S.slice(), commitments: s.C.map(hx), boxes: rounds.map((rd) => rd.D.map(hx)),
+    };
+    const fs = fsCoins(cert);
+    cert.fiat_shamir = { hash: "SHA-256 do JSON canônico", digest: fs.digest, coins: fs.coins.join("") };
+    cert.responses = rounds.map((rd, t) => fs.coins[t] === 0
+      ? { coin: 0, sigma: rd.sigma.slice(), delta: rd.delta.map(hx) }
+      : { coin: 1, rho: rd.rho.slice(), values: rd.boxVal.slice(), randomness: rd.boxR.map(hx) });
+    return cert;
+  }
+  function isPerm(a, n) {
+    if (!Array.isArray(a) || a.length !== n) return false;
+    const seen = new Array(n).fill(false);
+    for (const x of a) { if (!Number.isInteger(x) || x < 0 || x >= n || seen[x]) return false; seen[x] = true; }
+    return true;
+  }
+  function toBig(x, lo, hi, what) {
+    if (typeof x !== "string" || !/^[0-9a-f]+$/.test(x)) throw new Error(what + " não é um número hexadecimal.");
+    const v = BigInt("0x" + x); if (v < lo || v >= hi) throw new Error(what + " está fora do intervalo."); return v;
+  }
+  async function verifyCert(c, progress) {
+    const fail = (msg, round) => ({ ok: false, msg, round });
+    try {
+      if (!c || c.protocol !== PROTOCOL) return fail("Protocolo desconhecido.");
+      if (!c.group || c.group.p !== GROUP.p || c.group.q !== GROUP.q || c.group.g !== GROUP.g || c.group.h !== GROUP.h)
+        return fail("Os parâmetros do grupo (p, q, g ou o h derivado do hash) não são os publicados.");
+      const n = Array.isArray(c.participants) ? c.participants.length : 0;
+      if (n < 2 || !Array.isArray(c.values) || c.values.length !== n || !Array.isArray(c.commitments) || c.commitments.length !== n)
+        return fail("Participantes, valores e envelopes precisam ter o mesmo tamanho (pelo menos 2).");
+      if (!c.values.every((v) => Number.isInteger(v) && v >= 0)) return fail("Os valores precisam ser inteiros não negativos.");
+      const k = Array.isArray(c.boxes) ? c.boxes.length : 0;
+      if (k < 1 || k > 256) return fail("O número de rodadas precisa estar entre 1 e 256.");
+      if (!Array.isArray(c.responses) || c.responses.length !== k) return fail("Precisa haver uma resposta por rodada.");
+      const C = c.commitments.map((x, i) => toBig(x, 1n, P, "C" + (i + 1)));
+      const D = c.boxes.map((row, t) => { if (!Array.isArray(row) || row.length !== n) throw new Error("A rodada " + (t + 1) + " tem o número errado de caixas."); return row.map((x, j) => toBig(x, 1n, P, "Rodada " + (t + 1) + ", caixa D" + (j + 1))); });
+      const fs = fsCoins(c);
+      for (let t = 0; t < k; t++) {
+        const r = c.responses[t], b = fs.coins[t];
+        if (!r || r.coin !== b) return fail(`A resposta é para a moeda ${r && r.coin}, mas o hash dá a moeda ${b}.`, t);
+        if (b === 0) {
+          if (!isPerm(r.sigma, n)) return fail("σ não é uma permutação.", t);
+          if (!Array.isArray(r.delta) || r.delta.length !== n) return fail("Número errado de valores Δ.", t);
+          for (let i = 0; i < n; i++) {
+            const d = toBig(r.delta[i], 0n, Q, "Δ");
+            if (sq(D[t][r.sigma[i]]) !== sq(C[i] * hpow(d) % P)) return fail(`${esc(c.participants[i])}: D${r.sigma[i] + 1} ≠ C${i + 1}·h^Δ.`, t);
+          }
+        } else {
+          if (!isPerm(r.rho, n)) return fail("ρ não é uma permutação.", t);
+          if (!Array.isArray(r.values) || r.values.length !== n || !Array.isArray(r.randomness) || r.randomness.length !== n) return fail("Número errado de aberturas de caixas.", t);
+          for (let j = 0; j < n; j++) {
+            const v = r.values[j];
+            if (!Number.isInteger(v) || v < 0) return fail(`A caixa D${j + 1} abre para um valor que não é inteiro.`, t);
+            if (sq(com(v, toBig(r.randomness[j], 0n, Q, "r′"))) !== sq(D[t][j])) return fail(`A caixa D${j + 1} não abre para ${fmt(v)}.`, t);
+          }
+          for (let kk = 0; kk < n; kk++) { const j = r.rho[kk]; if (r.values[j] !== c.values[kk]) return fail(`A caixa D${j + 1} abre para ${fmt(r.values[j])}, mas ρ a liga ao valor ${fmt(c.values[kk])} da lista.`, t); }
+        }
+        if (progress) { progress(t + 1, k); await tick(); }
+      }
+      return { ok: true, k, n, digest: fs.digest };
+    } catch (e) { return fail(esc(e.message || String(e))); }
+  }
+
+  // ---------- colar dados ----------
+  // O último número da linha é o valor (formato brasileiro: ponto de milhar, vírgula decimal; centavos descartados).
+  function parsePaste(text) {
+    const rows = [], errors = [];
+    const lines = String(text).split(/\r?\n/);
+    lines.forEach((raw, idx) => {
+      const line = raw.trim(); if (!line) return;
+      const m = line.match(/^(.*?)(?:R\$\s*)?(?<![\d.,])(\d{1,3}(?:\.\d{3})+|\d+)(?:,\d*|\.\d{1,2})?\s*$/);
+      if (!m) { if (!rows.length && !errors.length) errors.push({ line: idx + 1, msg: "sem valor (cabeçalho? ignorada)", skip: true }); else errors.push({ line: idx + 1, msg: "sem valor no fim da linha" }); return; }
+      const value = parseInt(m[2].replace(/\./g, ""), 10);
+      const name = m[1].replace(/[\s;:,\t|-]+$/, "").trim().normalize("NFC").slice(0, 40);
+      if (!Number.isSafeInteger(value) || value > 1e12) { errors.push({ line: idx + 1, msg: "valor grande demais" }); return; }
+      rows.push({ name, value });
+    });
+    rows.forEach((r, i) => { if (!r.name) r.name = "Participante " + (i + 1); });
+    const hard = errors.filter((e) => !e.skip);
+    let problem = "";
+    if (rows.length < 2) problem = "São precisas pelo menos 2 linhas com valor.";
+    else if (rows.length > 20) problem = "No máximo 20 linhas (" + rows.length + " lidas).";
+    return { rows, errors, ok: !problem && !hard.length, problem };
+  }
+
+  // ---------- desenho ----------
+  const $ = (id) => document.getElementById(id);
+  const LOCK = '<svg class="lock" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+  const showSecret = () => $("showSecret").checked;
+
+  function renderLabels() {
+    const k = K();
+    $("peopleTitle").textContent = k.who;
+    $("peopleSub").textContent = "Nomes e envelopes C são públicos. O " + k.noun + " de cada um é segredo.";
+    $("listTitle").textContent = k.list; $("listSub").textContent = k.listSub;
+    $("nLabel").textContent = k.who.toLowerCase();
+    $("lieTitle").textContent = k.lie;
+    $("lieText").textContent = "Simule uma mentira: " + k.prover + " troca o " + k.noun + " de um" + (k.whoOne === "pessoa" || k.whoOne === "empresa" ? "a " : " ") + k.whoOne + " por um valor que não está na lista pública. Depois veja quantas rodadas a mentira aguenta.";
+    $("cheatLabel").textContent = k.liar;
+    $("runLie").textContent = "Rodar 40 rodadas com a mentira";
+    const kindSel = $("kindSel"); kindSel.value = data.kind; kindSel.querySelector('option[value="meus"]').hidden = data.kind !== "meus";
+    $("nsel").disabled = data.kind === "meus";
+    if (data.kind !== "meus") $("nsel").value = String(data.values.length);
+  }
+
+  function render() {
+    const s = setup, rd = round, sec = showSecret(), k = K();
+    $("people").innerHTML = s.C.map((c, i) => {
+      const cls = challenge === 0 && result ? (result.personOk[i] ? "ok" : "bad") : "";
+      const mark = challenge === 0 && result ? `<span class="mark ${result.personOk[i] ? "ok" : "bad"}">${result.personOk[i] ? "✓" : "✗"}</span>` : "";
+      const fake = i === s.cheater ? "fake" : "";
+      const chip = sec ? `<span class="secret ${fake}">${fmt(s.v[i])}</span>`
+        : `<span class="priv ${fake}" tabindex="0" title="Segredo: só quem prova sabe">${LOCK}<span class="h">${esc(k.noun)}</span><span class="v">${fmt(s.v[i])}</span></span>`;
+      return `<div class="item ${cls}" data-p="${i}"><span class="name" title="${esc(data.names[i])}">${esc(data.names[i])}</span><span class="meta">${chip}<span class="pub" title="Envelope público">C${i + 1}=${short(c)}</span>${mark}</span></div>`;
+    }).join("");
+    if (!rd) $("boxes").innerHTML = `<div class="placeholder">Ainda não há caixas. No passo 1, quem prova faz ${s.n} caixas novas, lacradas, para esta rodada.</div>`;
+    else $("boxes").innerHTML = rd.D.map((d, j) => {
+      const opened = challenge === 1, st = result ? (result.boxOk[j] ? "ok" : "bad") : "";
+      const inner = opened ? `<span class="mono muted">D${j + 1}</span><span class="val">${fmt(rd.boxVal[j])}</span>` : `${LOCK}<span class="pub" title="Envelope público">D${j + 1}=${short(d)}</span>`;
+      const peek = !opened && sec ? `<span class="secret ${s.cheater >= 0 && !s.S.includes(rd.boxVal[j]) ? "fake" : ""}">${fmt(rd.boxVal[j])}</span>` : "";
+      const mark = result ? `<span class="mark ${st}">${result.boxOk[j] ? "✓" : "✗"}</span>` : "";
+      return `<div class="item box ${opened ? "open" : ""} ${st}" data-b="${j}"><span class="meta">${inner}</span><span class="meta">${peek}${mark}</span></div>`;
+    }).join("");
+    $("list").innerHTML = s.S.map((v, kk) => {
+      const cls = challenge === 1 && result ? (result.listOk[kk] ? "ok" : "bad") : "";
+      return `<div class="item ${cls}" data-k="${kk}"><span class="val">${fmt(v)}</span></div>`;
+    }).join("");
+    $("colPeople").classList.toggle("dim", challenge === 1);
+    $("colList").classList.toggle("dim", challenge === 0);
+    $("st1").classList.toggle("active", !rd);
+    $("st2").classList.toggle("active", !!rd && challenge === null);
+    $("st3").classList.toggle("active", challenge !== null);
+    ["flip", "ask0", "ask1"].forEach((id) => { $(id).disabled = !rd || challenge !== null; });
+    $("newRound").disabled = !!rd && challenge === null;
+    $("newRound").textContent = rd && challenge !== null ? "Próxima rodada" : "Embaralhar e lacrar";
+    // aviso de mentira simulada (o controle fica na seção 4)
+    const ban = $("cheatBanner");
+    ban.hidden = s.cheater < 0;
+    if (s.cheater >= 0) ban.textContent = "Mentira simulada (seção 4): " + k.prover + " lacrou um valor que não está na lista." + (sec ? " É o envelope de " + data.names[s.cheater] + ": " + fmt(s.v[s.cheater]) + "." : " Marque “mostrar o segredo” para ver qual.");
+    $("fakeRow").innerHTML = s.cheater >= 0
+      ? `<div class="item bad fakerow"><span class="name">${esc(data.names[s.cheater])}</span><span class="meta"><span class="secret fake">envelope com ${fmt(s.v[s.cheater])} · fora da lista</span><span class="pub">C${s.cheater + 1}=${short(s.C[s.cheater])}</span></span></div>` : "";
+    renderVerdict();
+    requestAnimationFrame(drawLinks);
+  }
+
+  function renderVerdict() {
+    const v = $("verdict"), l = $("learned"), t = $("st3text"), k = K(), n = setup.n;
+    const set = (el, cls, title, text) => { el.className = "verdict " + cls; el.innerHTML = `<b>${title}</b><p>${text}</p>`; };
+    if (!round) {
+      set(v, "", "Nenhuma rodada ainda", "Comece pelo passo 1: quem prova embaralha a lista e a lacra em caixas novas.");
+      set(l, "", "O que quem confere sabe", `A lista pública e um envelope público por ${k.whoOne}. Não sabe quem tem qual ${k.noun}.`);
+      t.textContent = "Aguardando quem prova."; return;
+    }
+    if (challenge === null) {
+      set(v, "", "Caixas lacradas", "Jogue a moeda para desafiar quem prova.");
+      set(l, "", "O que quem confere fica sabendo", `Até agora, só ${n} caixas lacradas, que parecem números aleatórios.`);
+      t.textContent = "Aguardando a moeda."; return;
+    }
+    const pass = result.pass;
+    if (challenge === 1) {
+      t.innerHTML = "Moeda = <b>1</b>. Quem prova abriu todas as caixas (valor e r′) e mostrou o embaralhamento ρ que liga as caixas à lista pública.";
+      set(v, pass ? "ok" : "bad", pass ? "Conferido" : "Mentira descoberta",
+        pass ? "Todas as caixas abrem corretamente, e os valores abertos são exatamente a lista pública, em outra ordem."
+             : `Uma caixa abre para ${fmt(round.boxVal[result.boxOk.findIndex((x) => !x)])}, que não está na lista pública. Quem prova lacrou cópias dos envelopes C nas caixas, apostando na moeda 0.`);
+      set(l, "", "O que quem confere fica sabendo", `Os valores da lista em outra ordem, que já eram públicos. As caixas são novas, então nada as liga aos nomes. A coluna de ${k.who.toLowerCase()} fica apagada porque esta resposta não fala dela.`);
+    } else {
+      t.innerHTML = "Moeda = <b>0</b>. Quem prova mostrou qual caixa é de quem (σ) e um número Δ por participante. Quem confere verifica D = C·h<sup>Δ</sup>.";
+      set(v, pass ? "ok" : "bad", pass ? "Conferido" : "Mentira descoberta",
+        pass ? `Cada caixa lacra o mesmo valor que o envelope do seu dono, só com outro acaso. Nenhuma caixa foi aberta.`
+             : `O envelope de ${esc(data.names[setup.cheater])} não corresponde a nenhuma caixa: nenhum Δ faz D = C·h<sup>Δ</sup>. As caixas guardam de fato a lista pública, e um valor fora dela não tem para onde ir.`);
+      set(l, "", "O que quem confere fica sabendo", "Qual caixa lacrada é de quem, e números Δ que parecem aleatórios. As caixas continuam fechadas, então nenhum valor aparece. A lista pública fica apagada porque esta resposta não fala dela.");
+    }
+  }
+
+  function drawLinks() {
+    const svg = $("links"), dia = $("diagram"), base = dia.getBoundingClientRect();
+    svg.setAttribute("viewBox", `0 0 ${base.width} ${base.height}`);
+    if (challenge === null || !result) { svg.innerHTML = ""; return; }
+    const css = getComputedStyle(document.documentElement);
+    const okC = css.getPropertyValue("--ok").trim(), badC = css.getPropertyValue("--bad").trim();
+    const pts = [], N = setup.n;
+    for (let x = 0; x < N; x++) {
+      const [a, b, ok] = challenge === 1
+        ? [dia.querySelector(`[data-b="${round.rho[x]}"]`), dia.querySelector(`[data-k="${x}"]`), result.listOk[x]]
+        : [dia.querySelector(`[data-p="${x}"]`), dia.querySelector(`[data-b="${round.sigma[x]}"]`), result.personOk[x]];
+      const A = a.getBoundingClientRect(), B = b.getBoundingClientRect();
+      pts.push([A.right - base.left, A.top + A.height / 2 - base.top, B.left - base.left, B.top + B.height / 2 - base.top, ok]);
+    }
+    svg.innerHTML = pts.map(([x1, y1, x2, y2, ok]) => { const mx = (x1 + x2) / 2;
+      return `<path d="M${x1} ${y1} C${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}" fill="none" stroke="${ok ? okC : badC}" stroke-width="${ok ? 1.6 : 2.4}" stroke-opacity="${ok ? 0.8 : 1}"/>`; }).join("");
+  }
+
+  // ---------- ações ----------
+  function resetAll() {
+    setup = makeSetup(); round = null; challenge = null; result = null;
+    $("strip").innerHTML = ""; $("strip2").innerHTML = ""; $("summary").textContent = ""; $("summary2").textContent = "";
+    lastCert = null; $("certText").value = ""; $("certStatus").textContent = "";
+    $("certVerdict").className = "verdict"; $("certVerdict").innerHTML = "<b>Nenhum certificado conferido ainda</b><p>Gere um acima, ou cole um.</p>";
+    setBusy(false); renderLabels(); render();
+  }
+  const newRound = () => { round = makeRound(setup); challenge = null; result = null; render(); };
+  const answer = (b) => { challenge = b; result = verify(setup, round, b); render(); };
+
+  let busy = false, lastCert = null;
+  function setBusy(v) {
+    busy = v;
+    ["runMany", "runLie", "mkCert", "verifyCert", "newSetup", "nsel", "kindSel", "cheatToggle", "pasteOpen"].forEach((id) => { $(id).disabled = v; });
+    if (!v) $("nsel").disabled = data.kind === "meus";
+    $("copyCert").disabled = v || !lastCert; $("checkMine").disabled = v || !lastCert;
+  }
+
+  async function runRounds(k, stripId, sumId) {
+    if (busy) return; setBusy(true);
+    const cells = []; let caughtAt = -1; const P2 = K().prover;
+    for (let t = 0; t < k; t++) {
+      if (caughtAt >= 0) { cells.push(`<div class="cell" title="Não rodada">·</div>`); continue; }
+      const rd = makeRound(setup), b = randInt(2), res = verify(setup, rd, b);
+      if (!res.pass) caughtAt = t;
+      cells.push(`<div class="cell ${res.pass ? "ok" : "bad"}" title="Rodada ${t + 1}: moeda ${b}, ${res.pass ? "conferida" : "falhou"}">${b}</div>`);
+      $(sumId).textContent = `Rodada ${t + 1} de ${k}…`;
+      if (t % 4 === 3) { $(stripId).innerHTML = cells.join(""); await tick(); }
+    }
+    $(stripId).innerHTML = cells.join("");
+    const surv = Math.pow(2, -k).toExponential(1).replace(".", ",");
+    $(sumId).innerHTML = caughtAt >= 0
+      ? `<b style="color:var(--bad)">Mentira descoberta na rodada ${caughtAt + 1}.</b> Quem confere para ali e rejeita. Cada quadrado mostra a moeda; os verdes são rodadas em que a mentira acertou a moeda por sorte.`
+      : setup.cheater >= 0
+        ? `<b>A mentira passou nas ${k} rodadas.</b> Isso acontece com chance 2<sup>−${k}</sup> ≈ ${surv}. Tente de novo.`
+        : `<b style="color:var(--ok)">Prova honesta: passou nas ${k} rodadas.</b> Uma mentira passaria em ${k} rodadas com chance 2<sup>−${k}</sup> ≈ ${surv}. Cada quadrado mostra a moeda da rodada.`;
+    setBusy(false);
+  }
+
+  async function produceCert() {
+    if (busy) return; setBusy(true);
+    $("certVerdict").className = "verdict"; $("certVerdict").innerHTML = "<b>Nenhum certificado conferido ainda</b><p>Confira o novo certificado abaixo.</p>";
+    const cert = await makeCert(setup, 80, (t, k) => { $("certStatus").textContent = `Lacrando as caixas da rodada ${t} de ${k}…`; });
+    lastCert = JSON.stringify(cert, null, 1);
+    $("certText").value = lastCert;
+    $("certStatus").innerHTML = `Certificado pronto: 80 rodadas, ${cert.participants.length} participantes, cerca de ${fmt(Math.round(lastCert.length / 1024))} KB. Moedas do SHA-256: <span class="mono" style="word-break:break-all">${cert.fiat_shamir.coins}</span>`
+      + (setup.cheater >= 0 ? `<br><b style="color:var(--bad)">Há uma mentira simulada (seção 4): a conferência deve rejeitar este certificado.</b>` : "");
+    setBusy(false);
+  }
+  async function checkCert() {
+    if (busy) return;
+    let c; try { c = JSON.parse($("certText").value); } catch (e) { showCertVerdict({ ok: false, msg: "Isto não é um JSON válido. Cole o certificado inteiro." }); return; }
+    setBusy(true);
+    const res = await verifyCert(c, (t, k) => { $("certVerdict").className = "verdict"; $("certVerdict").innerHTML = `<b>Conferindo…</b><p>Rodada ${t} de ${k}</p>`; });
+    showCertVerdict(res); setBusy(false);
+  }
+  function showCertVerdict(res) {
+    const v = $("certVerdict"); v.className = "verdict " + (res.ok ? "ok" : "bad");
+    v.innerHTML = res.ok
+      ? `<b>Certificado confere</b><p>O SHA-256 recalculado dá as mesmas moedas, e as ${res.k} rodadas conferem para ${res.n} participantes. Resumo <span class="mono">${res.digest.slice(0, 16)}…</span></p>`
+      : `<b>Certificado rejeitado</b><p>${res.round !== undefined ? `Rodada ${res.round + 1}: ` : ""}${res.msg}</p>`;
+  }
+  async function copyCert() {
+    try { await navigator.clipboard.writeText($("certText").value); $("certStatus").textContent = "Certificado copiado."; }
+    catch (e) { $("certStatus").textContent = "Não foi possível copiar aqui. Clique na caixa, selecione tudo e copie."; }
+  }
+
+  function updatePastePreview() {
+    const r = parsePaste($("pasteText").value);
+    $("pastePreview").textContent = r.rows.length ? `${r.rows.length} ${r.rows.length === 1 ? "linha lida" : "linhas lidas"}` + (r.rows.length ? ": " + r.rows.slice(0, 3).map((x) => `${x.name} → ${fmt(x.value)}`).join(" · ") + (r.rows.length > 3 ? " · …" : "") : "") : "";
+    $("pasteErrors").innerHTML = (r.problem ? `<li>${esc(r.problem)}</li>` : "") + r.errors.map((e) => `<li>Linha ${e.line}: ${esc(e.msg)}</li>`).join("");
+    $("pasteUse").disabled = !r.ok;
+    return r;
+  }
+
+  // ---------- tema ----------
+  const LS = { get(k, d) { try { const v = localStorage.getItem("lucent-emb-" + k); return v === null ? d : v; } catch (e) { return d; } },
+               set(k, v) { try { localStorage.setItem("lucent-emb-" + k, v); } catch (e) {} } };
+  const THEMES = ["auto", "light", "dark"], THEME_LABEL = { auto: "Tema: automático", light: "Tema: claro", dark: "Tema: escuro" };
+  let theme = LS.get("theme", "auto"); if (!THEMES.includes(theme)) theme = "auto";
+  function applyTheme(t) { if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = t; $("themeBtn").textContent = THEME_LABEL[t]; requestAnimationFrame(drawLinks); }
+  $("themeBtn").addEventListener("click", () => { theme = THEMES[(THEMES.indexOf(theme) + 1) % 3]; LS.set("theme", theme); applyTheme(theme); });
+
+  // ---------- ligações ----------
+  $("kindSel").addEventListener("change", (e) => { const kind = e.target.value; if (kind === "meus") return; newData(kind, KINDS[kind].def); resetAll(); });
+  $("nsel").addEventListener("change", (e) => { newData(data.kind, +e.target.value); resetAll(); });
+  $("newSetup").addEventListener("click", () => { if (data.kind === "meus") { resetAll(); return; } newData(data.kind, data.values.length); resetAll(); });
+  $("showSecret").addEventListener("change", render);
+  $("newRound").addEventListener("click", newRound);
+  $("flip").addEventListener("click", () => answer(randInt(2)));
+  $("ask0").addEventListener("click", () => answer(0));
+  $("ask1").addEventListener("click", () => answer(1));
+  $("runMany").addEventListener("click", () => runRounds(+$("ksel").value, "strip", "summary"));
+  $("runLie").addEventListener("click", () => runRounds(40, "strip2", "summary2"));
+  $("cheatToggle").addEventListener("change", (e) => { cheating = e.target.checked; resetAll(); });
+  $("mkCert").addEventListener("click", produceCert);
+  $("copyCert").addEventListener("click", copyCert);
+  $("checkMine").addEventListener("click", () => { if (lastCert) { $("certText").value = lastCert; checkCert(); } });
+  $("verifyCert").addEventListener("click", checkCert);
+  $("pasteOpen").addEventListener("click", () => { $("pasteBox").hidden = false; updatePastePreview(); $("pasteText").focus(); });
+  $("pasteCancel").addEventListener("click", () => { $("pasteBox").hidden = true; });
+  $("pasteText").addEventListener("input", updatePastePreview);
+  $("pasteUse").addEventListener("click", () => {
+    const r = updatePastePreview(); if (!r.ok) return;
+    data = { kind: "meus", names: r.rows.map((x) => x.name), values: r.rows.map((x) => x.value) };
+    $("pasteBox").hidden = true; resetAll();
+  });
+  window.addEventListener("resize", () => requestAnimationFrame(drawLinks));
+
+  applyTheme(theme);
+  newData("salarios", KINDS.salarios.def);
+  resetAll();
+})();
+</script>
+</body>
+</html>
