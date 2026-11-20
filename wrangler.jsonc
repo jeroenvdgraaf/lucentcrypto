@@ -5,6 +5,7 @@
   "name": "sorteiolucido",
   "compatibility_date": "2026-11-18",
   "observability": { "enabled": true },
+  "build": { "command": "./build.sh" },
   "assets": {
     "directory": "dist",
     "html_handling": "auto-trailing-slash"
