@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # Copyright (C) 2026 Jeroen van de Graaf
 # Monta o site estático (SPEC-v3 9). Comando de build no Cloudflare Pages: ./build.sh  (saída: dist)
-#   /                -> site/index.html
+#   /                -> site/index.html   (Cloudflare Workers: wrangler.jsonc aponta para dist/)
 #   /sorteios/       -> LucentSorteios.html
 #   /amigo-oculto/   -> amigo-oculto/index.html
 #   /spec/, /verifier/ -> especificação, vetores e verificador (Apache-2.0)

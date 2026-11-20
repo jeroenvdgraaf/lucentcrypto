@@ -1,0 +1,12 @@
+// Site estático no Cloudflare Workers. Build: ./build.sh (monta dist/); deploy: npx wrangler deploy.
+// O relay de carimbo de tempo é outro Worker, com configuração própria em relay/wrangler.toml.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sorteiolucido",
+  "compatibility_date": "2026-11-18",
+  "observability": { "enabled": true },
+  "assets": {
+    "directory": "dist",
+    "html_handling": "auto-trailing-slash"
+  }
+}
