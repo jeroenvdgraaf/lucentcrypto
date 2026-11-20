@@ -138,7 +138,7 @@ The seed does **not** depend on C (title, ID, time): the result depends only on 
 
 The randomness beacon of Inmetro, the Brazilian federal metrology institute (beacon.inmetro.gov.br), in the NIST format (NISTIR 8213, version 2.1): one pulse per minute, hash-chained, signed, each committing in advance to the next. A judge can follow it: "a lista foi lacrada às 14:03:21; o resultado veio do número que o Inmetro publicou às 14:04".
 
-**Sealed spec:** `sources = { "inmetro": { "chain": 2, "rule": "first-pulse-after", "notBefore": <ms> } }`. `inmetro` is the only source (MUST NOT be combined). `notBefore` is the seal time in milliseconds; `chain` is Inmetro's chain index at sealing time.
+**Sealed spec:** `sources = { "inmetro": { "chain": 2, "rule": "first-pulse-after", "notBefore": <ms> } }`. `inmetro` is the only source (MUST NOT be combined). `notBefore` is the seal time plus 15 seconds, in milliseconds (the margin lets the seal's timestamps arrive before the pulse's minute, so the timing check can pass); `chain` is Inmetro's chain index at sealing time.
 
 **Which pulse:** the first pulse of that chain with `timeStamp` strictly after `notBefore`. Pulses fall on whole minutes, so normally it is the minute T = ⌊notBefore / 60000⌋ · 60000 + 60000. If Inmetro had no pulse at T, the next existing pulse counts.
 
@@ -155,6 +155,8 @@ seed = SHA-256( "LucentDraw/3\nseed\n" + C + "\neth=…\ndrand=…\nmegasena=…
 **Integrity (MUST, offline):** `outputValue` = SHA-512 of the NIST serialization: uri, version (UTF-8, 4-byte length prefix); cipherSuite, period (uint32); certificateId (bytes, 4-byte length prefix); chainIndex, pulseIndex (uint64); timeStamp (UTF-8, prefixed); localRandomValue, external.sourceId (bytes, prefixed); external.statusCode (uint32); external.value; listValues previous, hour, day, month, year (bytes, prefixed, in that order); precommitmentValue (bytes, prefixed); statusCode (uint32); signatureValue (bytes, prefixed). All big-endian. Checked against Inmetro's pulse nº 1049644 (2026-11-20T18:33:00Z).
 
 **Verification:** FAIL if the pulse is not intact, is from another chain, or is not after `notBefore`. With network access the verifier fetches the same pulse from Inmetro by number (`/beacon/2.1/chain/<c>/pulse/<i>`) and compares `outputValue`; if the pulse is not at T, it also asks Inmetro whether a pulse exists at T (then FAIL: not the first). Without network the check is UNVERIFIED and the verdict `incompleto`, as for Ethereum. The pulse signature will be checked once Inmetro publishes the certificate for `certificateId`. The timing check (seal timestamp before the pulse) is the same as for Ethereum and drand.
+
+**Timestamps:** on lucentcrypto.org the relay of SPEC 6.2 runs inside the site's own Worker at `/api/relay` (worker/index.js imports relay/src/index.js), so every verifiable draw gets RFC 3161 and OpenTimestamps anchors without configuration. A relay address typed in "Detalhes técnicos" still takes precedence.
 
 **Fetching from the browser:** directly from beacon.inmetro.gov.br; if the browser blocks it (CORS), through the site's own route `/api/inmetro/…` (worker/index.js), which accepts only the three pulse paths above and passes the response through unchanged. Trust does not depend on that route: every pulse is checked by its `outputValue`.
 

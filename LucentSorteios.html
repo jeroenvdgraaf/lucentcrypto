@@ -600,7 +600,7 @@ const STR = {
   fContribPh: "ex.: 4 6 1 3 5 2",
   techDetails: "Detalhes técnicos",
   fRpcs: "Servidores Ethereum (JSON-RPC), um por linha", fRpcsHint: "tentados em ordem; sem chave de API",
-  fRelay: "Relay de carimbo de tempo", fRelayHint: "opcional; sem ele não há carimbo de tempo",
+  fRelay: "Relay de carimbo de tempo", fRelayHint: "opcional; vazio usa o próprio site (lucentcrypto.org)",
   drandInfo: (h) => "Farol drand quicknet, cadeia " + h + ", verificado por assinatura BLS com a chave pública fixada nesta página.",
   sealBtn: "Lacrar o sorteio", sealing: "Lacrando…", checkingContest: "Conferindo o concurso…",
   sealLockHint: "Depois de lacrar, as opções ficam travadas.",
@@ -981,7 +981,7 @@ const LOTTERY = {
   portal: "https://loterias.caixa.gov.br",
   tzOffsetMin: -180, // horário de Brasília, sem horário de verão desde 2019
 };
-const LEAD_MS = { drand: 6000, "eth+drand": 36000 };
+const LEAD_MS = { drand: 6000, "eth+drand": 36000, inmetro: 15000 };
 const OID = { sha256: "2.16.840.1.101.3.4.2.1", signedData: "1.2.840.113549.1.7.2", tstInfo: "1.2.840.113549.1.9.16.1.4" };
 
 // ---- bytes, hashes
@@ -1322,7 +1322,8 @@ const PRESETS = {
 };
 function planSources(preset, sealMs, lottery) {
   const parts = preset.split("+"), sources = {};
-  if (preset === "inmetro") return { inmetro: { chain: INMETRO.chain, rule: INMETRO.rule, notBefore: sealMs } };
+  // notBefore = lacre + 15 s: os carimbos de tempo do lacre chegam antes do minuto do pulso.
+  if (preset === "inmetro") return { inmetro: { chain: INMETRO.chain, rule: INMETRO.rule, notBefore: sealMs + LEAD_MS.inmetro } };
   if (parts.includes("eth")) {
     sources.eth = { chain: ETH.chain, rule: ETH.rule, notBefore: Math.floor(sealMs / 1000), confirmations: ETH.confirmations };
   }
@@ -2044,6 +2045,8 @@ if (/^https?:$/.test(location.protocol)) {
 
 // ---- configurações (o calendário de sorteios antigo, se guardado, é ignorado)
 const savedSettings = LS.get("settings", {}) || {};
+// Relay de carimbo de tempo: o configurado em "Detalhes técnicos" ou, se vazio, a rota do próprio site.
+const relayBase = () => (settings.relay || (/^https?:$/.test(location.protocol) ? location.origin + "/api/relay" : "")).replace(/\/+$/, "");
 const settings = { rpcs: Array.isArray(savedSettings.rpcs) && savedSettings.rpcs.length ? savedSettings.rpcs : [...ETH.rpcs], relay: typeof savedSettings.relay === "string" ? savedSettings.relay : "" };
 const saveSettings = () => LS.set("settings", settings);
 $("rpcs").value = settings.rpcs.join("\n");
@@ -2068,7 +2071,7 @@ let drandMod = null;
 async function drandLib() { if (!drandMod) drandMod = await import("drand-client"); return drandMod; }
 const drandClient = makeDrandClient(fetchJson);
 async function getDrand(round) { return fetchVerifiedBeacon(await drandLib(), drandClient, round); }
-const getLottery = (game, contest, fj = fetchJson) => fetchLottery(fj, game, contest, settings.relay);
+const getLottery = (game, contest, fj = fetchJson) => fetchLottery(fj, game, contest, relayBase());
 // Inmetro: primeiro direto; se o navegador bloquear (CORS) ou falhar, pela rota do próprio site.
 async function inmetroGet(path) {
   try { return await fetchJson(INMETRO.base + path, { timeout: 10000 }); }
@@ -2526,7 +2529,7 @@ function showSeal() {
   if (s.drand) facts.push([STR.factDrand, STR.factDrandPlan(s.drand.round, fmtBrt(drandRoundTime(s.drand.round)))]);
   for (const g of ["megasena", "federal"]) if (s[g]) facts.push([LOTTERY.games[g].label, STR.factLotteryPlan(s[g].contest), LOTTERY.games[g].page]);
   kv($("sealFacts"), facts);
-  kv($("sealTech"), [[STR.factCommit, commitment], ["sealedAt", sealedAt], [STR.factRelay, settings.relay || "—"], [STR.factRpcs, settings.rpcs.join(" ")]]);
+  kv($("sealTech"), [[STR.factCommit, commitment], ["sealedAt", sealedAt], [STR.factRelay, relayBase() || "—"], [STR.factRpcs, settings.rpcs.join(" ")]]);
   $("specJson").textContent = JSON.stringify(spec, null, 2);
   setStep("prep", "done", v3 ? taskSummary(spec.task) : STR.optCount(spec.candidates.length, spec.candidates.length));
   setStep("seal", "done", commitment.slice(0, 16) + "…");
@@ -2540,11 +2543,11 @@ function showSeal() {
 
 // ---- carimbos de tempo (relay, SPEC 6)
 async function anchor() {
-  if (!settings.relay) { renderAnchors(STR.noRelay, "warn"); setStep("anchor", "warn", STR.noRelay); return; }
+  if (!relayBase()) { renderAnchors(STR.noRelay, "warn"); setStep("anchor", "warn", STR.noRelay); return; }
   renderAnchors(STR.anchoring, "warn"); setStep("anchor", "active", STR.anchoring);
   const C = current.commitment, state = current;
   try {
-    const resp = await fetchJson(settings.relay.replace(/\/+$/, "") + "/v1/timestamp", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ hash: C }), timeout: 30000 });
+    const resp = await fetchJson(relayBase() + "/v1/timestamp", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ hash: C }), timeout: 30000 });
     const { anchors, problems } = anchorsFromRelay(resp, C);
     state.anchors = anchors;
     persist(state);
@@ -2566,17 +2569,17 @@ function renderAnchors(extra, kindMsg) {
   if (rf.length) parts.push(STR.anchored(rf.map((x) => tsaName(x.tsa) + " " + x.time).join(", ")));
   if (ots) parts.push(ots.complete ? STR.otsComplete : STR.otsPending);
   if (extra) parts.push(extra);
-  if (!parts.length && current && !settings.relay) parts.push(STR.noRelay);
+  if (!parts.length && current && !relayBase()) parts.push(STR.noRelay);
   showMsg($("anchorMsg"), parts.join(" "), kindMsg || (rf.length ? "ok" : "warn"));
-  $("otsUpgrade").hidden = !(ots && !ots.complete && settings.relay);
+  $("otsUpgrade").hidden = !(ots && !ots.complete && relayBase());
   if (rf.length) setStep("anchor", "done", rf.map((x) => tsaName(x.tsa) + " " + x.time).join(" · "));
 }
 $("otsUpgrade").addEventListener("click", upgradeOts);
 async function upgradeOts() {
   const ots = current && current.anchors.find((x) => x.type === "ots");
-  if (!ots || ots.complete || !settings.relay) return;
+  if (!ots || ots.complete || !relayBase()) return;
   try {
-    const r = await fetchJson(settings.relay.replace(/\/+$/, "") + "/v1/ots/upgrade", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ots: ots.proof }), timeout: 30000 });
+    const r = await fetchJson(relayBase() + "/v1/ots/upgrade", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ots: ots.proof }), timeout: 30000 });
     if (typeof r.ots === "string" && r.ots) { ots.proof = r.ots; ots.complete = r.complete === true; persist(); renderAnchors(); if (isDone(current)) renderDone(); }
   } catch (e) { renderAnchors(STR.relayFailed(e.message), "warn"); }
 }

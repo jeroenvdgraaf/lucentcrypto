@@ -10,7 +10,7 @@
         "inmetro": {
           "chain": 2,
           "rule": "first-pulse-after",
-          "notBefore": 1795199550000
+          "notBefore": 1795199565000
         }
       },
       "task": {
@@ -33,7 +33,7 @@
         "replace": false
       }
     },
-    "commitment": "70de798efebece2fd3bbde5555ff3a6669ccc93baf99f452077406f532c0c20b",
+    "commitment": "a11ffa10830c33ece9ebb36be95ab6b8a2c039a2f7b5ccbd023b6b023ab5d9a3",
     "sealedAt": "2026-11-20T18:32:30.000Z",
     "anchors": [],
     "randomness": {
@@ -85,19 +85,19 @@
         "outputValue": "ab80541a2f36636f948e286f2020be4492c37d9541c44e5ea20553d92dd42a7f7c1b89ada1c005d028c62735a37384b9e918d439d3fbeea16269bc1d0ec455cd"
       }
     },
-    "seed": "2be7735cee51116f1badb35f39c6990978dd1b9fe0f89fe3ddd7846a1041ebb9",
+    "seed": "127ac1fae9bdd0374025e9a31826002e4470ec48540c7f40014e52dc8f7e6d6c",
     "result": [
       "Apto 202",
-      "Apto 101",
-      "Apto 102",
       "Apto 201",
+      "Apto 102",
+      "Apto 101",
       "Apto 301"
     ],
     "picks": [
       3,
-      0,
-      1,
       2,
+      1,
+      0,
       4
     ]
   }

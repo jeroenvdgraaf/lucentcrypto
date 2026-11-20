@@ -1,5 +1,5 @@
-// Site no Cloudflare Workers: arquivos estáticos de dist/ e uma rota /api/inmetro (worker/index.js). Build: ./build.sh (monta dist/); deploy: npx wrangler deploy.
-// O relay de carimbo de tempo é outro Worker, com configuração própria em relay/wrangler.toml.
+// Site no Cloudflare Workers: arquivos estáticos de dist/ e as rotas /api/relay (carimbos de tempo) e /api/inmetro
+// (worker/index.js). Build: ./build.sh (monta dist/); deploy: npx wrangler deploy.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "lucentcrypto",
@@ -7,6 +7,9 @@
   "compatibility_date": "2026-11-18",
   "observability": { "enabled": true },
   "build": { "command": "./build.sh" },
+  // Relay embutido (/api/relay): só o próprio site pode chamá-lo pelo navegador.
+  // As TSAs e agendas OpenTimestamps vêm do padrão de relay/src/index.js (ICP-Brasil desligada).
+  "vars": { "ALLOWED_ORIGINS": "[\"https://lucentcrypto.org\", \"https://www.lucentcrypto.org\", \"https://lucentcrypto.jvdg-ufmg.workers.dev\"]" },
   "assets": {
     "directory": "dist",
     "binding": "ASSETS",

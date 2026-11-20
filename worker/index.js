@@ -1,14 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2026 Jeroen van de Graaf
 //
-// Worker do site lucentcrypto.org. Só faz uma coisa além de servir os arquivos estáticos:
-// a rota /api/inmetro/..., que repassa sem alterar os pulsos do farol do Inmetro para o
+// Worker do site lucentcrypto.org. Além de servir os arquivos estáticos, tem duas rotas:
+//
+// /api/relay/...  o relay de carimbo de tempo (relay/src/index.js, SPEC 6.2) no próprio site:
+//                 POST /api/relay/v1/timestamp, POST /api/relay/v1/ots/upgrade. Recebe só o hash do lacre.
+//
+// /api/inmetro/..., que repassa sem alterar os pulsos do farol do Inmetro para o
 // navegador quando o Inmetro não permite leitura direta (CORS). Só aceita estes caminhos:
 //   /api/inmetro/pulse                      (último pulso)
 //   /api/inmetro/pulse/time/<ms>            (pulso de um instante)
 //   /api/inmetro/chain/<c>/pulse/<i>        (pulso por número)
 // A página confere cada pulso por conta própria (outputValue = SHA-512 dos campos), então
 // esta rota não pode alterar um resultado sem que a conferência falhe.
+import { handle as relay } from "../relay/src/index.js";
+
 const UPSTREAM = "https://beacon.inmetro.gov.br/beacon/2.1/";
 const ALLOWED = /^\/api\/inmetro\/(pulse|pulse\/time\/\d{10,16}|chain\/\d{1,4}\/pulse\/\d{1,12})$/;
 
@@ -16,6 +22,11 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
+    if (url.pathname.startsWith("/api/relay/")) {
+      const u = new URL(request.url);
+      u.pathname = u.pathname.slice("/api/relay".length);
+      return relay(new Request(u.toString(), request), env);
+    }
     if (request.method !== "GET") return new Response("Método não permitido.\n", { status: 405 });
     const m = url.pathname.match(ALLOWED);
     if (!m) return new Response("Rota desconhecida.\n", { status: 404 });
