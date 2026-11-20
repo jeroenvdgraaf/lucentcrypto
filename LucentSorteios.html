@@ -465,13 +465,12 @@ footer a { color: var(--accent); }
             <div class="row" id="certRow">
               <button class="btn primary" id="dlCert" type="button" data-s="dlCert"></button>
               <button class="btn" id="copyCert" type="button" data-s="copyCert"></button>
+              <button class="btn" id="verifyMine" type="button" data-s="verifyMine"></button>
+              <button class="btn" id="toggleAta" type="button" aria-expanded="false" aria-controls="ataBox"></button>
               <button class="btn" id="copyAta" type="button" data-s="copyAta"></button>
               <span class="hint" id="copyNote2" role="status"></span>
             </div>
-            <details id="ataBox">
-              <summary data-s="ataTitle"></summary>
-              <div class="inner"><pre class="ata" id="ataText"></pre></div>
-            </details>
+            <div id="ataBox" hidden><pre class="ata" id="ataText"></pre></div>
             <details id="quickTech" hidden>
               <summary data-s="techDetails"></summary>
               <div class="inner"><dl class="kv" id="quickFacts"></dl></div>
@@ -536,6 +535,7 @@ footer a { color: var(--accent); }
           <div class="inner prose">
             <p data-s="ruleText1"></p>
             <p data-s="ruleText2"></p>
+            <p data-s="passTech"></p>
             <pre class="code" id="ruleCode"></pre>
           </div>
         </details>
@@ -543,9 +543,7 @@ footer a { color: var(--accent); }
       <aside class="panel rail">
         <h3 data-s="passMeansTitle"></h3>
         <div class="prose" style="font-size:13.5px">
-          <p data-s="passMeans1"></p>
-          <p data-s="passMeans2"></p>
-          <p data-s="passMeans3"></p>
+          <div id="passBody"><p data-s="passIdle"></p></div>
         </div>
       </aside>
     </div>
@@ -729,7 +727,7 @@ const STR = {
   barCaptionCard: (j, opt, n) => "Carta " + j + ": " + opt + (n === 1 ? " (a última que restou)" : " (entre " + n + " restantes)"),
   needleTech: (x, W) => "x = " + x + " de W = " + W + " (x = ⌊r · W / 2²⁵⁶⌋)",
   barsMore: (n) => "Mostrar todas as " + n + " barras",
-  dlCert: "Baixar certificado", copyCert: "Copiar certificado", copyAta: "Copiar ata",
+  dlCert: "Baixar certificado", copyCert: "Copiar certificado", copyAta: "Copiar ata", verifyMine: "Conferir certificado", ataShow: "Ver ata", ataHide: "Ocultar ata",
   ataTitle: "Ata do sorteio",
   newDraw: "Começar um novo sorteio",
   errWait: (m) => m + " O lacre continua válido: recarregue a página para continuar aguardando os mesmos alvos.",
@@ -759,9 +757,19 @@ const STR = {
   ruleText1: "Tudo é SHA-256 sobre texto UTF-8. C é o hash do registro lacrado em JSON canônico (chaves ordenadas, sem espaços). A semente resume a versão, C e o valor de cada fonte, uma por linha, na ordem eth, drand, megasena, federal, com \"-\" para fonte não usada. Em LucentDraw/3, cada peso vira uma fração exata, todas vão para o mesmo denominador e viram inteiros; W é a soma. Para a escolha j, r = H(\"LucentDraw/3\\npick\\n\" + semente + \"\\n\" + j) lido como inteiro de 256 bits, x = ⌊r·W/2²⁵⁶⌋, e sai a primeira opção cuja soma acumulada passa de x. Sem reposição, ela sai da lista antes da próxima escolha.",
   ruleText2: "O verificador de referência verify_draw.py faz a conferência completa, inclusive das assinaturas dos carimbos de tempo e das versões /2 e /1. O mesmo cálculo em poucas linhas de Python:",
   passMeansTitle: "O que significa passar",
-  passMeans1: "O resultado decorre das opções e pesos lacrados e de valores aleatórios públicos que ninguém podia escolher depois de ver o lacre.",
-  passMeans2: "O que o programa não prova sozinho: que o lacre foi divulgado antes da aleatoriedade. Os carimbos de tempo servem de prova; sem eles, confira onde e quando o lacre foi publicado. Para loterias, o carimbo precisa ser anterior ao dia do sorteio.",
-  passMeans3: "O valor drand é conferido com a chave pública da quicknet. Para o bloco Ethereum, a página confere que ele é o primeiro após o lacre e que continua na cadeia canônica, usando os servidores listados; para independência total, use o seu próprio nó. O pulso do Inmetro é conferido pelo seu outputValue (o SHA-512 de todos os campos) e comparado com o arquivo do Inmetro; a assinatura do pulso será conferida quando o Inmetro publicar o certificado.",
+  passIdle: "Depois da conferência, aqui aparece o que ela prova para este sorteio.",
+  passCommon: "O resultado decorre das opções e pesos lacrados e de um valor aleatório público que ninguém podia escolher depois de ver o lacre.",
+  passOwn: "O resultado decorre da lista lacrada (nesta ordem) e da semente informada. Confira a semente na fonte indicada.",
+  passSrc: {
+    drand: "O valor drand foi conferido com a chave pública da rede quicknet.",
+    eth: "O bloco Ethereum é o primeiro após o lacre e continua na cadeia principal (consultado nos servidores listados).",
+    inmetro: "O pulso do Inmetro está íntegro e é igual ao publicado no arquivo do Inmetro.",
+    megasena: "Os números da Mega-Sena são os do concurso lacrado.",
+    federal: "Os bilhetes da Loteria Federal são os do concurso lacrado.",
+  },
+  passStamped: (names) => "Os carimbos de tempo (" + names + ") provam que o lacre existia antes desse valor.",
+  passNoStamp: "Sem carimbo de tempo: confira onde e quando o lacre foi divulgado; ele precisa ter vindo antes do valor aleatório.",
+  passTech: "Detalhes: o valor drand é conferido com a chave pública da quicknet. Para o bloco Ethereum, a página confere que ele é o primeiro após o lacre e que continua na cadeia canônica, usando os servidores listados; para independência total, use o seu próprio nó. O pulso do Inmetro é conferido pelo seu outputValue (o SHA-512 de todos os campos) e comparado com o arquivo do Inmetro; a assinatura do pulso será conferida quando o Inmetro publicar o certificado. As assinaturas dos carimbos de tempo são conferidas pelo verify_draw.py.",
   footer: "Lucent Sorteios · protocolo LucentDraw/3 · parte da família LucentCrypto. Tudo é calculado no seu navegador, sem cadastro e sem estatísticas de uso. Com semente própria ou no modo rápido, a página não se conecta a nada. Com drand, Ethereum ou o Inmetro, ela só busca o valor aleatório público e o carimbo de tempo do lacre.",
   footerHome: "LucentCrypto", footerSpec: "Especificação", footerVerifier: "Verificador em Python",
   // Conferência (SPEC 9)
@@ -2909,7 +2917,7 @@ async function renderDone() {
   setStep("result", "done", "semente " + current.seed.slice(0, 16) + "…");
   $("resultTitle").textContent = STR.resultTitle(spec.title);
   $("pendingBox").hidden = true; $("manualBox").hidden = true; $("doneBox").hidden = false;
-  $("quickNote").hidden = true; $("quickTech").hidden = true; $("certRow").hidden = false; $("ataBox").hidden = false; $("resultFacts").hidden = false;
+  $("quickNote").hidden = true; $("quickTech").hidden = true; $("certRow").hidden = false; $("ataBox").hidden = true; $("toggleAta").textContent = STR.ataShow; $("toggleAta").setAttribute("aria-expanded", "false"); $("resultFacts").hidden = false;
   $("againBtn").hidden = true; $("newDraw").hidden = false;
   if (v3) {
     const { picks, steps, ints } = await selectPicks(current.seed, spec.task);
@@ -2939,6 +2947,16 @@ $("copySeal").addEventListener("click", () => copyText(current.commitment, $("co
 $("copySpec").addEventListener("click", () => copyText(JSON.stringify({ spec: current.spec, commitment: current.commitment, sealedAt: current.sealedAt }, null, 2), $("copyNote")));
 $("copyCert").addEventListener("click", () => copyText(certText(), $("copyNote2")));
 $("copyAta").addEventListener("click", () => copyText(ataText(certificateOf(current)), $("copyNote2")));
+$("toggleAta").addEventListener("click", () => {
+  const open = $("ataBox").hidden;
+  $("ataBox").hidden = !open; $("toggleAta").textContent = open ? STR.ataHide : STR.ataShow; $("toggleAta").setAttribute("aria-expanded", String(open));
+});
+// Conferir este sorteio: abre a aba Conferir com o certificado já colado e confere na hora.
+$("verifyMine").addEventListener("click", () => {
+  if (!current) return;
+  $("certIn").value = JSON.stringify(certificateOf(current), null, 2);
+  selectTab("verify"); window.scrollTo({ top: 0 }); $("verifyBtn").click();
+});
 $("dlCert").addEventListener("click", () => download(certFileName(current.spec.id), certText()));
 $("newDraw").addEventListener("click", resetDraw);
 function resetDraw() {
@@ -3010,7 +3028,8 @@ renderPresets(); renderTimeline(); renderSaved(); refreshSuggestions(); applyDra
 // ================================================================ Conferir
 $("certFile").addEventListener("change", async (e) => { const f = e.target.files[0]; if (f) $("certIn").value = await f.text(); });
 $("verifyBtn").addEventListener("click", async () => {
-  const list = $("checks"); list.replaceChildren(); showMsg($("verdict"), ""); $("verifyHead").hidden = true; $("vOrderWrap").hidden = true; $("vV3").hidden = true;
+  const list = $("checks"); list.replaceChildren(); showMsg($("verdict"), "");
+  $("passBody").replaceChildren(el("p", { textContent: STR.passIdle })); $("verifyHead").hidden = true; $("vOrderWrap").hidden = true; $("vV3").hidden = true;
   let cert;
   try { cert = JSON.parse($("certIn").value); } catch { showMsg($("verdict"), STR.notJson, "bad"); return; }
   $("verifyBtn").disabled = true; $("verifyBtn").textContent = STR.verifying;
@@ -3030,8 +3049,25 @@ $("verifyBtn").addEventListener("click", async () => {
       rep.order.forEach((n) => ol.append(el("li", { textContent: n })));
     }
     if (rep.v3) renderVerifyV3(rep.v3);
+    renderPassMeans(cert, rep);
   } finally { $("verifyBtn").disabled = false; $("verifyBtn").textContent = STR.verifyBtn; }
 });
+// "O que significa passar": só o que vale para este sorteio (fonte usada, carimbos ou não).
+function renderPassMeans(cert, rep) {
+  const box = $("passBody"); box.replaceChildren();
+  const src = (cert && cert.spec && cert.spec.sources) || {}, keys = Object.keys(src), lines = [];
+  if (src.own) lines.push(STR.passOwn);
+  else {
+    lines.push(STR.passCommon);
+    // A frase de cada fonte só aparece quando a conferência dela passou.
+    for (const k of keys) if (STR.passSrc[k] && rep.checks.some((c) => c.id === k && c.status === STATUS.PASS)) lines.push(STR.passSrc[k]);
+    const timing = rep.checks.find((c) => c.id === "timing" || /Timing$/.test(c.id));
+    const tsas = [...new Set(((cert && cert.anchors) || []).filter((a) => a.type === "rfc3161").map((a) => tsaName(a.tsa)))];
+    if (timing && timing.status === STATUS.PASS && tsas.length) lines.push(STR.passStamped(tsas.join(", ")));
+    else if (timing) lines.push(STR.passNoStamp);
+  }
+  for (const t of lines) box.append(el("p", { textContent: t }));
+}
 // SPEC-v3 7: pesos como digitados, pesos inteiros e W, e o resultado recalculado com as barras.
 function renderVerifyV3(x) {
   const t = x.task;
