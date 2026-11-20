@@ -69,10 +69,10 @@ button.theme { font: 600 13px var(--body); border: 1px solid var(--line); backgr
 h2 { font: 650 20px/1.2 var(--display); margin: 0; text-wrap: balance; }
 h3 { font: 600 15px/1.3 var(--body); margin: 0; }
 .hint { color: var(--muted); font-size: 13.5px; margin: 0; }
-.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: end; }
 label.f, .f { display: grid; gap: 6px; font-weight: 600; font-size: 13px; min-width: 0; }
 label.f small, .f small { font-weight: 400; color: var(--muted); }
-input[type=text], input[type=number], input[type=date], input[type=time], input[type=url], textarea, select {
+input[type=text], input[type=number], input[type=date], input[type=time], input[type=datetime-local], input[type=url], textarea, select {
   width: 100%; font: 14px/1.5 var(--body); color: var(--ink); background: var(--bg);
   border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; min-width: 0;
 }
@@ -82,7 +82,13 @@ input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-
   outline: 2px solid var(--accent); outline-offset: 2px;
 }
 input:disabled, textarea:disabled, select:disabled { opacity: .7; }
-.sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+/* 4 numa linha quando cabe, senão 2 + 2, e 1 por linha no celular (nunca 3 + 1) */
+.f:has(> .sources) { container-type: inline-size; }
+.sources { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@container (min-width: 840px) { .sources { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@container (max-width: 400px) { .sources { grid-template-columns: 1fr; } }
+input[type=datetime-local] { height: 39px; }
+#title { height: 39px; }
 .src { position: relative; border: 1px solid var(--line); border-radius: 11px; padding: 11px; display: grid; gap: 3px; cursor: pointer; background: var(--bg); align-content: start; }
 .src input { position: absolute; opacity: 0; pointer-events: none; }
 .src b { font-size: 14px; }
@@ -331,10 +337,12 @@ footer a { color: var(--accent); }
               <label class="f" for="title"><span data-s="fTitle"></span>
                 <input type="text" id="title" autocomplete="off">
               </label>
-              <label class="f" for="drawId"><span><span data-s="fDrawId"></span> <small data-s="fDrawIdHint"></small></span>
-                <input type="text" id="drawId" autocomplete="off" spellcheck="false">
+              <label class="f" for="drawWhen"><span data-s="fDrawWhen"></span>
+                <input type="datetime-local" id="drawWhen" autocomplete="off">
               </label>
+              <input type="text" id="drawId" hidden tabindex="-1" aria-hidden="true">
             </div>
+            <p class="hint" id="idPreview" style="margin-top:-6px"></p>
             <div class="f">
               <span data-s="fSource"></span>
               <div class="sources" role="radiogroup" id="presetBox" data-s-aria="fSource"></div>
@@ -547,7 +555,7 @@ const STR = {
   themeAuto: "Tema: automático", themeLight: "Tema: claro", themeDark: "Tema: escuro",
   step1: "Preparar", step2: "Lacrar: divulgue o lacre agora", step3: "Resultado",
   modeAria: "Quando sai o resultado", modeLive: "Ao vivo", modeScheduled: "Agendado",
-  fTitle: "Título", fDrawId: "ID do sorteio", fDrawIdHint: "sugerido automaticamente; troque se quiser anunciá-lo antes",
+  fTitle: "Título", fDrawWhen: "Data e hora do sorteio", idPreview: (id) => "ID do sorteio: " + id,
   // Lista com pesos
   thOption: "Opção", thWeight: "Peso", thShare: "Chance",
   optAria: (i) => "Opção " + i, weightAria: (n) => "Peso de " + n, removeOpt: (n) => "Remover " + n,
@@ -624,7 +632,7 @@ const STR = {
     federal: ["Loteria Federal", "Os 5 bilhetes premiados do concurso escolhido. Resultado após o concurso."],
     megasena: ["Mega-Sena", "As 6 dezenas do concurso escolhido. Resultado após o concurso."],
   },
-  errIdUsed: (id) => "O ID \"" + id + "\" já foi lacrado neste navegador. Um segundo lacre com o mesmo ID invalidaria o sorteio. Use \"Novo sorteio com outro ID\".",
+  errIdUsed: (id) => "Já existe um sorteio lacrado neste navegador com o ID \"" + id + "\". Um segundo lacre com o mesmo ID invalidaria o sorteio. Mude o título ou a hora.",
   errContest: "Informe o concurso como aparece no site da Caixa, por exemplo 6120 ou 6054-2.",
   errContestDrawn: (c) => "Este concurso já foi sorteado (" + c + "): o resultado já é conhecido. Use o número do próximo concurso.",
   errEthNone: "Nenhum servidor Ethereum respondeu. Confira a conexão ou edite a lista em Detalhes técnicos.",
@@ -2317,7 +2325,7 @@ function setStepUI(k, state, detail) { const li = $("tl-" + k); if (!li) return;
 // ================================================================ Lacrar (verificável) ou sortear (rápido)
 $("sealBtn").addEventListener("click", () => (isQuick() ? runQuick() : seal()));
 $("againBtn").addEventListener("click", () => runQuick());
-$("otherIdBtn").addEventListener("click", () => { $("drawId").value = suggestId(); $("otherIdBtn").hidden = true; showMsg($("sealErr"), ""); $("drawId").focus(); });
+
 
 async function runQuick() {
   showMsg($("sealErr"), "");
@@ -2335,9 +2343,10 @@ async function seal() {
   const { task, error } = taskFromUI();
   if (error) return showMsg($("sealErr"), error);
   if (!normText($("title").value)) $("title").value = suggestTitle();
-  if (!normText($("drawId").value)) $("drawId").value = suggestId();
-  const id = normText($("drawId").value), p = preset(), g = presetGame(p);
-  if (LS.get("sealedIds", []).includes(id) || id in draws()) { $("otherIdBtn").hidden = false; return showMsg($("sealErr"), STR.errIdUsed(id)); }
+  if (!$("drawWhen").value) $("drawWhen").value = localMinute();
+  const id = computeId(); showIdPreview(id);
+  const p = preset(), g = presetGame(p);
+  if (LS.get("sealedIds", []).includes(id) || id in draws()) return showMsg($("sealErr"), STR.errIdUsed(id));
   if (p === "own") return sealOwn(task, id);
   let contest = null;
   if (g) { contest = normText($("contest").value); if (!contestOkV3(contest)) return showMsg($("sealErr"), STR.errContest); }
@@ -2786,7 +2795,7 @@ function resetDraw() {
   current = null; quick = null; LS.del("current"); clearInterval(ticker);
   lockForm(false);
   for (const id of ["sealPanel", "resultPanel", "cdWrap", "doneBox", "pendingBox", "manualBox"]) $(id).hidden = true;
-  showMsg($("runErr"), ""); showMsg($("sealErr"), ""); $("drawId").value = ""; $("copyFallback").hidden = true;
+  showMsg($("runErr"), ""); showMsg($("sealErr"), ""); $("drawWhen").value = ""; $("copyFallback").hidden = true;
   renderTimeline(); renderSaved(); refreshSuggestions(); selectTab(kind); $("title").focus();
 }
 function openDraw(state) {
@@ -2795,7 +2804,8 @@ function openDraw(state) {
   current = state; current.meta = current.meta || {}; current.anchors = current.anchors || []; current.randomness = current.randomness || {};
   LS.set("current", state.spec.id);
   for (const id of ["doneBox", "pendingBox", "manualBox"]) $(id).hidden = true;
-  $("title").value = state.spec.title; $("drawId").value = state.spec.id; $("contrib").value = state.spec.contribution || "";
+  $("title").value = state.spec.title; showIdPreview(state.spec.id);
+  { const m = state.spec.id.match(/(\d{4}-\d{2}-\d{2})-(\d{2})(\d{2})$/); $("drawWhen").value = m ? m[1] + "T" + m[2] + ":" + m[3] : ""; } $("contrib").value = state.spec.contribution || "";
   if (state.spec.v === V3) taskToUI(state.spec.task);
   else { kind = "list"; setListRows(state.spec.candidates.map((c) => ({ opt: c, w: "1" }))); }
   document.querySelector('input[name="mode"][value="' + (state.spec.mode === "scheduled" ? "scheduled" : "live") + '"]').checked = true;
@@ -2818,22 +2828,26 @@ function openDraw(state) {
 
 // ---- sugestões de título e ID: preenchidas, editáveis, e repostas ao lacrar se ficarem em branco
 const pad2 = (n) => String(n).padStart(2, "0");
-function suggestTitle(d = new Date()) {
-  return STR.task.presetName[kind] + " · " + pad2(d.getDate()) + "/" + pad2(d.getMonth() + 1) + "/" + d.getFullYear() + ", " + pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+function suggestTitle() { return STR.task.presetName[kind]; }
+const localMinute = (d = new Date()) => d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()) + "T" + pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+// ID = título sem acentos, em minúsculas, com hífens + data e hora do sorteio (AAAA-MM-DD-HHMM).
+function slugTitle(t) {
+  return String(t).normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60).replace(/-+$/, "");
 }
-function suggestId(d = new Date()) {
-  const base = ({ list: "sorteio", coin: "moeda", die: "dado", cards: "cartas" }[kind] || "sorteio") + "-" + d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()) + "-" + pad2(d.getHours()) + pad2(d.getMinutes());
-  const used = new Set([...LS.get("sealedIds", []), ...Object.keys(draws())]);
-  let id = base, n = 2;
-  while (used.has(id)) id = base + "-" + n++;
-  return id;
+function computeId() {
+  const when = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test($("drawWhen").value) ? $("drawWhen").value : localMinute();
+  const base = slugTitle(normText($("title").value) || suggestTitle()) || "sorteio";
+  return base + "-" + when.slice(0, 10) + "-" + when.slice(11, 13) + when.slice(14, 16);
 }
-let lastSuggestedId = "";
+function showIdPreview(id) { $("drawId").value = id; $("idPreview").textContent = STR.idPreview(id); }
+let lastSuggestedWhen = "";
 function refreshSuggestions() {
   $("title").placeholder = suggestTitle();
-  const v = normText($("drawId").value);
-  if (!$("drawId").disabled && (!v || v === lastSuggestedId)) $("drawId").value = lastSuggestedId = suggestId();
+  const w = $("drawWhen").value;
+  if (!$("drawWhen").disabled && (!w || w === lastSuggestedWhen)) $("drawWhen").value = lastSuggestedWhen = localMinute();
+  if (!$("title").disabled) showIdPreview(computeId());
 }
+["title", "drawWhen"].forEach((x) => $(x).addEventListener("input", () => { if (!$(x).disabled) showIdPreview(computeId()); }));
 
 // ---- inicialização: exemplo, modo e retomada
 listTable.render();
