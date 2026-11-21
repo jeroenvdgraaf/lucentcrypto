@@ -6,7 +6,7 @@
 // Uso: node tools/build-home.mjs          (escreve os arquivos)
 //      node tools/build-home.mjs --check  (só confere se estão atualizados; usado nos testes)
 // No modelo: {{chave}} = texto (escapado), {{url:chave}} = texto para um link (encodeURIComponent),
-// {{@langs}}, {{@alternates}}, {{@labNote}} = blocos gerados aqui.
+// {{@langs}}, {{@alternates}}, {{@labNote}}, {{@lattes}} = blocos gerados aqui.
 // O seletor grava a escolha num cookie (lang); o Worker usa esse cookie, ou o idioma do navegador,
 // só para decidir para onde vai quem abre lucentcrypto.org/ (worker/index.js).
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
@@ -28,7 +28,9 @@ export function render(lang) {
   const alternates = LANGS.map((l) => `<link rel="alternate" hreflang="${all[l].htmlLang}" href="https://lucentcrypto.org${all[l].path}">`).join("\n") +
     `\n<link rel="alternate" hreflang="x-default" href="https://lucentcrypto.org/">`;
   const labNote = t["lab.note"] ? `<p class="note">${esc(t["lab.note"])}</p>` : "";
-  let out = tpl.replace("{{@langs}}", langs).replace("{{@alternates}}", alternates).replace("{{@labNote}}", labNote);
+  let out = tpl.replace("{{@langs}}", langs).replace("{{@alternates}}", alternates).replace("{{@labNote}}", labNote)
+    // Currículo Lattes: só na página em português (fora do Brasil ninguém o conhece).
+    .replace("{{@lattes}}", t["who.lattes"] ? `<a href="http://lattes.cnpq.br/0069989873499216">${esc(t["who.lattes"])}</a>` : "");
   out = out.replace(/\{\{(url:)?([A-Za-z0-9_.]+)\}\}/g, (m, url, key) => {
     if (key === "lang") return lang;
     if (!(key in t)) throw new Error(lang + ": falta a chave " + key);

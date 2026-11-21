@@ -11,11 +11,11 @@ import { LANGS, render, outPath } from "../tools/build-home.mjs";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dict = (l) => JSON.parse(readFileSync(join(ROOT, "site", "i18n", l + ".json"), "utf8"));
 
-test("as quatro línguas têm exatamente as mesmas chaves, e nenhum texto vazio além da nota do laboratório", () => {
+test("as quatro línguas têm exatamente as mesmas chaves, e nenhum texto vazio além da nota do laboratório e do Lattes (só em português)", () => {
   const keys = Object.keys(dict("pt")).sort();
   for (const l of LANGS) {
     assert.deepEqual(Object.keys(dict(l)).sort(), keys, l);
-    for (const [k, v] of Object.entries(dict(l))) if (k !== "lab.note") assert.ok(String(v).trim(), l + ": " + k);
+    for (const [k, v] of Object.entries(dict(l))) if (k !== "lab.note" && !(k === "who.lattes" && l !== "pt")) assert.ok(String(v).trim(), l + ": " + k);
   }
 });
 test("site/index.html e site/{en,es,nl}/index.html estão atualizados (rode node tools/build-home.mjs)", () => {
@@ -42,4 +42,12 @@ test("raiz: cookie do seletor vence; senão Accept-Language pela ordem de prefer
   assert.equal(homeLanguage("lang=en", "pt-BR"), "en", "escolheu inglês num navegador em português");
   assert.equal(homeLanguage("x=1; lang=nl; y=2", "pt-BR"), "nl");
   assert.equal(homeLanguage("lang=xx", "es"), "es");
+});
+
+test("Lattes só na página em português; página do DCC em todas", () => {
+  for (const l of LANGS) {
+    const h = readFileSync(outPath(l), "utf8");
+    assert.equal(h.includes("lattes.cnpq.br"), l === "pt", l);
+    assert.ok(h.includes('href="https://dcc.ufmg.br/professor/jeroen-van-de-graaf/"'), l);
+  }
 });
