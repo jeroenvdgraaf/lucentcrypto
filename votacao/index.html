@@ -456,7 +456,7 @@ function resultHtml(it) {
 const resultLine = (it) => it.options.map((l, j) => l + " " + it.result.counts[j]).join(" · ") + " · Abstenção " + it.result.abst + " · Não votaram " + it.result.notVoted + " (" + it.result.eligible + " aptos)";
 function itemsHtml(st, { skipOpen = false } = {}) {
   const list = [...st.order].reverse().map((n) => st.items.get(n)).filter((it) => !(skipOpen && it.state === "aberto"));
-  return list.map((it) => `<div class="item"><div class="head"><b>${it.n}. ${esc(it.spec.q)}</b><span class="pill">${{ aberto: "aberta", encerrado: "apurando", apurado: "apurada", cancelado: "cancelada" }[it.state]}</span></div>` +
+  return list.map((it) => `<div class="item"><div class="head"><b>Resultados da votação ${it.n}</b><span class="pill">${{ aberto: "aberta", encerrado: "apurando", apurado: "apurada", cancelado: "cancelada" }[it.state]}</span></div><p>${esc(it.spec.q)}</p>` +
     (it.state === "apurado" ? resultHtml(it) : it.state === "cancelado" ? `<p class="small muted">Votação cancelada; as cédulas não foram abertas.</p>` : it.state === "encerrado" ? `<p class="small muted">Encerrada, aguardando apuração.</p>` : "") + `</div>`).join("");
 }
 
