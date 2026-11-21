@@ -88,6 +88,9 @@ table.people th.c { text-align: center; }
 table.people td { padding: 4px 3px; vertical-align: middle; border-top: 1px solid var(--line); }
 td.num { width: 26px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; padding-right: 6px; }
 td.name input { min-width: 110px; }
+td.contact input { min-width: 150px; }
+.import { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 8px; }
+.import textarea { font: inherit; width: 100%; min-height: 110px; padding: 9px 11px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: inherit; resize: vertical; box-sizing: border-box; }
 td.help input { width: 48px; text-align: center; padding: 10px 4px; font-variant-numeric: tabular-nums; }
 td.help input.bad { border-color: var(--berry); background: var(--berry-soft); }
 td.tg { width: 34px; text-align: center; }
@@ -179,6 +182,7 @@ footer { color: var(--muted); font-size: 13px; }
           <span class="example" id="exampleTag">exemplo: troque pelos nomes da sua família</span>
         </div>
         <ul class="legend">
+          <li><b>Celular ou e-mail</b> (opcional): para mandar o link direto para a pessoa, pelo WhatsApp ou por e-mail. Fica só neste aparelho.</li>
           <li><b>Ajudante:</b> o número de quem abre o link junto com a pessoa (por exemplo, 3 para a Ana ajudar os avós). A pessoa ajudada não tira o próprio ajudante.</li>
           <li><b>Colunas 1, 2, 3…:</b> marque quem é do mesmo casal ou da mesma família. Quem estiver marcado na mesma coluna nunca tira o outro. Uma pessoa pode estar em mais de uma coluna.</li>
         </ul>
@@ -193,7 +197,16 @@ footer { color: var(--muted); font-size: 13px; }
         <div class="row">
           <button type="button" id="addPerson">+ Adicionar pessoa</button>
           <button type="button" id="addCol">+ Coluna</button>
+          <button type="button" id="importOpen">Colar uma lista</button>
+          <button type="button" id="fileBtn">Importar arquivo (.csv)</button>
+          <input type="file" id="fileIn" accept=".csv,.txt,.tsv,text/csv,text/plain" hidden>
           <span class="hint" id="countInfo"></span>
+        </div>
+        <div class="import" id="importBox" hidden>
+          <label for="importText"><b>Uma pessoa por linha</b>, com nome e, se quiser, celular ou e-mail. Por exemplo “Pedro; (31) 98888-7777”. Também lê planilhas salvas como CSV (vírgula, ponto e vírgula ou tabulação).</label>
+          <textarea id="importText" spellcheck="false"></textarea>
+          <p class="hint" id="importPreview" aria-live="polite"></p>
+          <div class="row"><button type="button" class="primary" id="importUse" disabled>Usar esta lista</button><button type="button" id="importCancel">Cancelar</button></div>
         </div>
       </section>
 
@@ -462,7 +475,7 @@ if (hash.startsWith("o")) {
   $("rsInfo").textContent = "Este link traz de volta o sorteio \"" + (o.g.g || "amigo oculto") + "\", feito em " + fmtStamp(o.t) + ", com " + o.people.length + " pessoas e os mesmos links de antes. Se houver outro sorteio guardado neste aparelho, ele será substituído.";
   $("rsBtn").addEventListener("click", () => {
     const byName = new Map(o.people.map(([name], i) => [name, o.ids[i]]));
-    LS.set("rows", o.people.map(([name, groups, helper], i) => ({ id: o.ids[i], name, groups, helper: helper ? byName.get(helper) || "" : "" })));
+    LS.set("rows", o.people.map(([name, groups, helper], i) => ({ id: o.ids[i], name, contact: "", groups, helper: helper ? byName.get(helper) || "" : "" })));
     LS.set("cols", o.cols || 6);
     LS.set("group", o.g);
     LS.set("draw", { t: o.t, g: o.g, backup: o, sent: {}, fresh: [] });
@@ -567,7 +580,7 @@ function updateCount() { const n = rows.filter((r) => norm(r.name)).length; $("c
 
 function renderHead() {
   const tr = el("tr");
-  tr.append(el("th", { textContent: "#" }), el("th", { textContent: "Nome" }), el("th", { className: "c", textContent: "Ajudante" }));
+  tr.append(el("th", { textContent: "#" }), el("th", { textContent: "Nome" }), el("th", { textContent: "Celular ou e-mail" }), el("th", { className: "c", textContent: "Ajudante" }));
   for (let c = 1; c <= cols; c++) { const th = el("th", { className: "c", textContent: String(c) }); th.title = "Casal / mesma família " + c; tr.append(th); }
   tr.append(el("th"));
   $("peopleHead").replaceChildren(tr);
@@ -582,6 +595,10 @@ function renderRows() {
     nameIn.setAttribute("aria-label", "Nome da pessoa " + (i + 1));
     nameIn.addEventListener("input", () => { r.name = nameIn.value; touched(); });
     tr.append(el("td", { className: "name" }, [nameIn]));
+    const contactIn = el("input", { type: "text", id: "pc-" + r.id, value: r.contact || "", placeholder: "opcional", autocomplete: "off", inputMode: "email" });
+    contactIn.setAttribute("aria-label", "Celular ou e-mail de " + (r.name || "pessoa " + (i + 1)));
+    contactIn.addEventListener("input", () => { r.contact = contactIn.value; save(); if (draw) renderLinks(); });
+    tr.append(el("td", { className: "contact" }, [contactIn]));
     const helpIn = el("input", { type: "text", id: "pa-" + r.id, value: r.helper && !r.helper.startsWith("bad:") ? String(numberOf(r.helper) || "") : (r.helper ? r.helper.slice(4) : ""), inputMode: "numeric", autocomplete: "off", placeholder: "–" });
     helpIn.setAttribute("aria-label", "Número do ajudante de " + (r.name || "pessoa " + (i + 1)));
     helpIn.addEventListener("input", () => {
@@ -630,8 +647,73 @@ function checkHelpers() {
   box.textContent = bad.length ? "Ajudante inválido em " + bad.join(", ") + ". Use o número de outra pessoa da lista." : "";
   box.hidden = !bad.length;
 }
-$("addPerson").addEventListener("click", () => { const r = { id: newId(), name: "", groups: [], helper: "" }; rows.push(r); touched(); renderRows(); $("pn-" + r.id).focus(); });
+$("addPerson").addEventListener("click", () => { const r = { id: newId(), name: "", contact: "", groups: [], helper: "" }; rows.push(r); touched(); renderRows(); $("pn-" + r.id).focus(); });
 $("addCol").addEventListener("click", () => { cols += 1; save(); renderRows(); });
+
+// ---- colar uma lista / importar planilha (o mesmo leitor da Lucent Votação)
+const fold = (x) => String(x).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+const looksContact = (c) => /@/.test(c) || String(c).replace(/\D/g, "").length >= 8 && /^[\d\s()+.\-]+$/.test(c);
+function splitRow(line, sep) {
+  const out = []; let cur = "", q = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (q) { if (ch === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+    else if (ch === '"' && !cur.trim()) { q = true; cur = ""; }
+    else if (ch === sep) { out.push(cur.trim()); cur = ""; }
+    else cur += ch;
+  }
+  out.push(cur.trim()); return out;
+}
+function parseFree(text) {
+  const out = [];
+  for (const raw of String(text).split(/\r?\n/)) {
+    const line = raw.trim(); if (!line) continue;
+    if (!out.length && /^(nome|name|pessoa|participante)\b/i.test(line) && !/\d|@/.test(line)) continue;
+    let name = line, contact = "";
+    const mail = line.match(/[^\s;,\t<>()]+@[^\s;,\t<>()]+\.[^\s;,\t<>()]+/);
+    if (mail) { contact = mail[0]; name = line.replace(mail[0], ""); }
+    else { const ph = line.match(/(\+?\(?\d[\d\s().-]{7,}\d)\s*$/); if (ph && ph[1].replace(/\D/g, "").length >= 8) { contact = ph[1].trim(); name = line.slice(0, ph.index); } }
+    name = name.replace(/[<>()]/g, " ").replace(/[\s;,:\t|-]+$/, "").replace(/^[\s;,:\t|-]+/, "").replace(/\s+/g, " ").trim();
+    if (name) out.push({ name, contact });
+  }
+  return out;
+}
+function parseList(text) {
+  const lines = String(text).split(/\r?\n/).filter((l) => l.trim());
+  if (!lines.length) return [];
+  const sample = lines.slice(0, 10), score = (sep) => sample.filter((l) => splitRow(l, sep).length >= 2).length;
+  const sep = ["\t", ";", ","].map((x) => [x, score(x)]).sort((a, b) => b[1] - a[1])[0];
+  if (sep[1] < Math.ceil(sample.length / 2)) return parseFree(text);
+  let table = lines.map((l) => splitRow(l, sep[0])), nameCol = -1, contactCols = [];
+  const head = table[0].map(fold), hn = head.findIndex((h) => /^(nome|name|participante|pessoa)/.test(h));
+  if (hn >= 0) { nameCol = hn; contactCols = head.map((h, i) => (/(contato|celular|telefone|fone|whats|e-?mail|email)/.test(h) ? i : -1)).filter((i) => i >= 0); table = table.slice(1); }
+  else { const first = table[0]; nameCol = first.findIndex((c) => c && !/^\d+$/.test(c) && !looksContact(c)); contactCols = first.map((c, i) => (looksContact(c) ? i : -1)).filter((i) => i >= 0); }
+  if (nameCol < 0) return parseFree(text);
+  return table.map((r) => ({ name: norm(r[nameCol] || ""), contact: (contactCols.map((i) => r[i]).find((c) => c && looksContact(c)) || "").trim() })).filter((x) => x.name);
+}
+function importPreview() {
+  // Enquanto a tabela mostra o exemplo, a lista colada o substitui.
+  const l = parseList($("importText").value), have = new Set(isExample ? [] : rows.filter((r) => norm(r.name)).map((r) => norm(r.name).toLowerCase()));
+  const fresh = l.filter((x) => !have.has(x.name.toLowerCase())), dup = l.length - fresh.length;
+  $("importPreview").textContent = l.length ? l.length + (l.length === 1 ? " pessoa lida" : " pessoas lidas") + ": " + l.slice(0, 4).map((x) => x.name + (x.contact ? " (" + x.contact + ")" : "")).join(" · ") + (l.length > 4 ? " · …" : "") +
+    (dup ? ". " + dup + (dup === 1 ? " já estava" : " já estavam") + " na lista e não " + (dup === 1 ? "será incluída" : "serão incluídas") + " de novo." : "") : "";
+  $("importUse").disabled = !fresh.length; return fresh;
+}
+$("importOpen").addEventListener("click", () => { $("importBox").hidden = false; $("importText").focus(); });
+$("importCancel").addEventListener("click", () => { $("importBox").hidden = true; });
+$("importText").addEventListener("input", importPreview);
+$("importUse").addEventListener("click", () => {
+  const fresh = importPreview(); if (!fresh.length) return;
+  if (isExample) rows = [];
+  rows = rows.filter((r) => norm(r.name) || (r.contact || "").trim()).concat(fresh.map((x) => ({ id: newId(), name: x.name, contact: x.contact, groups: [], helper: "" })));
+  $("importBox").hidden = true; $("importText").value = ""; touched(); renderRows();
+});
+$("fileBtn").addEventListener("click", () => $("fileIn").click());
+$("fileIn").addEventListener("change", async () => {
+  const f = $("fileIn").files[0]; if (!f) return;
+  let text = await f.text(); if (text.includes("\uFFFD")) text = new TextDecoder("windows-1252").decode(await f.arrayBuffer());
+  $("importBox").hidden = false; $("importText").value = text.replace(/^\uFEFF/, ""); importPreview(); $("fileIn").value = "";
+});
 for (const id of ["gName", "gDate", "gValue"]) $(id).addEventListener("input", () => LS.set("group", group()));
 function group() { return { g: norm($("gName").value), d: $("gDate").value || "", v: norm($("gValue").value) }; }
 
@@ -713,6 +795,11 @@ $("updateBtn").addEventListener("click", () => {
 
 // ---- links
 const base = () => location.href.split("#")[0];
+// Celular → WhatsApp direto (55 + DDD quando faltar); e-mail → mailto.
+function contactOf(c) {
+  c = String(c || "").trim(); const isMail = /@/.test(c), digits = c.replace(/\D/g, "");
+  return { mail: isMail ? c : "", phone: !isMail && digits.length >= 10 ? (digits.length <= 11 ? "55" + digits : digits) : "" };
+}
 function messageFor(item) {
   const g = draw.g.g || "o amigo oculto";
   const extra = (draw.g.d ? " A troca é em " + fmtDate(draw.g.d) + "." : "") + (draw.g.v ? " Valor sugerido: " + draw.g.v + "." : "");
@@ -743,13 +830,14 @@ function renderLinks() {
   const mode = modeOf(), items = linksFromBackup(draw.backup);
   $("modeLinks").checked = mode === "links"; $("modeRoom").checked = mode === "room";
   const when = "Sorteio feito em " + fmtStamp(draw.t) + (draw.updatedAt ? ", atualizado em " + fmtStamp(draw.updatedAt) : "") + ". ";
-  if (mode === "links") $("linksIntro").textContent = when + "Mande cada link só para a pessoa certa; os links de quem tem ajudante vão para o ajudante. \"Enviar link pelo WhatsApp\" abre o WhatsApp com uma mensagem pronta, e você escolhe o contato. \"Copiar link\" copia só o link, para colar onde quiser.";
+  if (mode === "links") $("linksIntro").textContent = when + "Mande cada link só para a pessoa certa; os links de quem tem ajudante vão para o ajudante. Com o celular ou o e-mail na tabela, o botão manda direto para a pessoa; sem ele, o WhatsApp abre com a mensagem pronta e você escolhe o contato. \"Copiar link\" copia só o link, para colar onde quiser.";
   else {
     const done = items.filter(seenHere).length;
     $("linksIntro").replaceChildren(when + "Passe o aparelho: cada pessoa toca no próprio nome, segura o botão para ver, toca em Pronto e passa adiante. Ninguém deve tocar no nome de outra pessoa; se tocar, a outra pessoa vê \"já viu\" na vez dela. ",
       el("span", { className: "progress", textContent: done + " de " + items.length + " já viram." }));
   }
   const box = $("links"); box.replaceChildren();
+  const contactByName = new Map(rows.filter((r) => norm(r.name)).map((r) => [norm(r.name), (r.contact || "").trim()]));
   for (const item of items) {
     const who = el("div", { className: "who", textContent: item.p });
     if (draw.fresh.includes(item.id) && !(mode === "room" && seenHere(item))) who.append(el("span", { className: "newtag", textContent: "novo" }));
@@ -766,11 +854,20 @@ function renderLinks() {
     const mark = el("span", { className: "sent", textContent: draw.sent[item.id] ? "enviado" : "" });
     left.append(mark);
     const markSent = () => { draw.sent[item.id] = true; saveDraw(); mark.textContent = "enviado"; };
-    const wa = el("a", { className: "btn", textContent: "Enviar link pelo WhatsApp", title: "Abre o WhatsApp com a mensagem pronta; você escolhe para quem mandar", href: "https://wa.me/?text=" + encodeURIComponent(messageFor(item)), target: "_blank", rel: "noopener" });
-    wa.addEventListener("click", markSent);
+    // Quem recebe o link: o ajudante, se houver; senão, a própria pessoa. O contato vem da tabela (só neste aparelho).
+    const c = contactOf(contactByName.get(item.h || item.p)), acts = [];
+    if (c.phone || !c.mail) {
+      const wa = el("a", { className: "btn", textContent: c.phone ? "Enviar pelo WhatsApp" : "Enviar link pelo WhatsApp", href: "https://wa.me/" + c.phone + "?text=" + encodeURIComponent(messageFor(item)), target: "_blank", rel: "noopener",
+        title: c.phone ? "Abre a conversa com " + (item.h || item.p) + " no WhatsApp, com a mensagem pronta" : "Abre o WhatsApp com a mensagem pronta; você escolhe para quem mandar" });
+      wa.addEventListener("click", markSent); acts.push(wa);
+    }
+    if (c.mail) {
+      const em = el("a", { className: "btn", textContent: "Enviar por e-mail", href: "mailto:" + encodeURIComponent(c.mail) + "?subject=" + encodeURIComponent("Amigo oculto: " + (draw.g.g || "sorteio")) + "&body=" + encodeURIComponent(messageFor(item)) });
+      em.addEventListener("click", markSent); acts.push(em);
+    }
     const cp = el("button", { type: "button", textContent: "Copiar link", title: "Copia só o link, para colar em outro lugar (e-mail, SMS, outro app)" });
     cp.addEventListener("click", async () => { if (await copyTo(cp, base() + "#" + item.payload, "Copiar link")) markSent(); });
-    box.append(el("div", { className: "linkrow" }, [left, el("div", { className: "acts" }, [wa, cp])]));
+    box.append(el("div", { className: "linkrow" }, [left, el("div", { className: "acts" }, [...acts, cp])]));
   }
   const bk = base() + "#" + encodeBackup(draw.backup);
   $("bkWa").href = "https://wa.me/?text=" + encodeURIComponent("Link de recuperação do " + (draw.g.g || "amigo oculto") + " (só para mim, não encaminhe):\n\n" + bk);
