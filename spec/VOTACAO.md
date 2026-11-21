@@ -36,7 +36,7 @@ Keeping the admin link should need no understanding of cryptography:
 1. **Create.** The admin enters the meeting title, their own name, and the voters (name and, optionally, phone or e-mail; *Colar uma lista* as in Segredo). Choose *Mostrar no quadro: nomes* or *impressões digitais*. The page derives everything from `m`, publishes the session (section 5) and shows the admin link with the backup options.
 2. **Send links.** Per voter, as in Segredo: *Enviar pelo WhatsApp* only for a phone number, *Enviar por e-mail* only for an address, *Copiar link* and *QR* always. Usually before the meeting or at its start.
 3. **Items, improvised or prepared.** The admin screen always has *Nova votação*: type the question, choose the type (section 4), *Abrir votação*. Items prepared in advance are optional and can be skipped or reordered. One item is open at a time.
-4. **Vote.** The voter's page shows the open item live, the options and *Abstenção*; the voter chooses, confirms, and the page posts the encrypted ballot. It then shows *Sua cédula está no quadro* with the ballot's fingerprint (first 8 hex digits of its hash).
+4. **Vote.** The voter's page shows the open item live, the options and *Abstenção*; the voter chooses, confirms, and the page posts the encrypted ballot. It then shows *Sua cédula está no quadro* with the ballot's *número de acompanhamento* (section 5).
 5. **Close.** *Encerrar votação*: the Worker stops accepting ballots for the item, computes the encrypted totals and its partial decryption; the admin's browser adds its partial decryption; the result appears on every screen. If the admin's browser is offline at that moment, the item shows *Encerrada, aguardando apuração* until the admin link is opened again anywhere.
 6. **Cancel.** *Cancelar votação* (open or closed but not yet tallied): the ballots are discarded without being decrypted; the board shows *item cancelado*.
 7. **Roll changes.** *Incluir eleitor* or *Excluir eleitor* at any moment. **The roll of an item is frozen when the item opens**; changes take effect from the next item. Every change is an event on the board, with its time.
@@ -106,6 +106,9 @@ The board is an append-only list of **events**. Each event has a sequence number
 | `reuniao-encerrada` | — |
 
 - **Fingerprint:** `f_i = first 16 bytes of SHA-256("LucentVote/1/eleitor" ‖ s_i)`, hex. The voter's page shows the first 8 digits as *sua impressão digital*.
+- **Codes shown to people** use Crockford Base32 (digits and letters without I, L, O, U), 40 bits, written `XXXX-YYYY`, read leniently (case-insensitive, O = 0, I and L = 1):
+  - *número de acompanhamento* of a ballot: the first 40 bits of SHA-256 of the ballot's canonical JSON;
+  - *código* of a participant: the first 40 bits of the fingerprint `f`.
 - **Accepting a ballot (MUST, in the Worker):** the item is open; the sender knows `s_i` whose fingerprint is on the item's frozen roll; that fingerprint has no ballot yet for this item; the proof verifies. **One ballot per voter per item, final.** If a voter's page finds a ballot already there, it says *Já há uma cédula com o seu link neste item, às 14:03. Se não foi você, avise a mesa.* (The admin can derive every voter secret; this makes such abuse visible instead of silent.)
 - **Admin actions** carry `t`; the Worker checks it against the stored hash.
 - **Display:** most recent first. In names mode the board shows names next to ballots; otherwise fingerprints. Never contacts.

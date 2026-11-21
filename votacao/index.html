@@ -182,7 +182,7 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
     <div class="row"><button class="btn small primary" id="cImportUse" type="button" disabled>Usar esta lista</button><button class="btn small" id="cImportCancel" type="button">Cancelar</button></div>
   </div>
   <div class="f"><span>No quadro público, mostrar</span>
-    <div class="radios"><label><input type="radio" name="cDisplay" value="nomes" checked> os nomes de quem votou</label><label><input type="radio" name="cDisplay" value="digitais"> só impressões digitais</label></div>
+    <div class="radios"><label><input type="radio" name="cDisplay" value="nomes" checked> os nomes de quem votou</label><label><input type="radio" name="cDisplay" value="digitais"> só códigos (sem nomes)</label></div>
     <small class="muted">Com os nomes, todos podem conferir que a lista não tem gente estranha. Como cada um votou nunca aparece.</small>
   </div>
   <label class="check"><input type="checkbox" id="cSplit" checked><span>Guardar metade da chave comigo (recomendado) <small>— a chave fica dividida entre você e a LucentCrypto; nenhum dos dois, sozinho, consegue ler uma cédula.</small></span></label>
@@ -287,7 +287,7 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
   <ul>
     <li><b>Voto secreto:</b> cada cédula é cifrada no celular de quem vota. Só os totais de cada votação são abertos. <span id="scopeKey">Com a chave dividida, nem o organizador nem a LucentCrypto, sozinhos, conseguem ler uma cédula.</span></li>
     <li><b>Contado como votado:</b> cada pessoa vê a sua cédula no quadro, e qualquer um confere que o resultado é exatamente a soma das cédulas aceitas. O quadro tem uma cadeia de hashes: o histórico não pode ser reescrito sem que as páginas percebam.</li>
-    <li><b>Quem votou aparece</b> (pelo nome ou por uma impressão digital, com a hora); como votou, não.</li>
+    <li><b>Quem votou aparece</b> (pelo nome ou por um código, com a hora); como votou, não.</li>
     <li><b>O organizador controla a lista.</b> Cada inclusão e exclusão aparece no quadro. Com os nomes à vista, todos podem notar um nome estranho.</li>
     <li><b>Grupos pequenos:</b> quando há poucos participantes, ou quando todos votam igual, o resultado pode revelar como cada um votou.</li>
     <li><b>Não protege:</b> quem vota sob o olhar de outra pessoa ou repassa o seu link; vírus no celular; a perda do link do organizador.</li>
@@ -627,7 +627,7 @@ async function viewAdmin() {
       const p = privs[k], name = p?.name || v.name || "participante " + v.i, link = voterLink(sid, adm.voterSecret(v.i));
       const msg = "Olá, " + name + ". Este é o seu link pessoal para votar na reunião «" + S.title + "», conduzida por " + S.by + ". Ele vale para todas as votações da reunião. Não o encaminhe a ninguém:\n" + link;
       const el = document.createElement("div"); el.className = "voter" + (sent.has(v.f) ? " sent" : "");
-      el.innerHTML = `<span class="pill">${v.i}</span><span class="who">${esc(name)} ${p?.contact ? `<small>· ${esc(p.contact)}</small>` : ""} <small class="mono">· ${v.f.slice(0, 8)}</small></span><div class="row"></div>`;
+      el.innerHTML = `<span class="pill">${v.i}</span><span class="who">${esc(name)} ${p?.contact ? `<small>· ${esc(p.contact)}</small>` : ""} <small class="mono">· ${V.voterCode(v.f)}</small></span><div class="row"></div>`;
       const row = el.querySelector(".row"), mark = () => { sent.add(v.f); el.classList.add("sent"); };
       row.append(sendButtons(p?.contact, "Seu link de votação: " + S.title, msg, mark));
       const c = document.createElement("button"); c.className = "btn small"; c.type = "button"; c.textContent = "Copiar link";
@@ -664,7 +664,7 @@ function viewVoter() {
     const S = st.session, meNow = st.roll.get(f);
     const everIn = board.events.find((e) => e.type === "eleitor-incluido" && e.f === f);
     $("vTitle").textContent = S.title;
-    $("vHello").innerHTML = everIn ? (meNow ? "Olá" + (meNow.name ? ", <b>" + esc(meNow.name) + "</b>" : "") + ". Este é o seu link pessoal; não o encaminhe." : "<b>Seu link foi excluído da lista de participantes.</b> Você não vota nas próximas votações.") + ` <span class="small muted mono">Sua impressão digital: ${f.slice(0, 8)}</span>` : "<b>Este link não está na lista de participantes desta reunião.</b>";
+    $("vHello").innerHTML = everIn ? (meNow ? "Olá" + (meNow.name ? ", <b>" + esc(meNow.name) + "</b>" : "") + ". Este é o seu link pessoal; não o encaminhe." : "<b>Seu link foi excluído da lista de participantes.</b> Você não vota nas próximas votações.") + ` <span class="small muted">Seu código: <span class="mono">${V.voterCode(f)}</span></span>` : "<b>Este link não está na lista de participantes desta reunião.</b>";
     $("vSecrecy").textContent = secrecyText(S);
     const [cls, txt] = checkText(); $("vCheck").textContent = txt; $("vCheck").style.color = cls === "bad" ? "var(--bad)" : "";
     const cur = $("vCurrent"), open = st.open ? st.items.get(st.open) : null;
@@ -680,7 +680,7 @@ function viewVoter() {
       if (b) {
         const wasMe = mine()[open.n] === b.fp;
         cur.innerHTML = `<h2>Votação ${open.n}</h2><p class="question">${esc(open.spec.q)}</p>` + (wasMe
-          ? `<div class="msg ok"><b>Sua cédula está no quadro</b> (às ${fmtHM(b.t)}). Impressão digital da cédula: <span class="mono">${b.fp}</span>. Aguarde o encerramento.</div><div class="row"><a class="btn small" target="_blank" rel="noopener" href="${BASE}#s=${sid}&c=${b.fp}">Ver minha cédula no quadro</a></div>`
+          ? `<div class="msg ok"><b>Sua cédula está no quadro</b> (às ${fmtHM(b.t)}). Número de acompanhamento da cédula: <span class="mono">${b.fp}</span>. Aguarde o encerramento.</div><div class="row"><a class="btn small" target="_blank" rel="noopener" href="${BASE}#s=${sid}&c=${b.fp}">Ver minha cédula no quadro</a></div>`
           : `<div class="msg bad">Já há uma cédula com o seu link neste item, às ${fmtHM(b.t)}. Se não foi você, avise a mesa.</div>`) + `<p class="small muted">${open.ballots.length} de ${open.roll.size} votaram.</p>`;
       } else {
         const opts = open.options.map((l, j) => [j + 1, l]).concat([[0, "Abstenção"]]);
@@ -707,7 +707,7 @@ function viewVoter() {
 function viewBoard() {
   $("viewBoard").hidden = false;
   const describe = (e, st) => {
-    const who = (f) => { const ev = board.events.find((x) => x.type === "eleitor-incluido" && x.f === f); return ev?.name ? esc(ev.name) + ` <span class="mono muted">${f.slice(0, 8)}</span>` : `<span class="mono">${f.slice(0, 8)}</span>`; };
+    const who = (f) => { const ev = board.events.find((x) => x.type === "eleitor-incluido" && x.f === f); return ev?.name ? esc(ev.name) + ` <span class="mono muted">${V.voterCode(f)}</span>` : `<span class="mono">${V.voterCode(f)}</span>`; };
     switch (e.type) {
       case "criada": return `Reunião criada por ${esc(e.by)} · chave ${e.keyMode === "dividida" ? "dividida entre o organizador e a LucentCrypto" : "com a LucentCrypto"}`;
       case "eleitor-incluido": return `Eleitor ${e.i} incluído: ${who(e.f)}`;
@@ -725,7 +725,7 @@ function viewBoard() {
     const blob = new Blob([JSON.stringify({ format: V.VERSION, session: sid, events: board.events }, null, 1)], { type: "application/json" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "ata-votacao-" + sid + ".json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   });
-  const target = /^[0-9a-f]{8}$/.test(H.get("c") || "") ? H.get("c") : null;
+  const target = V.readCode40(H.get("c"));
   let scrolled = false;
   // Tela cheia (para projetar): só o bloco da votação atual, em letras grandes.
   const setFull = (on) => {

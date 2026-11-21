@@ -139,7 +139,21 @@ export function verifyBallot(sid, Kh, item, m, f, ballot) {
     return recs.every((rc) => mod(rc.reduce((s, x) => s + x.c, 0n)) === cg);
   } catch { return false; }
 }
-export const ballotFingerprint = (ballot) => sha256hex(canon(ballot)).slice(0, 8);
+// Códigos curtos para pessoas: Crockford Base32 (sem I, L, O, U), 40 bits, como XXXX-YYYY.
+const CROCK = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+export function code40(bytes) {
+  let x = 0n; for (const v of bytes.subarray(0, 5)) x = (x << 8n) | BigInt(v);
+  let s = ""; for (let i = 0; i < 8; i++) { s = CROCK[Number(x & 31n)] + s; x >>= 5n; }
+  return s.slice(0, 4) + "-" + s.slice(4);
+}
+// Leitura tolerante: maiúsculas ou minúsculas, O = 0, I e L = 1, hífen e espaços opcionais.
+export function readCode40(t) {
+  const s = String(t || "").toUpperCase().replace(/[\s-]/g, "").replace(/O/g, "0").replace(/[IL]/g, "1");
+  return /^[0-9A-HJKMNP-TV-Z]{8}$/.test(s) ? s.slice(0, 4) + "-" + s.slice(4) : null;
+}
+// Número de acompanhamento da cédula, e código do participante (a partir da impressão digital f).
+export const ballotFingerprint = (ballot) => code40(sha256(te.encode(canon(ballot))));
+export const voterCode = (f) => code40(unhex(f));
 
 // ---- apuração
 export function sumBallots(ballots, m) {

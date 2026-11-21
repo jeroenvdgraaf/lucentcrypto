@@ -144,3 +144,14 @@ test("desempenho: conferir 50 cédulas de 3 opções", () => {
   console.log("    50 cédulas (criar + conferir várias vezes): " + Math.round(ms) + " ms");
   const t1 = performance.now(); V.verifyBoard(S.bd.events); console.log("    conferência completa do quadro: " + Math.round(performance.now() - t1) + " ms");
 });
+
+test("códigos Crockford de 40 bits: formato XXXX-YYYY e leitura tolerante", () => {
+  assert.equal(V.code40(new Uint8Array([0, 0, 0, 0, 0])), "0000-0000");
+  assert.equal(V.code40(new Uint8Array([255, 255, 255, 255, 255])), "ZZZZ-ZZZZ");
+  const S = setup(), b = V.makeBallot(S.sid, S.K, 1, 2, S.voters[0].f, 1), c = V.ballotFingerprint(b);
+  assert.match(c, /^[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/);
+  assert.equal(V.readCode40(c.toLowerCase().replace("-", " ")), c);
+  assert.equal(V.readCode40("o1il-0000"), "0111-0000");
+  assert.equal(V.readCode40("abcd-efgU"), null);
+  assert.match(V.voterCode(S.voters[0].f), /^[0-9A-Z]{4}-[0-9A-Z]{4}$/);
+});
