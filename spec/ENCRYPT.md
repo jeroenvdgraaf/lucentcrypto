@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 <!-- Copyright (C) 2026 Jeroen van de Graaf -->
-# Lucent Encrypt — spec (draft, LucentEncrypt/1)
+# Lucent Encrypt — spec (LucentEncrypt/1)
 
 A demonstration of public-key encryption that needs nothing installed and nothing stored. A person's key pair is derived from a **phrase of 7 words** plus an **identifier** (name, phone or e-mail). They publish a **public link**; anyone can use it to encrypt a short text message for them; only the phrase opens it. Three modes show the cost of post-quantum security side by side: **X25519** (classic), **ML-KEM-768** (post-quantum) and **X-Wing** (hybrid of both).
 
@@ -125,4 +125,7 @@ All binary, sent as base64url (no padding) after `#` in `https://lucentcrypto.or
   - phrase parsing and four-letter completion; identifier normalization; Argon2id with fixed vectors;
   - each mode: key derivation reproducible from phrase and identifier, encrypt and open, wrong phrase vs altered message, link sizes;
   - ML-KEM and X-Wing known-answer tests from their standards, through the library.
-- **To confirm while implementing:** the license of the BIP39 word list, and that noble-post-quantum's X-Wing matches the current draft.
+- **Confirmed while implementing:**
+  - The word list is the Portuguese list of BIP-39, taken from `@scure/bip39` (MIT). All 2,048 words are ASCII (4–8 letters, no accents), and each is identified by its first four letters.
+  - X-Wing is `ml_kem768_x25519` in `@noble/post-quantum` 0.7.1. It matches the three official test vectors of draft-connolly-cfrg-xwing-kem (tests/fixtures/xwing_draft10_vectors.json).
+  - Argon2id (hash-wasm, WebAssembly) takes about 0.3 s on a desktop browser. The parameters stay as specified.
