@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<!-- Copyright (C) 2026 Jeroen van de Graaf -->
+<!-- Gerado por tools/build-home.mjs a partir de site/home.html e site/i18n/es.json: edite esses, não este. -->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LucentCrypto · pruebas, no promesas</title>
+<meta name="description" content="Sorteos, publicaciones de datos y votaciones cuyo resultado cualquier persona puede verificar, sin exponer a nadie. Criptografía verificable y protección de datos.">
+<link rel="canonical" href="https://lucentcrypto.org/es/">
+<link rel="alternate" hreflang="pt-BR" href="https://lucentcrypto.org/">
+<link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/">
+<link rel="alternate" hreflang="es" href="https://lucentcrypto.org/es/">
+<link rel="alternate" hreflang="nl" href="https://lucentcrypto.org/nl/">
+<link rel="alternate" hreflang="x-default" href="https://lucentcrypto.org/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23a85d08'/%3E%3Cpath d='M22 14h8v28h16v8H22z' fill='%23fff'/%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_LA">
+<meta property="og:site_name" content="LucentCrypto">
+<meta property="og:title" content="LucentCrypto · pruebas, no promesas">
+<meta property="og:description" content="Sorteos, publicaciones de datos y votaciones cuyo resultado cualquier persona puede verificar, sin exponer a nadie.">
+<meta property="og:url" content="https://lucentcrypto.org/es/">
+<meta property="og:image" content="https://lucentcrypto.org/og/lucentcrypto.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root {
+  --bg: #eef2f3; --surface: #ffffff; --ink: #13232b; --text: #2c3d45; --muted: #50646d; --line: #cdd8dc;
+  --accent: #a85d08; --pine: #1f5a44; --pine-ink: #ffffff; --blue: #2b4c9a;
+  --lab: #13232b; --lab-card: #1b2f38; --lab-line: #26363d; --lab-ink: #e2ebee; --lab-muted: #98abb2; --lab-accent: #f0a443;
+  --display: "Avenir Next", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #0d1417; --surface: #141f24; --ink: #e2ebee; --text: #c9d6db; --muted: #98abb2; --line: #26363d; --accent: #f0a443; --pine: #4fb487; --pine-ink: #0b1712; --blue: #7d9ee8; --lab: #071014; --lab-card: #111e24; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #0d1417; --surface: #141f24; --ink: #e2ebee; --text: #c9d6db; --muted: #98abb2; --line: #26363d; --accent: #f0a443; --pine: #4fb487; --pine-ink: #0b1712; --blue: #7d9ee8; --lab: #071014; --lab-card: #111e24; color-scheme: dark; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 var(--body); }
+a { color: var(--pine); }
+.in { max-width: 1120px; margin: 0 auto; padding-inline: 24px; }
+.mono { font-family: var(--mono); font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase; }
+h1, h2, h3 { font-family: var(--display); margin: 0; }
+h2.sec { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
+p { margin: 0; }
+.btn { display: inline-flex; align-items: center; min-height: 44px; padding: 12px 22px; border-radius: 12px; font-weight: 600; text-decoration: none; }
+.btn.primary { background: var(--pine); color: var(--pine-ink); }
+.btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.btn:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* cabeçalho */
+.top { background: var(--surface); border-bottom: 1px solid var(--line); }
+.top .in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 32px; padding-block: 16px; }
+.logo { font: 800 22px var(--display); letter-spacing: -0.02em; color: var(--ink); text-decoration: none; }
+.logo span { color: var(--accent); }
+.top nav { display: flex; flex-wrap: wrap; gap: 6px 24px; font-weight: 500; font-size: 15px; }
+.top nav a { color: var(--ink); text-decoration: none; }
+.top nav a.lab { color: var(--muted); }
+.top nav a:hover { color: var(--pine); }
+
+/* abertura */
+.hero { padding-block: 84px 68px; display: grid; gap: 22px; }
+.hero .mono { color: var(--muted); }
+.hero h1 { font-size: clamp(40px, 7vw, 68px); line-height: 1.04; font-weight: 800; letter-spacing: -0.03em; }
+.hero p.lead { font-size: 20px; color: var(--text); max-width: 46ch; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* soluções */
+.solutions { padding-bottom: 80px; display: grid; gap: 24px; }
+.cards3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+.sol { background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--c); border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+.sol .mono { color: var(--c); }
+.sol h3 { font-size: 24px; font-weight: 700; }
+.sol p, .sol ul { color: var(--text); }
+.sol ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.sol .links { margin-top: auto; display: flex; flex-wrap: wrap; gap: 6px 20px; font-weight: 600; }
+.sol .links a { color: var(--c); }
+
+/* como funciona */
+.how { background: var(--surface); border-block: 1px solid var(--line); }
+.how .in { padding-block: 64px; display: grid; gap: 28px; }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px; }
+.steps div { display: grid; gap: 8px; align-content: start; }
+.steps .n { font: 500 14px var(--mono); color: var(--accent); }
+.steps h3 { font-size: 20px; }
+.steps p { color: var(--text); }
+
+/* serviços */
+.services { padding-block: 72px; display: grid; gap: 20px; }
+.services > p { color: var(--text); max-width: 60ch; }
+.cards4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.svc { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: grid; gap: 6px; align-content: start; }
+.svc h3 { font-size: 18px; }
+.svc p { color: var(--text); font-size: 15px; }
+
+/* laboratório */
+.labband { background: var(--lab); color: var(--lab-ink); }
+.labband .in { padding-block: 72px; display: grid; gap: 24px; }
+.labhead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px 24px; }
+.labhead > div { display: grid; gap: 8px; }
+.labhead .mono { color: var(--lab-accent); }
+.labhead h2 { color: #ffffff; }
+.labhead p { color: var(--lab-muted); max-width: 58ch; }
+.labcards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+.labcards a { background: var(--lab-card); border: 1px solid var(--lab-line); border-radius: 14px; padding: 18px; text-decoration: none; color: var(--lab-ink); display: grid; gap: 6px; align-content: start; }
+.labcards a:hover { border-color: var(--lab-accent); }
+.labcards b { color: #ffffff; font: 700 17px var(--display); }
+.labcards span { color: var(--lab-muted); font-size: 14px; }
+.labband .partner { color: var(--lab-muted); font-size: 14px; }
+.labband .partner a { color: var(--lab-accent); }
+
+/* quem faz e contato */
+.contact { padding-block: 72px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; }
+.contact .who { display: grid; gap: 12px; align-content: start; }
+.contact .who p { color: var(--text); }
+.contact .who .links { display: flex; flex-wrap: wrap; gap: 6px 18px; font-weight: 600; }
+.card-contact { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 28px; display: grid; gap: 14px; align-content: start; justify-items: start; }
+.card-contact h2 { font-size: 24px; font-weight: 800; }
+.card-contact p { color: var(--text); }
+
+footer { border-top: 1px solid var(--line); background: var(--surface); }
+footer .in { padding-block: 26px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 32px; font-size: 14px; color: var(--muted); }
+footer b { color: var(--ink); }
+footer .links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+footer a { color: var(--muted); }
+.top nav.langs { display: flex; gap: 0; align-items: center; font: 600 12px var(--mono); letter-spacing: .06em; }
+.langs a { color: var(--muted); text-decoration: none; padding: 6px 6px; border-radius: 6px; }
+.langs a:hover { color: var(--ink); background: var(--bg); }
+.langs a[aria-current="page"] { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
+.langs svg { width: 14px; height: 14px; color: var(--muted); margin-right: 4px; }
+.right { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; }
+.labband .note { color: var(--lab-muted); font-size: 13.5px; font-style: italic; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="in">
+    <a class="logo" href="/es/">Lucent<span>Crypto</span></a>
+    <nav aria-label="Principal">
+      <a href="#sorteios">Sorteos</a>
+      <a href="#conformidade">Cumplimiento</a>
+      <a href="#votacao">Votación</a>
+      <a href="#servicos">Servicios</a>
+      <a class="lab" href="#laboratorio">Laboratorio</a>
+    </nav>
+    <div class="right">
+      <nav class="langs" aria-label="Idioma"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><a href="/" hreflang="pt-BR" lang="pt-BR" title="Português">PT</a><a href="/en/" hreflang="en" lang="en" title="English">EN</a><a href="/es/" hreflang="es" lang="es" title="Español" aria-current="page">ES</a><a href="/nl/" hreflang="nl" lang="nl" title="Nederlands">NL</a></nav>
+      <a class="btn primary" href="#contato">Contáctenos</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="in hero">
+    <p class="mono">Criptografía verificable · protección de datos</p>
+    <h1>Pruebas, no promesas.</h1>
+    <p class="lead">Sorteos, publicaciones de datos y votaciones cuyo resultado cualquier persona puede verificar, sin exponer a nadie.</p>
+    <div class="row">
+      <a class="btn primary" href="#contato">Conversar sobre un proyecto</a>
+      <a class="btn ghost" href="#solucoes">Ver las soluciones</a>
+    </div>
+  </section>
+
+  <section class="in solutions" id="solucoes">
+    <h2 class="sec">Soluciones</h2>
+    <div class="cards3">
+      <article class="sol" id="sorteios" style="--c: var(--accent)">
+        <p class="mono">Disponible</p>
+        <h3>Sorteos verificables</h3>
+        <p>Sorteos sellados antes y verificables después, por cualquier participante.</p>
+        <ul>
+          <li>Selecciones públicas: viviendas, cupos escolares</li>
+          <li>Muestras para auditoría y fiscalización</li>
+          <li>Con validez jurídica en Brasil: sello de tiempo ICP-Brasil y acta</li>
+        </ul>
+        <p class="links"><a href="/sorteios/">Probar</a><a href="mailto:info@lucentcrypto.org?subject=Presupuesto%3A%20sorteo%20verificable">Pedir presupuesto →</a></p>
+      </article>
+      <article class="sol" id="conformidade" style="--c: var(--pine)">
+        <p class="mono">Pilotos a pedido</p>
+        <h3>Cumplimiento sin exposición</h3>
+        <p>Demostrar que los datos son correctos sin entregar los datos, con pruebas de conocimiento cero.</p>
+        <ul>
+          <li>Publicación verificable de datos salariales</li>
+          <li>Cruzar listas sin revelar quién está en ellas (PSI)</li>
+          <li>Cadena de custodia de documentos y evidencias</li>
+        </ul>
+        <p class="links"><a href="/embaralhamento/">Ver una demostración</a><a href="mailto:info@lucentcrypto.org?subject=Piloto%3A%20cumplimiento%20sin%20exposici%C3%B3n">Conversar sobre un piloto →</a></p>
+      </article>
+      <article class="sol" id="votacao" style="--c: var(--blue)">
+        <p class="mono">En desarrollo</p>
+        <h3>Votación segura</h3>
+        <p>Elecciones con voto secreto y un escrutinio que cualquier elector verifica, para sindicatos y asociaciones.</p>
+        <ul>
+          <li>Hasta 10.000 electores</li>
+          <li>Autenticación de varias formas, según el estatuto</li>
+          <li>Urna preconfigurada (Raspberry Pi) y voto cifrado por correo</li>
+        </ul>
+        <p class="links"><a href="mailto:info@lucentcrypto.org?subject=Votaci%C3%B3n%20segura">Quiero saber más →</a></p>
+      </article>
+    </div>
+  </section>
+
+  <section class="how">
+    <div class="in">
+      <h2 class="sec">Cómo funciona</h2>
+      <div class="steps">
+        <div><p class="n">01</p><h3>Sellar</h3><p>Las reglas y los datos se fijan antes, con sello de tiempo. Nadie cambia nada después sin que se note.</p></div>
+        <div><p class="n">02</p><h3>Prueba pública</h3><p>El resultado sale con una prueba matemática. Los datos personales siguen protegidos.</p></div>
+        <div><p class="n">03</p><h3>Verificar</h3><p>Cualquier persona verifica en el navegador, o con un verificador independiente y abierto.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="in services" id="servicos">
+    <h2 class="sec">Servicios especializados</h2>
+    <p>Más de cuatro décadas de investigación en criptografía, a disposición de su proyecto.</p>
+    <div class="cards4">
+      <div class="svc"><h3>Consultoría</h3><p>Diseño de sistemas que deben ser auditables y respetar la protección de datos.</p></div>
+      <div class="svc"><h3>Revisión de seguridad</h3><p>Análisis independiente de sistemas criptográficos y de votación de terceros.</p></div>
+      <div class="svc"><h3>Peritaje técnico</h3><p>Dictámenes en procesos que involucran criptografía, sorteos o voto electrónico.</p></div>
+      <div class="svc"><h3>Formación</h3><p>Cursos y charlas para equipos jurídicos, de TI y de cumplimiento.</p></div>
+    </div>
+  </section>
+
+  <section class="labband" id="laboratorio">
+    <div class="in">
+      <div class="labhead">
+        <div>
+          <p class="mono">Laboratorio</p>
+          <h2 class="sec">Pruébelo en el navegador</h2>
+          <p>Demostraciones gratuitas, para conocer la criptografía detrás de las soluciones. Sin registro y sin garantías.</p>
+        </div>
+      </div>
+      <div class="labcards">
+        <a href="/sorteios/"><b>Sorteo rápido</b><span>Moneda, dados, cartas y listas, al instante o verificable.</span></a>
+        <a href="/encrypt/"><b>Encrypt</b><span>Cifrado clásico y poscuántico, lado a lado.</span></a>
+        <a href="/segredo/"><b>Secreto</b><span>Divida un secreto entre personas de confianza.</span></a>
+        <a href="/votacao/"><b>Votación en reunión</b><span>Voto secreto por celular, hasta 20 personas.</span></a>
+        <a href="/amigo-oculto/"><b>Amigo secreto</b><span>Cada uno recibe a su amigo por su propio enlace.</span></a>
+      </div>
+      <p class="note">Por ahora, las demostraciones están en portugués.</p>
+      <p class="partner">Para guardar secretos por décadas: <a href="https://grifortis.com" rel="noopener">DuraShare, de Grifortis</a>, empresa asociada.</p>
+    </div>
+  </section>
+
+  <section class="in contact" id="contato">
+    <div class="who">
+      <h2 class="sec">Quiénes somos</h2>
+      <p>Un equipo coordinado por Jeroen van de Graaf, profesor del Departamento de Ciencia de la Computación de la Universidad Federal de Minas Gerais (UFMG), Brasil, investigador en criptografía desde hace más de cuatro décadas.</p>
+      <p class="links"><a href="http://lattes.cnpq.br/0069989873499216">Currículum Lattes</a><a href="https://scholar.google.com.br/citations?user=-w8olWwAAAAJ">Google Scholar</a></p>
+    </div>
+    <div class="card-contact">
+      <h2>Contáctenos</h2>
+      <p>Cuéntenos qué necesita demostrar, y a quién.</p>
+      <a class="btn primary" href="mailto:info@lucentcrypto.org">info@lucentcrypto.org</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="in">
+    <span><b>LucentCrypto</b></span>
+    <span class="links">
+      <a href="https://github.com/jeroenvdgraaf/lucentcrypto" rel="noopener">Código abierto en GitHub</a>
+      <a href="/spec/SPEC-v3.md">Especificación de los sorteos</a>
+      <a href="/verifier/verify_draw.py">Verificador en Python</a>
+      <a href="#laboratorio">Laboratorio</a>
+    </span>
+  </div>
+</footer>
+</body>
+</html>

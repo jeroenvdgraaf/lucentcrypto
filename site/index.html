@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <!-- SPDX-License-Identifier: AGPL-3.0-only -->
 <!-- Copyright (C) 2026 Jeroen van de Graaf -->
+<!-- Gerado por tools/build-home.mjs a partir de site/home.html e site/i18n/pt.json: edite esses, não este. -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -8,6 +9,11 @@
 <title>LucentCrypto · provas, não promessas</title>
 <meta name="description" content="Sorteios, publicações de dados e votações cujo resultado qualquer pessoa pode conferir, sem expor ninguém. Criptografia verificável e LGPD.">
 <link rel="canonical" href="https://lucentcrypto.org/">
+<link rel="alternate" hreflang="pt-BR" href="https://lucentcrypto.org/">
+<link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/">
+<link rel="alternate" hreflang="es" href="https://lucentcrypto.org/es/">
+<link rel="alternate" hreflang="nl" href="https://lucentcrypto.org/nl/">
+<link rel="alternate" hreflang="x-default" href="https://lucentcrypto.org/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23a85d08'/%3E%3Cpath d='M22 14h8v28h16v8H22z' fill='%23fff'/%3E%3C/svg%3E">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
@@ -122,6 +128,13 @@ footer .in { padding-block: 26px; display: flex; flex-wrap: wrap; justify-conten
 footer b { color: var(--ink); }
 footer .links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
 footer a { color: var(--muted); }
+.top nav.langs { display: flex; gap: 0; align-items: center; font: 600 12px var(--mono); letter-spacing: .06em; }
+.langs a { color: var(--muted); text-decoration: none; padding: 6px 6px; border-radius: 6px; }
+.langs a:hover { color: var(--ink); background: var(--bg); }
+.langs a[aria-current="page"] { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
+.langs svg { width: 14px; height: 14px; color: var(--muted); margin-right: 4px; }
+.right { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; }
+.labband .note { color: var(--lab-muted); font-size: 13.5px; font-style: italic; }
 </style>
 </head>
 <body>
@@ -135,7 +148,10 @@ footer a { color: var(--muted); }
       <a href="#servicos">Serviços</a>
       <a class="lab" href="#laboratorio">Laboratório</a>
     </nav>
-    <a class="btn primary" href="#contato">Fale conosco</a>
+    <div class="right">
+      <nav class="langs" aria-label="Idioma"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><a href="/" hreflang="pt-BR" lang="pt-BR" title="Português" aria-current="page">PT</a><a href="/en/" hreflang="en" lang="en" title="English">EN</a><a href="/es/" hreflang="es" lang="es" title="Español">ES</a><a href="/nl/" hreflang="nl" lang="nl" title="Nederlands">NL</a></nav>
+      <a class="btn primary" href="#contato">Fale conosco</a>
+    </div>
   </div>
 </header>
 
@@ -227,6 +243,7 @@ footer a { color: var(--muted); }
         <a href="/votacao/"><b>Votação em reunião</b><span>Voto secreto pelo celular, até 20 pessoas.</span></a>
         <a href="/amigo-oculto/"><b>Amigo Oculto</b><span>Cada um recebe o seu amigo pelo próprio link.</span></a>
       </div>
+      
       <p class="partner">Para guardar segredos por décadas: <a href="https://grifortis.com" rel="noopener">DuraShare, da Grifortis</a>, empresa parceira.</p>
     </div>
   </section>
