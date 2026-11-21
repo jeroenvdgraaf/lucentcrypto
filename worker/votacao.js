@@ -67,16 +67,16 @@ export class Sessao {
   table() { this.ctx.storage.sql.exec("CREATE TABLE IF NOT EXISTS ev (n INTEGER PRIMARY KEY, body TEXT NOT NULL)"); }
   lastActivity() { const S = this.state; return S?.ended ? S.endedAt : (this.events.at(-1)?.t || Date.now()); }
 
-  // Acrescenta eventos: confere o quadro com eles antes de gravar (nada inválido entra).
+  // Acrescenta eventos: confere cada um sobre o estado já conferido antes de gravar (nada inválido entra).
+  // applyEvent é atômico; um lote só existe na criação, e ali uma falha apaga tudo.
   async append(list) {
-    const out = [], evs = this.events.slice();
+    const out = [], evs = this.events.slice(), st = this.state || V.newBoardState();
     for (const ev of list) {
       const e = { n: evs.length + 1, t: Date.now(), ...ev };
       e.h = V.eventHash(evs.at(-1)?.h || V.ZERO_HASH, e);
+      V.applyEvent(st, e, this.cache, true);
       evs.push(e); out.push(e);
     }
-    const st = V.verifyBoard(evs, this.cache);
-    if (!st.ok) throw new Error(st.problems[0]);
     this.table();
     for (const e of out) this.ctx.storage.sql.exec("INSERT INTO ev (n, body) VALUES (?, ?)", e.n, JSON.stringify(e));
     this.events = evs; this.state = st;
@@ -92,15 +92,21 @@ export class Sessao {
     const textOk = (s, max) => typeof s === "string" && s.trim() && new TextEncoder().encode(s).length <= max;
     if (!textOk(b.title, V.MAX_TEXT) || !textOk(b.by, V.MAX_TEXT)) return err("Título ou nome inválido.");
     if (!/^[0-9a-f]{64}$/.test(b.th || "")) return err("Token inválido.");
-    if (!Array.isArray(b.voters) || b.voters.length > V.MAX_VOTERS) return err("Lista de eleitores inválida.");
+    let limit = V.FREE_LIMIT;
+    if (b.liberacao) {
+      const r = V.checkRelease(this.env.LIBERACAO_KEY || "", b.liberacao);
+      if (!r) return err("Código de liberação inválido ou vencido.", 403);
+      limit = r.limit;
+    }
+    if (!Array.isArray(b.voters) || b.voters.length > limit) return err(b.voters?.length > limit ? "A demonstração vai até " + limit + " participantes. Para mais, peça um código de liberação." : "Lista de participantes inválida.");
     const w = V.randScalar(), W = V.mulBase(w);
     await this.ctx.storage.put("w", V.sHex(w));
-    const ev = [{ type: "criada", sid, title: b.title.trim(), by: b.by.trim(), display: b.display === "digitais" ? "digitais" : "nomes", keyMode,
+    const ev = [{ type: "criada", sid, title: b.title.trim(), by: b.by.trim(), display: b.display === "digitais" ? "digitais" : "nomes", keyMode, limit,
       A: keyMode === "dividida" ? b.A : undefined, pokA: keyMode === "dividida" ? b.pokA : undefined,
       W: V.pHex(W), pokW: V.provePok(sid, w, W), th: b.th }];
     for (const v of b.voters) ev.push(this.voterEvent(v, b.display));
     try { const out = await this.append(ev); return json({ events: out }); }
-    catch (e) { await this.ctx.storage.deleteAll(); throw e; }
+    catch (e) { await this.ctx.storage.deleteAll(); this.events = []; this.state = null; this.cache = new Map(); throw e; }
   }
 
   voterEvent(v, display) {

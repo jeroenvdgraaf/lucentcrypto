@@ -19,7 +19,7 @@ function setup(keyMode = "dividida", nVoters = 4) {
   const sid = "c2Vzc2FvLWRlLXRlc3Rl", m = V.hex(V.randBytes(32)), adm = V.deriveAdmin(m);
   const w = V.randScalar(), W = B.multiply(w), A = B.multiply(adm.a);
   const bd = board();
-  bd.push({ type: "criada", sid, title: "Assembleia", by: "Ana", display: "nomes", keyMode,
+  bd.push({ type: "criada", sid, title: "Assembleia", by: "Ana", display: "nomes", keyMode, limit: nVoters > V.FREE_LIMIT ? nVoters : undefined,
     A: keyMode === "dividida" ? V.pHex(A) : undefined, pokA: keyMode === "dividida" ? V.provePok(sid, adm.a, A) : undefined,
     W: V.pHex(W), pokW: V.provePok(sid, w, W), th: adm.th });
   const voters = [];
@@ -154,4 +154,41 @@ test("códigos Crockford de 40 bits: formato XXXX-YYYY e leitura tolerante", () 
   assert.equal(V.readCode40("o1il-0000"), "0111-0000");
   assert.equal(V.readCode40("abcd-efgU"), null);
   assert.match(V.voterCode(S.voters[0].f), /^[0-9A-Z]{4}-[0-9A-Z]{4}$/);
+});
+
+test("limite: 20 sem código; o limite da reunião vale também para inclusões", () => {
+  const S = setup("dividida", 20);
+  S.bd.push({ type: "eleitor-incluido", i: 21, f: V.fingerprint(S.adm.voterSecret(21)) });
+  const st = V.verifyBoard(S.bd.events);
+  assert.ok(!st.ok && /limite/.test(st.problems[0]));
+  const S2 = setup("dividida", 30); assert.ok(V.verifyBoard(S2.bd.events).ok);
+});
+test("código de liberação: limite e validade; chave errada, alteração e vencimento recusados", () => {
+  const key = V.hex(V.randBytes(32)), code = V.makeRelease(key, 50, "2026-12-31");
+  assert.match(code, /^([0-9A-HJKMNP-TV-Z]{4}-){6}[0-9A-HJKMNP-TV-Z]{2}$/);
+  assert.deepEqual(V.checkRelease(key, code, Date.UTC(2026, 11, 31, 23, 0)), { limit: 50, until: "2026-12-31" }); // 20h em Brasília
+  assert.equal(V.checkRelease(key, code, Date.UTC(2027, 0, 1, 4, 0)), null);  // 1/1, 01h em Brasília
+  assert.equal(V.checkRelease(V.hex(V.randBytes(32)), code), null);
+  const alt = code.slice(0, 5) + (code[5] === "0" ? "1" : "0") + code.slice(6);
+  assert.equal(V.checkRelease(key, alt), null);
+  assert.deepEqual(V.checkRelease(key, code.toLowerCase().replace(/-/g, " "), Date.UTC(2026, 10, 21)), { limit: 50, until: "2026-12-31" });
+  assert.throws(() => V.makeRelease(key, 101, "2026-12-31"));
+  assert.throws(() => V.makeRelease(key, 20, "2026-12-31"));
+});
+test("applyEvent: incremental igual à conferência completa; evento inválido não muda o estado", () => {
+  const S = setup("dividida", 4);
+  runItem(S, 1, { type: "simnao", q: "x", m: 2 }, [1, 2, 1, 0]);
+  const st = V.newBoardState(), cache = new Map();
+  for (const e of S.bd.events) V.applyEvent(st, e, cache);
+  const full = V.verifyBoard(S.bd.events);
+  assert.equal(st.head, full.head); assert.deepEqual(st.items.get(1).result, full.items.get(1).result);
+  // contagem falsa: lança, e o estado continua igual
+  const S3 = setup("dividida", 3), st3 = V.newBoardState();
+  runItem(S3, 1, { type: "simnao", q: "x", m: 2 }, [1, 1, 2]);
+  const evs = S3.bd.events, last = structuredClone(evs.at(-1)); last.counts = [3, 0]; last.h = V.eventHash(evs.at(-2).h, last);
+  for (const e of evs.slice(0, -1)) V.applyEvent(st3, e);
+  const before = JSON.stringify([st3.count, st3.head, st3.items.get(1).state]);
+  assert.throws(() => V.applyEvent(st3, last));
+  assert.equal(JSON.stringify([st3.count, st3.head, st3.items.get(1).state]), before);
+  V.applyEvent(st3, evs.at(-1)); assert.equal(st3.items.get(1).state, "apurado");
 });

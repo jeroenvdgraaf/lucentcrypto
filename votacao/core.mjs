@@ -11,7 +11,8 @@
 import { RistrettoPoint as P, ed25519, sha256, sha512, hmac } from "./vendor/noble.mjs";
 
 export const VERSION = "LucentVote/1";
-export const MAX_VOTERS = 50, MAX_ITEMS = 100, MAX_QUESTION = 300, MAX_TEXT = 128;
+// Demonstração: até 20 participantes; com um código de liberação, até 100.
+export const FREE_LIMIT = 20, MAX_LIMIT = 100, MAX_ITEMS = 100, MAX_QUESTION = 300, MAX_TEXT = 128;
 export const L = ed25519.CURVE.n;
 const B = P.BASE, ZERO = P.ZERO;
 const te = new TextEncoder();
@@ -155,6 +156,46 @@ export function readCode40(t) {
 export const ballotFingerprint = (ballot) => code40(sha256(te.encode(canon(ballot))));
 export const voterCode = (f) => code40(unhex(f));
 
+// Crockford Base32 de qualquer tamanho (para códigos de liberação), em grupos de 4.
+export function crockEncode(bytes) {
+  let x = 0n; for (const v of bytes) x = (x << 8n) | BigInt(v);
+  const bits = bytes.length * 8, n = Math.ceil(bits / 5); x <<= BigInt(n * 5 - bits);
+  let s = ""; for (let i = 0; i < n; i++) { s = CROCK[Number(x & 31n)] + s; x >>= 5n; }
+  return s.match(/.{1,4}/g).join("-");
+}
+export function crockDecode(t, len) {
+  const s = String(t || "").toUpperCase().replace(/[\s-]/g, "").replace(/O/g, "0").replace(/[IL]/g, "1");
+  const n = Math.ceil(len * 8 / 5);
+  if (s.length !== n || /[^0-9A-HJKMNP-TV-Z]/.test(s)) return null;
+  let x = 0n; for (const ch of s) x = (x << 5n) | BigInt(CROCK.indexOf(ch));
+  x >>= BigInt(n * 5 - len * 8);
+  const out = new Uint8Array(len); for (let i = len - 1; i >= 0; i--) { out[i] = Number(x & 255n); x >>= 8n; }
+  return out;
+}
+
+// ---- código de liberação: permite mais de 20 participantes (até 100)
+//   6 bytes: versão 1 · limite · último dia válido (2 bytes, dias desde 2000-01-01, horário de Brasília) · nº (2 bytes)
+//   + 10 bytes de HMAC-SHA-256(chave, "LucentVote/1/liberacao" ‖ os 6 bytes). Só o Worker (e quem emite) tem a chave.
+const DAY0 = Date.UTC(2000, 0, 1), BRT = 3 * 36e5;
+const brDay = (ms) => Math.floor((ms - BRT - DAY0) / 864e5);
+export function makeRelease(keyHex, limit, untilIso, id = Number(randBytes(2)[0]) * 256 + randBytes(1)[0]) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(untilIso); if (!m) throw new Error("data");
+  if (!(limit > FREE_LIMIT && limit <= MAX_LIMIT)) throw new Error("limite entre " + (FREE_LIMIT + 1) + " e " + MAX_LIMIT);
+  const day = Math.round((Date.UTC(+m[1], m[2] - 1, +m[3]) - DAY0) / 864e5);
+  const p = new Uint8Array([1, limit, day >> 8, day & 255, (id >> 8) & 255, id & 255]);
+  const mac = hmac(sha256, unhex(keyHex), cat(te.encode(VERSION + "/liberacao"), p)).subarray(0, 10);
+  return crockEncode(cat(p, mac));
+}
+export function checkRelease(keyHex, code, now = Date.now()) {
+  const b = crockDecode(code, 16); if (!b || !keyHex) return null;
+  const p = b.subarray(0, 6), mac = hmac(sha256, unhex(keyHex), cat(te.encode(VERSION + "/liberacao"), p)).subarray(0, 10);
+  let diff = 0; for (let i = 0; i < 10; i++) diff |= mac[i] ^ b[6 + i];
+  if (diff || p[0] !== 1) return null;
+  const day = (p[2] << 8) | p[3], limit = p[1];
+  if (brDay(now) > day || !(limit > FREE_LIMIT && limit <= MAX_LIMIT)) return null;
+  return { limit, until: new Date(DAY0 + day * 864e5).toISOString().slice(0, 10) };
+}
+
 // ---- apuração
 export function sumBallots(ballots, m) {
   const T = Array.from({ length: m }, () => [ZERO, ZERO]);
@@ -181,7 +222,7 @@ export function verifyPartial(sid, item, Xh, T, pd) {
   } catch { return false; }
 }
 // Contagem: n_j·B = S(T_j) − ΣD_j; n_j entre 0 e max.
-export function counts(T, partials, max = MAX_VOTERS) {
+export function counts(T, partials, max = MAX_LIMIT) {
   const table = [ZERO]; for (let i = 1; i <= max; i++) table.push(table[i - 1].add(B));
   return T.map(([, S], j) => {
     let M = pOf(S); for (const pd of partials) M = M.subtract(pOf(pd.D[j]));
@@ -201,21 +242,37 @@ export function deletionTime(t) {
   return Math.floor((t - OFF) / DAY) * DAY + DAY + OFF + DAY;
 }
 
-// Confere o quadro inteiro, a partir só da lista de eventos. Devolve o estado e os problemas.
-// cache (opcional): Map hash-do-evento → true para cédulas e provas já conferidas (páginas ao vivo).
+// Estado de um quadro conferido. verifyBoard confere a lista inteira; applyEvent acrescenta um evento
+// (o Worker e as páginas ao vivo usam applyEvent, para não reconferir tudo a cada cédula).
+// cache (opcional): Map chave → resultado das provas já conferidas (por exemplo, num Web Worker).
+export function newBoardState() {
+  return { ok: true, problems: [], session: null, roll: new Map(), items: new Map(), order: [], open: null, head: ZERO_HASH, count: 0, ended: false, last: 0 };
+}
+// strict (Worker): um evento inválido lança e o estado não muda.
+// não strict (páginas): um evento inválido é anotado em st.problems, e a conferência segue.
+export function applyEvent(st, ev, cache = new Map(), strict = true) {
+  if (ev.n !== st.count + 1) throw new Error("Evento fora de ordem (nº " + ev.n + ").");
+  const h = eventHash(st.head, ev);
+  if (ev.h !== h) throw new Error("A cadeia de hashes não confere no evento " + ev.n + ".");
+  try { apply(st, ev, cache); }
+  catch (e) { if (strict) throw e; st.ok = false; st.problems.push("Evento " + ev.n + " (" + ev.type + "): " + e.message); }
+  st.count++; st.head = h; st.last = ev.t;
+}
 export function verifyBoard(events, cache = new Map()) {
-  const st = { ok: true, problems: [], session: null, roll: new Map(), items: new Map(), order: [], open: null, head: ZERO_HASH, ended: false, last: 0 };
-  const bad = (msg) => { st.ok = false; st.problems.push(msg); };
-  let prev = ZERO_HASH;
-  for (let i = 0; i < events.length; i++) {
-    const ev = events[i];
-    if (ev.n !== i + 1) { bad("Evento fora de ordem (nº " + ev.n + ")."); break; }
-    const h = eventHash(prev, ev);
-    if (ev.h !== h) { bad("A cadeia de hashes não confere no evento " + ev.n + "."); break; }
-    prev = h; st.head = h; st.last = ev.t;
-    try { apply(st, ev, cache); } catch (e) { bad("Evento " + ev.n + " (" + ev.type + "): " + e.message); }
+  const st = newBoardState();
+  for (const ev of events) {
+    try { applyEvent(st, ev, cache, false); } catch (e) { st.ok = false; st.problems.push(e.message); break; }
   }
   return st;
+}
+// As provas de cédula de uma lista de eventos ainda não conferidas: [{ key, args }] (para um Web Worker).
+export function pendingBallotChecks(events, cache, K, sid, mOf = () => undefined) {
+  const ms = new Map(), out = [];
+  for (const ev of events) {
+    if (ev.type === "item-aberto") ms.set(ev.item, ev.spec?.m);
+    if (ev.type === "cedula" && !cache.has("c:" + ev.h)) out.push({ key: "c:" + ev.h, args: [sid, K, ev.item, ms.get(ev.item) ?? mOf(ev.item), ev.f, ev.ballot] });
+  }
+  return out;
 }
 function apply(st, ev, cache) {
   const S = st.session;
@@ -226,7 +283,9 @@ function apply(st, ev, cache) {
     if (!verifyPok(ev.sid, ev.W, ev.pokW)) throw new Error("prova da chave da LucentCrypto não confere");
     if (split && !verifyPok(ev.sid, ev.A, ev.pokA)) throw new Error("prova da chave do organizador não confere");
     const K = split ? pOf(ev.A).add(pOf(ev.W)) : pOf(ev.W);
-    st.session = { sid: ev.sid, title: ev.title, by: ev.by, display: ev.display, keyMode: ev.keyMode, A: ev.A, W: ev.W, K: pHex(K), th: ev.th, created: ev.t };
+    const limit = ev.limit ?? FREE_LIMIT;
+    if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIMIT) throw new Error("limite de participantes");
+    st.session = { sid: ev.sid, title: ev.title, by: ev.by, display: ev.display, keyMode: ev.keyMode, A: ev.A, W: ev.W, K: pHex(K), th: ev.th, created: ev.t, limit };
     return;
   }
   if (!S) throw new Error("sem criação");
@@ -235,7 +294,7 @@ function apply(st, ev, cache) {
     case "eleitor-incluido": {
       if (!Number.isInteger(ev.i) || ev.i < 1 || [...st.roll.values()].some((v) => v.i === ev.i)) throw new Error("número de eleitor");
       if (!/^[0-9a-f]{32}$/.test(ev.f) || st.roll.has(ev.f)) throw new Error("impressão digital");
-      if (st.roll.size >= MAX_VOTERS) throw new Error("mais de " + MAX_VOTERS + " eleitores");
+      if (st.roll.size >= S.limit) throw new Error("mais de " + S.limit + " participantes (o limite desta reunião)");
       st.roll.set(ev.f, { i: ev.i, f: ev.f, name: ev.name || null, priv: ev.priv || null, added: ev.t });
       return;
     }
@@ -273,8 +332,9 @@ function apply(st, ev, cache) {
       const key = "w:" + ev.h, ok = cache.get(key) ?? verifyPartial(S.sid, ev.item, S.W, T, ev.dW);
       cache.set(key, ok);
       if (!ok) throw new Error("a decifração da LucentCrypto não confere");
-      Object.assign(it, { state: "encerrado", T, dW: ev.dW, closed: ev.t }); st.open = null;
-      if (S.keyMode === "lucent") finish(it, [ev.dW]);
+      const result = S.keyMode === "lucent" ? resultOf(it, T, [ev.dW]) : null; // calcula antes de mudar o estado
+      Object.assign(it, { state: result ? "apurado" : "encerrado", T, dW: ev.dW, closed: ev.t }); if (result) it.result = result;
+      st.open = null;
       return;
     }
     case "item-apurado": {
@@ -283,8 +343,9 @@ function apply(st, ev, cache) {
       const key = "a:" + ev.h, ok = cache.get(key) ?? verifyPartial(S.sid, ev.item, S.A, it.T, ev.dA);
       cache.set(key, ok);
       if (!ok) throw new Error("a decifração do organizador não confere");
-      it.dA = ev.dA; finish(it, [it.dW, ev.dA]);
-      if (canon(it.result.counts) !== canon(ev.counts)) throw new Error("a contagem publicada não confere");
+      const result = resultOf(it, it.T, [it.dW, ev.dA]);
+      if (canon(result.counts) !== canon(ev.counts)) throw new Error("a contagem publicada não confere");
+      Object.assign(it, { dA: ev.dA, state: "apurado", result });
       return;
     }
     case "item-cancelado": {
@@ -300,9 +361,8 @@ function apply(st, ev, cache) {
     default: throw new Error("tipo desconhecido");
   }
 }
-function finish(it, partials) {
-  const c = counts(it.T, partials), n = it.ballots.length, sum = c.reduce((a, b) => a + b, 0);
+function resultOf(it, T, partials) {
+  const n = it.ballots.length, c = counts(T, partials, n), sum = c.reduce((a, b) => a + b, 0);
   if (sum > n) throw new Error("contagem maior que o número de cédulas");
-  it.state = "apurado";
-  it.result = { counts: c, abst: n - sum, ballots: n, eligible: it.roll.size, notVoted: it.roll.size - n };
+  return { counts: c, abst: n - sum, ballots: n, eligible: it.roll.size, notVoted: it.roll.size - n };
 }

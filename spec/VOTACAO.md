@@ -2,7 +2,7 @@
 <!-- Copyright (C) 2026 Jeroen van de Graaf -->
 # Lucent Votação — spec (draft, LucentVote/1)
 
-A teaser for a larger voting application: secret ballots during **one meeting**, online or in person, with at most **50 voters**. The person running the meeting (the **admin**, usually the president) opens items one at a time, improvising as needed; voters vote from a personal link on their phone; a public **board** on our Worker holds the encrypted ballots; the result of each item is decrypted only as a total. Where this document says MUST, the behavior affects verification or privacy.
+A teaser for a larger voting application: secret ballots during **one meeting**, online or in person, with at most **20 participants** (up to **100** with a release code, section 2.1). The person running the meeting (the **admin**, usually the president) opens items one at a time, improvising as needed; voters vote from a personal link on their phone; a public **board** on our Worker holds the encrypted ballots; the result of each item is decrypted only as a total. Where this document says MUST, the behavior affects verification or privacy.
 
 Interface language is Portuguese; terms in *italics* are the interface words.
 
@@ -42,7 +42,18 @@ Keeping the admin link should need no understanding of cryptography:
 7. **Roll changes.** *Incluir eleitor* or *Excluir eleitor* at any moment. **The roll of an item is frozen when the item opens**; changes take effect from the next item. Every change is an event on the board, with its time.
 8. **End.** *Encerrar a reunião*. Deletion follows section 8.
 
-## 3. Cryptography (MUST)
+### 2.1 Limits, release codes, participant lists
+
+- **Limit.** A session allows 20 participants. With a **release code** it allows up to the code's limit (21 to 100). The limit is fixed at creation and recorded in the `criada` event (`limit`); it applies to inclusions during the meeting too. Above 20, the page says *A demonstração vai até 20 participantes. Para mais (até 100), informe um código de liberação*, with a pre-filled e-mail to info@lucentcrypto.org.
+- **Release code** (MUST): 16 bytes in Crockford Base32, 26 symbols in groups of four (`XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XX`), read leniently.
+  - The first 6 bytes: version `1` · limit · last valid day (2 bytes, days since 2000-01-01, Brasília time) · a 2-byte serial.
+  - Then the first 10 bytes of HMAC-SHA-256(key, `"LucentVote/1/liberacao"` ‖ those 6 bytes).
+  - The key is a Worker secret (`LIBERACAO_KEY`), never in the repository. Codes are issued with `tools/liberar.mjs`.
+  - The board stores only the resulting limit, never the code.
+- **Importing participants** (when preparing): *Colar uma lista* or *Importar arquivo (.csv)*. Fields may be separated by comma, semicolon or tab, quoted or not. A header line is used to find the name and contact columns when present. Names already on the list (case-insensitive) are skipped, and the preview says how many.
+- **Exporting** (organizer page): *Exportar planilha (CSV)*, UTF-8 with BOM, `;`-separated, with columns `nº;nome;contato;código;link`. The same file can be imported when preparing another meeting.
+
+
 
 **Group:** ristretto255 (prime order ℓ, canonical 32-byte encodings, generator `B`). Points and scalars are written as lowercase hex in JSON. Implementation: `@noble/curves` (MIT), pinned version, inline in the page and imported by the Worker.
 
@@ -64,7 +75,7 @@ Keeping the admin link should need no understanding of cryptography:
 **Tally of a closed item.** For each option j, `T_j = Σ_i c_ij` over the accepted ballots of that item (componentwise).
 - Worker: `D_j^W = w·R(T_j)` with a Chaum–Pedersen proof that `log_B W = log_{R(T_j)} D_j^W` (domain `dec`).
 - Admin's browser: `D_j^A = a·R(T_j)`, same kind of proof.
-- `n_j·B = S(T_j) − D_j^A − D_j^W`; `n_j` is found by trying 0…50.
+- `n_j·B = S(T_j) − D_j^A − D_j^W`; `n_j` is found by trying 0 to the number of accepted ballots.
 - *Abstenção* = accepted ballots − Σ n_j. *Não votaram* = size of the frozen roll − accepted ballots.
 
 ### 3.1 Key modes (chosen at creation, fixed for the session)
@@ -113,7 +124,7 @@ The board is an append-only list of **events**. Each event has a sequence number
 - **Admin actions** carry `t`; the Worker checks it against the stored hash.
 - **Display:** most recent first. In names mode the board shows names next to ballots; otherwise fingerprints. Never contacts.
 - **Live:** pages subscribe by WebSocket to the Durable Object and receive new events as they are appended; polling every 5 s is the fallback.
-- **Limits:** 50 voters on the roll at any time, 100 items, 300 characters per question, 128 bytes per name and title.
+- **Limits:** the session's limit of participants on the roll at any time (section 2.1), 100 items, 300 characters per question, 128 bytes per name and title.
 
 ## 6. Verification (MUST, in every browser that shows a result)
 
@@ -124,6 +135,8 @@ The board and voter pages verify, from the event list alone:
 3. each ballot: on the item's frozen roll, at most one per fingerprint, valid proof, posted while the item was open;
 4. the totals `T_j`, recomputed from the accepted ballots;
 5. the partial-decryption proofs, and the counts.
+
+Verification is incremental: the Worker and the pages keep the verified state and apply each new event to it, so a new ballot does not cost a re-verification of the whole board. In pages, ballot proofs are checked in a Web Worker, with *Conferindo as provas das cédulas neste aparelho: 312 de 500…* while it runs, so the page never freezes. A Worker event that fails verification is rejected and leaves the state unchanged.
 
 Any failure is shown as *O quadro não confere* with the reason; no result is shown for that item. *Baixar a ata* downloads the full event list as JSON, so that the results can be verified after the board is deleted (a stand-alone verifier can come later).
 

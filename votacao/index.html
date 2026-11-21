@@ -6,7 +6,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lucent Votação · voto secreto em reuniões</title>
-<meta name="description" content="Voto secreto em reuniões, presenciais ou online: cada pessoa vota pelo celular, as cédulas ficam cifradas num quadro público e só os totais são abertos. Demonstração.">
+<meta name="description" content="Votações secretas durante uma reunião: os participantes votam pelo celular em cada questão que a mesa abrir; as cédulas ficam cifradas num quadro público e só os totais são abertos. Demonstração.">
 <link rel="canonical" href="https://lucentcrypto.org/votacao/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
@@ -149,7 +149,7 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
   <div>
     <div class="kicker"><a href="/">LucentCrypto</a> · demonstração</div>
     <h1>Lucent <span>Votação</span></h1>
-    <p class="lead" id="lead">Voto secreto em reuniões, presenciais ou online. Cada pessoa vota pelo celular; as cédulas ficam cifradas num quadro público, que qualquer um pode conferir, e só os totais são abertos.</p>
+    <p class="lead" id="lead">Votações secretas durante uma reunião, presencial ou online, com até 20 pessoas (para mais, <a href="mailto:info@lucentcrypto.org?subject=Lucent%20Vota%C3%A7%C3%A3o">fale conosco</a>). Os mesmos participantes votam em várias questões, uma de cada vez, à medida que a mesa as abre, inclusive as que surgirem na hora. Cada pessoa vota pelo celular, com um link pessoal que vale para a reunião toda. As cédulas cifradas são publicadas numa página pública, que qualquer um pode conferir. Elas são somadas ainda cifradas, e só o total de cada votação é decifrado: nenhuma cédula é aberta.</p>
   </div>
   <button class="theme" id="themeBtn" type="button"></button>
 </header>
@@ -163,6 +163,7 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
 </div>
 
 <div class="msg bad" id="fatal" hidden role="alert"></div>
+<p class="small muted" id="verifyProgress" hidden role="status"></p>
 
 <!-- ===== Criar ===== -->
 <section id="viewCreate" class="panel" hidden>
@@ -173,11 +174,16 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
   </div>
   <label class="f"><span>Seu celular ou e-mail <small>opcional: só para enviar a você mesmo o link do organizador</small></span><input type="text" id="cMe" maxlength="80" autocomplete="off" placeholder="(31) 99999-0000 ou nome@exemplo.com"></label>
   <h3>Participantes</h3>
-  <p class="small muted">No máximo 50. Cada um recebe um link pessoal para votar durante toda a reunião. Dá para incluir e excluir pessoas depois, também durante a reunião.</p>
+  <p class="small muted">Até 20 na demonstração (até 100 com um código de liberação). Cada um recebe um link pessoal para votar durante toda a reunião. Dá para incluir e excluir pessoas depois, também durante a reunião.</p>
   <table class="g"><thead><tr><th></th><th>Nome</th><th>Celular ou e-mail <small>(opcional, para enviar)</small></th><th></th></tr></thead><tbody id="cRows"></tbody></table>
-  <div class="row"><button class="btn small" id="cAdd" type="button">+ Participante</button><button class="btn small" id="cImportOpen" type="button">Colar uma lista</button></div>
+  <div class="row"><button class="btn small" id="cAdd" type="button">+ Participante</button><button class="btn small" id="cImportOpen" type="button">Colar uma lista</button><button class="btn small" id="cFileBtn" type="button">Importar arquivo (.csv)</button><input type="file" id="cFile" accept=".csv,.txt,.tsv,text/csv,text/plain" hidden></div>
+  <div class="msg warn" id="cLimit" hidden>
+    <p>A demonstração vai até 20 participantes. Para mais (até 100), informe um código de liberação, que pode ser pedido a <a href="mailto:info@lucentcrypto.org?subject=C%C3%B3digo%20de%20libera%C3%A7%C3%A3o%3A%20Lucent%20Vota%C3%A7%C3%A3o&amp;body=Gostaria%20de%20um%20c%C3%B3digo%20para%20uma%20reuni%C3%A3o%20com%20___%20participantes%2C%20no%20dia%20___.">info@lucentcrypto.org</a>.</p>
+    <label class="f" style="margin-top:8px"><span>Código de liberação</span><input type="text" id="cCode" maxlength="40" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XX" class="mono"></label>
+  </div>
   <div class="import" id="cImport" hidden>
     <label class="f"><span>Uma pessoa por linha <small>nome e, se quiser, celular ou e-mail; por exemplo “Bruno; (31) 98888-7777”. Pode colar duas colunas de uma planilha.</small></span><textarea id="cImportText" rows="5" spellcheck="false"></textarea></label>
+    <p class="small muted">Também lê planilhas salvas como CSV, separadas por vírgula, ponto e vírgula ou tabulação, com ou sem aspas, inclusive a planilha exportada de outra reunião.</p>
     <p class="small muted" id="cImportPreview" aria-live="polite"></p>
     <div class="row"><button class="btn small primary" id="cImportUse" type="button" disabled>Usar esta lista</button><button class="btn small" id="cImportCancel" type="button">Cancelar</button></div>
   </div>
@@ -242,6 +248,7 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
           <label class="f"><span>&nbsp;</span><input type="text" id="aNewContact" maxlength="80" placeholder="Celular ou e-mail (opcional)"></label>
         </div>
         <div class="row"><button class="btn small" id="aAddVoter" type="button">Incluir</button><span class="small muted" id="aVoterNote"></span></div>
+        <div class="row"><button class="btn small" id="aExport" type="button">Exportar planilha (CSV)</button><span class="small muted">nº, nome, contato, código e link de cada participante: para mala direta no Gmail ou Outlook, ou para um assistente enviar os links. Guarde-a como guardaria os links.</span></div>
       </section>
       <section class="panel" id="aResults" hidden><h2>Resultados</h2><div class="items" id="aResultsList"></div></section>
       <section class="panel">
@@ -368,6 +375,42 @@ function showQr(text, title, note) {
 $("qrClose").addEventListener("click", () => { $("qrDlg").close(); $("qrBox").innerHTML = ""; });
 
 // ---- lista colada (como no Segredo)
+// Planilha (CSV): separador vírgula, ponto e vírgula ou tabulação, campos com ou sem aspas; cabeçalho opcional.
+// Sem separador consistente, cai no leitor de linhas livres (parsePeople).
+const fold = (x) => String(x).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+function splitRow(line, sep) {
+  const out = []; let cur = "", q = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (q) { if (ch === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+    else if (ch === '"' && !cur.trim()) { q = true; cur = ""; }
+    else if (ch === sep) { out.push(cur.trim()); cur = ""; }
+    else cur += ch;
+  }
+  out.push(cur.trim()); return out;
+}
+const looksContact = (c) => /@/.test(c) || String(c).replace(/\D/g, "").length >= 8 && /^[\d\s()+.\-]+$/.test(c);
+function parseList(text) {
+  const lines = String(text).split(/\r?\n/).filter((l) => l.trim());
+  if (!lines.length) return [];
+  const sample = lines.slice(0, 10);
+  const score = (sep) => sample.filter((l) => splitRow(l, sep).length >= 2).length;
+  const sep = ["\t", ";", ","].map((x) => [x, score(x)]).sort((a, b) => b[1] - a[1])[0];
+  if (sep[1] < Math.ceil(sample.length / 2)) return parsePeople(text);
+  let rows = lines.map((l) => splitRow(l, sep[0])), nameCol = -1, contactCols = [];
+  const head = rows[0].map(fold);
+  const hn = head.findIndex((h) => /^(nome|name|participante|eleitor|pessoa)/.test(h));
+  if (hn >= 0) {
+    nameCol = hn; contactCols = head.map((h, i) => (/(contato|celular|telefone|fone|whats|e-?mail|email)/.test(h) ? i : -1)).filter((i) => i >= 0);
+    rows = rows.slice(1);
+  } else {
+    const first = rows[0];
+    nameCol = first.findIndex((c) => c && !/^\d+$/.test(c) && !looksContact(c));
+    contactCols = first.map((c, i) => (looksContact(c) ? i : -1)).filter((i) => i >= 0);
+  }
+  if (nameCol < 0) return parsePeople(text);
+  return rows.map((r) => ({ name: (r[nameCol] || "").replace(/\s+/g, " ").trim(), contact: (contactCols.map((i) => r[i]).find((c) => c && looksContact(c)) || "").trim() })).filter((p) => p.name);
+}
 function parsePeople(text) {
   const out = [];
   for (const raw of String(text).split(/\r?\n/)) {
@@ -421,13 +464,50 @@ async function fetchEvents() {
   const r = await fetch(API + sid + "/eventos?desde=" + board.events.length, { cache: "no-store" });
   if (r.status === 404 && !board.events.length) { board.missing = true; return; }
   const j = await r.json(); if (j.error) throw new Error(j.error);
-  board.deleteAt = j.deleteAt; addEvents(j.events);
+  board.deleteAt = j.deleteAt; await addEvents(j.events);
 }
+// Novos eventos: entram na lista na hora; a conferência é incremental (só os novos), em fila,
+// e as provas das cédulas vão para um Web Worker, com uma linha de progresso quando são muitas.
+board.queue = Promise.resolve();
 function addEvents(evs) {
-  let added = false;
-  for (const e of evs || []) if (e.n === board.events.length + 1) { board.events.push(e); added = true; }
-  if (added || !board.st) { board.st = V.verifyBoard(board.events, board.cache); checkHead(); }
-  return added;
+  const fresh = [];
+  for (const e of evs || []) if (e.n === board.events.length + 1) { board.events.push(e); fresh.push(e); }
+  if (!fresh.length) return board.queue.then(() => false);
+  board.queue = board.queue.then(() => processEvents(fresh)).then(() => true, (e) => { console.warn(e); return true; });
+  return board.queue;
+}
+async function processEvents(evs) {
+  if (!board.st) board.st = V.newBoardState();
+  const st = board.st, safe = (e) => { try { V.applyEvent(st, e, board.cache, false); } catch (err) { st.ok = false; st.problems.push(err.message); } };
+  let i = 0;
+  if (!st.session && evs[0]?.n === 1) { safe(evs[0]); i = 1; }
+  const rest = evs.slice(i);
+  if (st.session) await runChecks(V.pendingBallotChecks(rest, board.cache, st.session.K, sid, (n) => st.items.get(n)?.spec.m));
+  rest.forEach(safe);
+  checkHead();
+}
+let checker = null, checkId = 0;
+function showProgress(done, total) {
+  const el = $("verifyProgress");
+  el.hidden = done >= total; el.textContent = "Conferindo as provas das cédulas neste aparelho: " + done + " de " + total + "…";
+}
+async function runChecks(tasks) {
+  if (!tasks.length) return;
+  if (tasks.length > 3 && !checker) { try { checker = new Worker(new URL("./verifica.mjs", import.meta.url), { type: "module" }); } catch { checker = false; } }
+  if (tasks.length > 3 && checker) {
+    const id = ++checkId; showProgress(0, tasks.length);
+    const done = await new Promise((resolve) => {
+      const on = (e) => { if (e.data.id !== id) return; if (e.data.progress) showProgress(e.data.progress, e.data.total); if (e.data.done) { checker.removeEventListener("message", on); resolve(e.data.done); } };
+      checker.addEventListener("message", on); checker.postMessage({ id, tasks });
+    });
+    for (const [k, ok] of done) board.cache.set(k, ok);
+    showProgress(tasks.length, tasks.length); return;
+  }
+  // poucas (ou sem Web Worker): aqui mesmo, cedendo a vez à página entre uma e outra
+  for (let i = 0; i < tasks.length; i++) {
+    board.cache.set(tasks[i].key, V.verifyBallot(...tasks[i].args));
+    if (tasks.length > 3) { showProgress(i + 1, tasks.length); await new Promise((r) => setTimeout(r, 0)); }
+  }
 }
 function checkHead() {
   const st = board.st, key = "head:" + sid, seen = LSread()[key];
@@ -446,7 +526,7 @@ function live(render) {
   const connect = () => {
     try {
       const ws = new WebSocket(API.replace(/^http/, "ws") + sid + "/ao-vivo"); board.ws = ws;
-      ws.onmessage = (m) => { try { const d = JSON.parse(m.data); if (!addEvents(d.events)) go(); else render(); } catch {} };
+      ws.onmessage = async (m) => { try { const d = JSON.parse(m.data); if (await addEvents(d.events)) render(); else go(); } catch {} };
       ws.onopen = () => go();
       ws.onclose = () => { board.ws = null; setTimeout(connect, 3000); };
     } catch {}
@@ -457,7 +537,7 @@ function live(render) {
 async function post(path, body) {
   const r = await fetch(API + sid + "/" + path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
   const j = await r.json().catch(() => ({ error: "Resposta inválida do servidor." }));
-  if (j.events) addEvents(j.events);
+  if (j.events) await addEvents(j.events);
   return { ok: r.ok, ...j };
 }
 
@@ -475,14 +555,32 @@ function viewCreate() {
       d.disabled = rows.length <= 1; d.addEventListener("click", () => { rows.splice(i, 1); render(); });
       tb.append(tr);
     });
-    $("cAdd").disabled = rows.length >= V.MAX_VOTERS;
+    $("cAdd").disabled = rows.length >= V.MAX_LIMIT;
+    $("cLimit").hidden = rows.filter((r) => r.name.trim() || r.contact.trim()).length <= V.FREE_LIMIT;
   };
   $("cAdd").addEventListener("click", () => { rows.push({ name: "", contact: "" }); render(); });
-  const preview = () => { const l = parsePeople($("cImportText").value); $("cImportPreview").textContent = l.length ? l.length + (l.length === 1 ? " pessoa lida" : " pessoas lidas") + ": " + l.slice(0, 4).map((g) => g.name + (g.contact ? " (" + g.contact + ")" : "")).join(" · ") + (l.length > 4 ? " · …" : "") + (l.length > V.MAX_VOTERS ? " — no máximo " + V.MAX_VOTERS + "." : "") : ""; $("cImportUse").disabled = !l.length || l.length > V.MAX_VOTERS; return l; };
+  const known = () => new Set(rows.filter((r) => r.name.trim()).map((r) => r.name.trim().toLowerCase()));
+  const preview = () => {
+    const l = parseList($("cImportText").value), k = known(), fresh = l.filter((g) => !k.has(g.name.toLowerCase())), dup = l.length - fresh.length;
+    const total = rows.filter((r) => r.name.trim() || r.contact.trim()).length + fresh.length;
+    $("cImportPreview").textContent = l.length ? l.length + (l.length === 1 ? " pessoa lida" : " pessoas lidas") + ": " + l.slice(0, 4).map((g) => g.name + (g.contact ? " (" + g.contact + ")" : "")).join(" · ") + (l.length > 4 ? " · …" : "") +
+      (dup ? ". " + dup + (dup === 1 ? " já estava" : " já estavam") + " na lista e não " + (dup === 1 ? "será incluída" : "serão incluídas") + " de novo." : "") + (total > V.MAX_LIMIT ? " No máximo " + V.MAX_LIMIT + " participantes." : "") : "";
+    $("cImportUse").disabled = !fresh.length || total > V.MAX_LIMIT; return fresh;
+  };
   $("cImportOpen").addEventListener("click", () => { $("cImport").hidden = false; $("cImportText").focus(); });
   $("cImportCancel").addEventListener("click", () => { $("cImport").hidden = true; });
   $("cImportText").addEventListener("input", preview);
-  $("cImportUse").addEventListener("click", () => { const l = preview(); if (l.length && l.length <= V.MAX_VOTERS) { rows = l; $("cImport").hidden = true; $("cImportText").value = ""; render(); } });
+  $("cImportUse").addEventListener("click", () => {
+    const fresh = preview(); if (!fresh.length) return;
+    rows = rows.filter((r) => r.name.trim() || r.contact.trim()).concat(fresh);
+    $("cImport").hidden = true; $("cImportText").value = ""; render();
+  });
+  $("cFileBtn").addEventListener("click", () => $("cFile").click());
+  $("cFile").addEventListener("change", async () => {
+    const f = $("cFile").files[0]; if (!f) return;
+    let text = await f.text(); if (text.includes("\uFFFD")) text = new TextDecoder("windows-1252").decode(await f.arrayBuffer());
+    $("cImport").hidden = false; $("cImportText").value = text.replace(/^\uFEFF/, ""); preview(); $("cFile").value = "";
+  });
   render();
   const err = (t) => { $("cErr").hidden = !t; $("cErr").textContent = t || ""; };
   $("cGo").addEventListener("click", async () => {
@@ -494,6 +592,8 @@ function viewCreate() {
     if ([title, by].some((x) => utf8Len(x) > V.MAX_TEXT)) return err("Nome longo demais (máximo de " + V.MAX_TEXT + " bytes).");
     const names = rows.map((r) => r.name.trim());
     if (!names.length) return err("Inclua pelo menos um participante.");
+    const code = $("cCode").value.trim();
+    if (names.length > V.FREE_LIMIT && !code) return err("A demonstração vai até " + V.FREE_LIMIT + " participantes. Para mais, informe um código de liberação.");
     if (names.some((x) => !x)) return err("Dê um nome a cada participante (ou exclua as linhas vazias).");
     if (names.some((x) => utf8Len(x) > V.MAX_TEXT)) return err("Há um nome longo demais (máximo de " + V.MAX_TEXT + " bytes).");
     if (new Set(names.map((x) => x.toLowerCase())).size !== names.length) return err("Há dois participantes com o mesmo nome; diferencie-os.");
@@ -504,7 +604,7 @@ function viewCreate() {
       const A = V.mulBase(adm.a);
       const voters = [];
       for (let i = 0; i < rows.length; i++) voters.push({ i: i + 1, f: V.fingerprint(adm.voterSecret(i + 1)), name: names[i], priv: await sealPriv(key, { name: names[i], contact: rows[i].contact.trim() }) });
-      const body = { title, by, display, keyMode: split ? "dividida" : "lucent", th: adm.th, voters, A: split ? V.pHex(A) : undefined, pokA: split ? V.provePok(s, adm.a, A) : undefined };
+      const body = { title, by, display, keyMode: split ? "dividida" : "lucent", th: adm.th, voters, liberacao: names.length > V.FREE_LIMIT ? code : undefined, A: split ? V.pHex(A) : undefined, pokA: split ? V.provePok(s, adm.a, A) : undefined };
       const r = await fetch(API + s + "/criar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || "O servidor recusou a criação.");
@@ -558,12 +658,25 @@ async function viewAdmin() {
     const name = $("aNewName").value.trim(), contact = $("aNewContact").value.trim(), st = board.st;
     if (!name) { $("aVoterNote").textContent = "Digite o nome."; return; }
     if (utf8Len(name) > V.MAX_TEXT) { $("aVoterNote").textContent = "Nome longo demais."; return; }
-    if (st.roll.size >= V.MAX_VOTERS) { $("aVoterNote").textContent = "Já há " + V.MAX_VOTERS + " participantes."; return; }
+    if (st.roll.size >= st.session.limit) { $("aVoterNote").textContent = "Esta reunião vai até " + st.session.limit + " participantes" + (st.session.limit === V.FREE_LIMIT ? ". Para mais, crie a reunião com um código de liberação." : "."); return; }
     const i = board.events.filter((e) => e.type === "eleitor-incluido").reduce((mx, e) => Math.max(mx, e.i), 0) + 1;
     const r = await post("admin", { t: adm.t, acao: "incluir", voter: { i, f: V.fingerprint(adm.voterSecret(i)), name, priv: await sealPriv(key, { name, contact }) } });
     $("aVoterNote").textContent = r.ok ? "Incluído: vota a partir da próxima votação aberta." : r.error;
     if (r.ok) { $("aNewName").value = ""; $("aNewContact").value = ""; }
     render();
+  });
+  $("aExport").addEventListener("click", async () => {
+    const st = board.st; if (!st?.session) return;
+    const q = (x) => /[;"\r\n]/.test(String(x)) ? '"' + String(x).replace(/"/g, '""') + '"' : String(x);
+    const lines = [["nº", "nome", "contato", "código", "link"].join(";")];
+    for (const v of [...st.roll.values()].sort((a, b) => a.i - b.i)) {
+      const p = await privOf(v.f, v.priv);
+      lines.push([v.i, p?.name || v.name || "", p?.contact || "", V.voterCode(v.f), voterLink(sid, adm.voterSecret(v.i))].map(q).join(";"));
+    }
+    const blob = new Blob(["\uFEFF" + lines.join("\r\n") + "\r\n"], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = "participantes-" + (st.session.title.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase() || "reuniao") + ".csv";
+    a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   });
   $("aEnd").addEventListener("click", async () => {
     if (!confirmEnd) { confirmEnd = true; $("aEnd").textContent = "Confirmar: encerrar a reunião"; return; }
