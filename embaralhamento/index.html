@@ -266,16 +266,16 @@ footer a { color: inherit; }
 </section>
 
 <section class="panel" aria-labelledby="h3sec">
-  <h2 id="h3sec"><span class="n">3</span>Certificado (Fiat–Shamir)</h2>
+  <h2 id="h3sec"><span class="n">3</span>Comprovante (Fiat–Shamir)</h2>
   <p class="muted">Sem ninguém para jogar a moeda: quem prova lacra as caixas das 80 rodadas primeiro e calcula o SHA-256 de tudo o que é público (o grupo, os participantes, a lista, os envelopes C e todas as caixas D). O bit <i>t</i> desse hash é a moeda da rodada <i>t</i>. Qualquer pessoa recalcula o hash e confere as 80 respostas depois.</p>
   <p class="muted">Para enganar, seria preciso refazer as caixas até o hash cair nas moedas preparadas: cerca de 2<sup>80</sup> tentativas.</p>
-  <div class="row"><button class="btn primary" id="mkCert" type="button">Gerar certificado de 80 rodadas</button><button class="btn" id="copyCert" type="button" disabled>Copiar</button><button class="btn" id="checkMine" type="button" disabled>Conferir este certificado</button></div>
-  <p class="muted" style="font-size:13.5px">O certificado contém os nomes e a lista pública de valores, que já são públicos. Ele nunca diz quem tem qual valor.</p>
+  <div class="row"><button class="btn primary" id="mkCert" type="button">Gerar comprovante de 80 rodadas</button><button class="btn" id="copyCert" type="button" disabled>Copiar</button><button class="btn" id="checkMine" type="button" disabled>Conferir este comprovante</button></div>
+  <p class="muted" style="font-size:13.5px">O comprovante contém os nomes e a lista pública de valores, que já são públicos. Ele nunca diz quem tem qual valor.</p>
   <p id="certStatus"></p>
-  <label class="muted" for="certText" style="font-size:13px">Certificado (JSON). Cole um aqui para conferi-lo, ou altere-o para ver a conferência falhar.</label>
+  <label class="muted" for="certText" style="font-size:13px">Comprovante (JSON). Cole um aqui para conferi-lo, ou altere-o para ver a conferência falhar.</label>
   <textarea id="certText" rows="8" spellcheck="false"></textarea>
-  <div class="row"><button class="btn primary" id="verifyCert" type="button">Conferir certificado colado</button></div>
-  <div class="verdict" id="certVerdict"><b>Nenhum certificado conferido ainda</b><p>Gere um acima, ou cole um.</p></div>
+  <div class="row"><button class="btn primary" id="verifyCert" type="button">Conferir comprovante colado</button></div>
+  <div class="verdict" id="certVerdict"><b>Nenhum comprovante conferido ainda</b><p>Gere um acima, ou cole um.</p></div>
 </section>
 
 <details class="panel" id="lieBox">
@@ -463,7 +463,7 @@ footer a { color: inherit; }
     return { pass: personOk.every(Boolean), personOk, boxOk };
   }
 
-  // ---------- certificado (Fiat–Shamir) ----------
+  // ---------- comprovante (Fiat–Shamir) ----------
   const PROTOCOL = "lucent-embaralhamento/v1";
   const tick = () => new Promise((r) => setTimeout(r, 0));
   const GROUP = { p: hx(P), q: hx(Q), g: hx(G), h: hx(H) };
@@ -520,21 +520,21 @@ footer a { color: inherit; }
         const r = c.responses[t], b = fs.coins[t];
         if (!r || r.coin !== b) return fail(`A resposta é para a moeda ${r && r.coin}, mas o hash dá a moeda ${b}.`, t);
         if (b === 0) {
-          if (!isPerm(r.sigma, n)) return fail("σ não é uma permutação.", t);
-          if (!Array.isArray(r.delta) || r.delta.length !== n) return fail("Número errado de valores Δ.", t);
+          if (!isPerm(r.sigma, n)) return fail("A resposta não diz, para cada pessoa, qual é a caixa dela.", t);
+          if (!Array.isArray(r.delta) || r.delta.length !== n) return fail("A resposta não traz um número de ajuste para cada pessoa.", t);
           for (let i = 0; i < n; i++) {
-            const d = toBig(r.delta[i], 0n, Q, "Δ");
-            if (sq(D[t][r.sigma[i]]) !== sq(C[i] * hpow(d) % P)) return fail(`${esc(c.participants[i])}: D${r.sigma[i] + 1} ≠ C${i + 1}·h^Δ.`, t);
+            const d = toBig(r.delta[i], 0n, Q, "O número de ajuste de " + esc(c.participants[i]));
+            if (sq(D[t][r.sigma[i]]) !== sq(C[i] * hpow(d) % P)) return fail(`${esc(c.participants[i])}: o envelope, com o ajuste, não vira a caixa ${r.sigma[i] + 1}.`, t);
           }
         } else {
-          if (!isPerm(r.rho, n)) return fail("ρ não é uma permutação.", t);
+          if (!isPerm(r.rho, n)) return fail("A resposta não liga cada caixa a um valor da lista.", t);
           if (!Array.isArray(r.values) || r.values.length !== n || !Array.isArray(r.randomness) || r.randomness.length !== n) return fail("Número errado de aberturas de caixas.", t);
           for (let j = 0; j < n; j++) {
             const v = r.values[j];
             if (!Number.isInteger(v) || v < 0) return fail(`A caixa D${j + 1} abre para um valor que não é inteiro.`, t);
-            if (sq(com(v, toBig(r.randomness[j], 0n, Q, "r′"))) !== sq(D[t][j])) return fail(`A caixa D${j + 1} não abre para ${fmt(v)}.`, t);
+            if (sq(com(v, toBig(r.randomness[j], 0n, Q, "O acaso da caixa " + (j + 1)))) !== sq(D[t][j])) return fail(`A caixa D${j + 1} não abre para ${fmt(v)}.`, t);
           }
-          for (let kk = 0; kk < n; kk++) { const j = r.rho[kk]; if (r.values[j] !== c.values[kk]) return fail(`A caixa D${j + 1} abre para ${fmt(r.values[j])}, mas ρ a liga ao valor ${fmt(c.values[kk])} da lista.`, t); }
+          for (let kk = 0; kk < n; kk++) { const j = r.rho[kk]; if (r.values[j] !== c.values[kk]) return fail(`A caixa D${j + 1} abre para ${fmt(r.values[j])}, mas a resposta a liga ao valor ${fmt(c.values[kk])} da lista.`, t); }
         }
         if (progress) { progress(t + 1, k); await tick(); }
       }
@@ -639,17 +639,17 @@ footer a { color: inherit; }
     }
     const pass = result.pass;
     if (challenge === 1) {
-      t.innerHTML = "Moeda = <b>1</b>. Quem prova abriu todas as caixas (valor e r′) e mostrou o embaralhamento ρ que liga as caixas à lista pública.";
+      t.innerHTML = "Moeda = <b>1</b>. Quem prova abriu todas as caixas e mostrou como elas se ligam à lista pública.";
       set(v, pass ? "ok" : "bad", pass ? "Conferido" : "Mentira descoberta",
         pass ? "Todas as caixas abrem corretamente, e os valores abertos são exatamente a lista pública, em outra ordem."
              : `Uma caixa abre para ${fmt(round.boxVal[result.boxOk.findIndex((x) => !x)])}, que não está na lista pública. Quem prova lacrou cópias dos envelopes C nas caixas, apostando na moeda 0.`);
       set(l, "", "O que quem confere fica sabendo", `Os valores da lista em outra ordem, que já eram públicos. As caixas são novas, então nada as liga aos nomes. A coluna de ${k.who.toLowerCase()} fica apagada porque esta resposta não fala dela.`);
     } else {
-      t.innerHTML = "Moeda = <b>0</b>. Quem prova mostrou qual caixa é de quem (σ) e um número Δ por participante. Quem confere verifica D = C·h<sup>Δ</sup>.";
+      t.innerHTML = "Moeda = <b>0</b>. Quem prova mostrou qual caixa é de quem e, para cada pessoa, um número de ajuste. Quem confere verifica que o envelope de cada pessoa, com esse ajuste, vira exatamente a caixa dela.";
       set(v, pass ? "ok" : "bad", pass ? "Conferido" : "Mentira descoberta",
         pass ? `Cada caixa lacra o mesmo valor que o envelope do seu dono, só com outro acaso. Nenhuma caixa foi aberta.`
-             : `O envelope de ${esc(data.names[setup.cheater])} não corresponde a nenhuma caixa: nenhum Δ faz D = C·h<sup>Δ</sup>. As caixas guardam de fato a lista pública, e um valor fora dela não tem para onde ir.`);
-      set(l, "", "O que quem confere fica sabendo", "Qual caixa lacrada é de quem, e números Δ que parecem aleatórios. As caixas continuam fechadas, então nenhum valor aparece. A lista pública fica apagada porque esta resposta não fala dela.");
+             : `O envelope de ${esc(data.names[setup.cheater])} não vira nenhuma caixa, com ajuste nenhum. As caixas guardam de fato a lista pública, e um valor fora dela não tem para onde ir.`);
+      set(l, "", "O que quem confere fica sabendo", "Qual caixa lacrada é de quem, e números de ajuste que parecem aleatórios. As caixas continuam fechadas, então nenhum valor aparece. A lista pública fica apagada porque esta resposta não fala dela.");
     }
   }
 
@@ -676,7 +676,7 @@ footer a { color: inherit; }
     setup = makeSetup(); round = null; challenge = null; result = null;
     $("strip").innerHTML = ""; $("strip2").innerHTML = ""; $("summary").textContent = ""; $("summary2").textContent = "";
     lastCert = null; $("certText").value = ""; $("certStatus").textContent = "";
-    $("certVerdict").className = "verdict"; $("certVerdict").innerHTML = "<b>Nenhum certificado conferido ainda</b><p>Gere um acima, ou cole um.</p>";
+    $("certVerdict").className = "verdict"; $("certVerdict").innerHTML = "<b>Nenhum comprovante conferido ainda</b><p>Gere um acima, ou cole um.</p>";
     setBusy(false); renderLabels(); render();
   }
   const newRound = () => { round = makeRound(setup); challenge = null; result = null; render(); };
@@ -713,17 +713,17 @@ footer a { color: inherit; }
 
   async function produceCert() {
     if (busy) return; setBusy(true);
-    $("certVerdict").className = "verdict"; $("certVerdict").innerHTML = "<b>Nenhum certificado conferido ainda</b><p>Confira o novo certificado abaixo.</p>";
+    $("certVerdict").className = "verdict"; $("certVerdict").innerHTML = "<b>Nenhum comprovante conferido ainda</b><p>Confira o novo comprovante abaixo.</p>";
     const cert = await makeCert(setup, 80, (t, k) => { $("certStatus").textContent = `Lacrando as caixas da rodada ${t} de ${k}…`; });
     lastCert = JSON.stringify(cert, null, 1);
     $("certText").value = lastCert;
-    $("certStatus").innerHTML = `Certificado pronto: 80 rodadas, ${cert.participants.length} participantes, cerca de ${fmt(Math.round(lastCert.length / 1024))} KB. Moedas do SHA-256: <span class="mono" style="word-break:break-all">${cert.fiat_shamir.coins}</span>`
-      + (setup.cheater >= 0 ? `<br><b style="color:var(--bad)">Há uma mentira simulada (seção 4): a conferência deve rejeitar este certificado.</b>` : "");
+    $("certStatus").innerHTML = `Comprovante pronto: 80 rodadas, ${cert.participants.length} participantes, cerca de ${fmt(Math.round(lastCert.length / 1024))} KB. Moedas do SHA-256: <span class="mono" style="word-break:break-all">${cert.fiat_shamir.coins}</span>`
+      + (setup.cheater >= 0 ? `<br><b style="color:var(--bad)">Há uma mentira simulada (seção 4): a conferência deve rejeitar este comprovante.</b>` : "");
     setBusy(false);
   }
   async function checkCert() {
     if (busy) return;
-    let c; try { c = JSON.parse($("certText").value); } catch (e) { showCertVerdict({ ok: false, msg: "Isto não é um JSON válido. Cole o certificado inteiro." }); return; }
+    let c; try { c = JSON.parse($("certText").value); } catch (e) { showCertVerdict({ ok: false, msg: "Isto não é um JSON válido. Cole o comprovante inteiro." }); return; }
     setBusy(true);
     const res = await verifyCert(c, (t, k) => { $("certVerdict").className = "verdict"; $("certVerdict").innerHTML = `<b>Conferindo…</b><p>Rodada ${t} de ${k}</p>`; });
     showCertVerdict(res); setBusy(false);
@@ -731,11 +731,11 @@ footer a { color: inherit; }
   function showCertVerdict(res) {
     const v = $("certVerdict"); v.className = "verdict " + (res.ok ? "ok" : "bad");
     v.innerHTML = res.ok
-      ? `<b>Certificado confere</b><p>O SHA-256 recalculado dá as mesmas moedas, e as ${res.k} rodadas conferem para ${res.n} participantes. Resumo <span class="mono">${res.digest.slice(0, 16)}…</span></p>`
-      : `<b>Certificado rejeitado</b><p>${res.round !== undefined ? `Rodada ${res.round + 1}: ` : ""}${res.msg}</p>`;
+      ? `<b>Comprovante confere</b><p>O SHA-256 recalculado dá as mesmas moedas, e as ${res.k} rodadas conferem para ${res.n} participantes. Resumo <span class="mono">${res.digest.slice(0, 16)}…</span></p>`
+      : `<b>Comprovante rejeitado</b><p>${res.round !== undefined ? `Rodada ${res.round + 1}: ` : ""}${res.msg}</p>`;
   }
   async function copyCert() {
-    try { await navigator.clipboard.writeText($("certText").value); $("certStatus").textContent = "Certificado copiado."; }
+    try { await navigator.clipboard.writeText($("certText").value); $("certStatus").textContent = "Comprovante copiado."; }
     catch (e) { $("certStatus").textContent = "Não foi possível copiar aqui. Clique na caixa, selecione tudo e copie."; }
   }
 

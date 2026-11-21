@@ -106,7 +106,8 @@ como MUST.
 - Coluna "Celular ou e-mail" por participante; o link vai para o contato do ajudante, quando houver. Celular: WhatsApp direto ao número; e-mail: "Enviar por e-mail"; sem contato: WhatsApp escolhendo o contato. Os contatos ficam só no aparelho (não vão no link de recuperação).
 - "Colar uma lista" e "Importar arquivo (.csv)", com o mesmo leitor da Votação; a lista colada substitui o exemplo.
 
-## Pendente: Embaralhamento, símbolos que assustam
+## Feito (21/11/2026): Embaralhamento, símbolos que assustam
+- Resolvido: as explicações das moedas e as mensagens de erro falam em «número de ajuste» e «qual caixa é de quem»; as fórmulas (σ, ρ, Δ) ficam só no parágrafo técnico do rodapé. «Certificado» virou «comprovante», como no Sorteios.
 - O Δ (e σ, ρ, h^Δ) aparece na seção técnica (linha "Resposta ao 0…") e na mensagem de erro "Número errado de valores Δ." Assusta o leitor comum. Rever: esconder a notação na parte técnica recolhida, ou trocar por palavras ("diferença de sorteio"), e tirar o Δ das mensagens de erro.
 
 ## Faróis (21/11/2026)
