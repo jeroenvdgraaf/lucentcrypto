@@ -151,13 +151,52 @@ body.tela .question { font-size: clamp(28px, 4.2vw, 56px); }
 body.tela .bar { font-size: clamp(18px, 2.4vw, 32px); grid-template-columns: minmax(200px, auto) 1fr 4ch; }
 body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
 .big { font: 800 clamp(36px, 7vw, 96px)/1 var(--display); }
+/* FRAME-BEGIN (moldura do site: Laboratório ou Soluções; mesma em todas as páginas) */
+.lcf-bar { margin: calc(-1 * 24px) calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 24px; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.lcf-in { max-width: 1120px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; }
+.lcf-logo { font: 800 20px "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; text-decoration: none; white-space: nowrap; }
+.lcf-logo span { color: #a85d08; }
+.lcf-nav { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 14.5px; font-weight: 500; }
+.lcf-nav a { text-decoration: none; padding-bottom: 2px; border-bottom: 2px solid transparent; }
+.lcf-tag { font: 600 11.5px ui-monospace, Menlo, monospace; letter-spacing: .1em; text-transform: uppercase; }
+.lcf-lab { background: #13232b; border-bottom: 1px solid #26363d; }
+.lcf-lab .lcf-logo { color: #ffffff; } .lcf-lab .lcf-logo span { color: #f0a443; }
+.lcf-lab .lcf-logo i { font: normal 600 12px ui-monospace, Menlo, monospace; letter-spacing: .14em; color: #f0a443; margin-left: 10px; }
+.lcf-lab .lcf-nav a { color: #98abb2; } .lcf-lab .lcf-nav a[aria-current="page"] { color: #ffffff; border-color: #f0a443; }
+.lcf-lab .lcf-tag { color: #f0a443; border: 1px solid #f0a443; border-radius: 99px; padding: 3px 10px; }
+.lcf-sol { background: var(--surface, #ffffff); border-bottom: 1px solid var(--line, #cdd8dc); }
+.lcf-sol .lcf-logo { color: var(--ink, #13232b); }
+.lcf-sol .lcf-nav a { color: var(--ink, #13232b); } .lcf-sol .lcf-nav a.lcf-muted { color: var(--muted, #50646d); }
+.lcf-sol .lcf-nav a[aria-current="page"] { border-color: currentColor; }
+.lcf-btn { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 16px; border-radius: 10px; font-weight: 600; font-size: 14.5px; text-decoration: none; background: #1f5a44; color: #ffffff; }
+.lcf-end { border-radius: 16px; padding: 26px; display: grid; gap: 16px; }
+.lcf-end h2 { margin: 0; font: 800 24px "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; }
+.lcf-end .lcf-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.lcf-labend { background: #13232b; color: #e2ebee; }
+.lcf-labend .lcf-kick { font: 600 12px ui-monospace, Menlo, monospace; letter-spacing: .14em; text-transform: uppercase; color: #f0a443; margin: 0; }
+.lcf-labend a.lcf-card { background: #1b2f38; border: 1px solid #26363d; border-radius: 14px; padding: 16px; text-decoration: none; color: #e2ebee; display: grid; gap: 4px; }
+.lcf-labend a.lcf-card:hover { border-color: #f0a443; }
+.lcf-labend a.lcf-card b { color: #ffffff; } .lcf-labend a.lcf-card span { color: #98abb2; font-size: 14px; }
+.lcf-labend p { margin: 0; color: #98abb2; font-size: 14px; } .lcf-labend p a { color: #f0a443; }
+.lcf-solend { background: var(--surface, #ffffff); border: 1px solid var(--line, #cdd8dc); grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: center; gap: 24px; }
+.lcf-solend ul { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
+.lcf-solend .lcf-box { background: var(--bg, #eef2f3); border: 1px solid var(--line, #cdd8dc); border-radius: 14px; padding: 20px; display: grid; gap: 12px; justify-items: start; }
+.lcf-solend .lcf-box p { margin: 0; }
+/* FRAME-END */
 </style>
 </head>
 <body>
+<!-- FRAME-BAR -->
+<div class="lcf-bar lcf-sol" id="lcfBar"><div class="lcf-in">
+  <a class="lcf-logo" href="/pt/">Lucent<span>Crypto</span></a>
+  <nav class="lcf-nav" aria-label="Principal"><a href="/pt/#sorteios">Sorteios</a><a href="/pt/#conformidade">Conformidade</a><a href="/pt/#votacao" aria-current="page">Votação</a><a href="/pt/#servicos">Serviços</a><a class="lcf-muted" href="/pt/#laboratorio">Laboratório</a></nav>
+  <a class="lcf-btn" href="/pt/#contato">Fale conosco</a>
+</div></div>
+<!-- /FRAME-BAR -->
 <div class="wrap">
 <header class="top" id="topHeader">
   <div>
-    <div class="kicker"><a href="/">LucentCrypto</a> · demonstração</div>
+    <div class="kicker">Votação segura · versão de avaliação</div>
     <h1>Lucent <span>Votação</span></h1>
     <p class="lead" id="lead">Votações secretas durante uma reunião, presencial ou online, com até 20 pessoas (para mais, <a href="mailto:info@lucentcrypto.org?subject=Lucent%20Vota%C3%A7%C3%A3o">fale conosco</a>). Os mesmos participantes votam em várias questões, uma de cada vez, à medida que a mesa as abre, inclusive as que surgirem na hora. Cada pessoa vota pelo celular, com um link pessoal que vale para a reunião toda. As cédulas cifradas são publicadas numa página pública, que qualquer um pode conferir. Elas são somadas ainda cifradas, e só o total de cada votação é decifrado: nenhuma cédula é aberta.</p>
   </div>
@@ -167,8 +206,8 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
 <div class="danger" role="note" id="demoNote">
   <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 2 44h44L24 4z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M24 18v12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="36.5" r="2.6" fill="currentColor"/></svg>
   <div>
-    <b>Versão de demonstração</b>
-    <p>Feita de boa-fé e com cuidado, mas sem garantias. <b style="display:inline;font:inherit;font-weight:700;color:inherit">Nenhum valor jurídico pode ser atribuído a estas votações.</b> Uma versão completa está em preparação.</p>
+    <b>Versão de avaliação</b>
+    <p>Funciona de verdade, e qualquer pessoa confere o resultado, mas é oferecida sem garantias. <b style="display:inline;font:inherit;font-weight:700;color:inherit">Nenhum valor jurídico pode ser atribuído a estas votações.</b> Para uso oficial, fale conosco.</p>
   </div>
 </div>
 
@@ -315,6 +354,12 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
     <p>Esta página é uma demonstração, feita de boa-fé e com cuidado. Ela é oferecida “como está”, <b>sem garantia de qualquer tipo</b>, inclusive de funcionamento, de segurança ou de adequação a um uso específico. <b>Nenhum valor jurídico pode ser atribuído a estas votações.</b> Os autores e a LucentCrypto não se responsabilizam por qualquer dano decorrente do uso. O código ainda não passou por auditoria independente.</p>
   </div>
 </details>
+<!-- FRAME-END -->
+<section class="lcf-end lcf-solend" id="lcfEnd" aria-label="Para usar na sua organização">
+  <div><h2>Para usar na sua organização</h2><ul><li>Eleições com até 10.000 eleitores</li><li>Autenticação conforme o estatuto</li><li>Ata</li></ul></div>
+  <div class="lcf-box"><p>Conte como é a sua eleição. Respondemos com uma proposta.</p><a class="lcf-btn" href="mailto:info@lucentcrypto.org?subject=Vota%C3%A7%C3%A3o%20segura">info@lucentcrypto.org</a></div>
+</section>
+<!-- /FRAME-END -->
 
 <footer>
   <p>Formato LucentVote/1 · ristretto255; uma cifra ElGamal por opção, com provas de Chaum–Pedersen disjuntivas de que cada cédula marca no máximo uma opção; decifração só dos totais, com prova. Especificação: <a href="https://github.com/jeroenvdgraaf/lucentcrypto/blob/main/spec/VOTACAO.md" target="_blank" rel="noopener">spec/VOTACAO.md</a>. Bibliotecas: noble-curves e noble-hashes, de Paul Miller; qrcode-generator, de Kazuhiko Arase (licença MIT).</p>
@@ -858,7 +903,7 @@ function viewBoard() {
   // Tela cheia (para projetar): só o bloco da votação atual, em letras grandes.
   const setFull = (on) => {
     document.body.classList.toggle("tela", on);
-    ["topHeader", "demoNote", "scope"].forEach((id) => { $(id).hidden = on; }); document.querySelector("footer").hidden = on;
+    ["lcfBar", "lcfEnd", "topHeader", "demoNote", "scope"].forEach((id) => { $(id).hidden = on; }); document.querySelector("footer").hidden = on;
     document.querySelectorAll("[data-notela]").forEach((x) => { x.hidden = on || (x.id === "bResults" && !$("bResultsList").innerHTML); });
     $("bFull").textContent = on ? "Sair da tela cheia" : "Tela cheia";
     if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});

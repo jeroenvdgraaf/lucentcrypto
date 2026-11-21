@@ -117,9 +117,48 @@ dialog::backdrop { background: rgba(10, 15, 25, .6); }
 .qrbox { background: #fff; padding: 12px; border-radius: 12px; width: 100%; max-width: 360px; }
 .qrbox svg { width: 100%; height: auto; display: block; }
 footer { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
+/* FRAME-BEGIN (moldura do site: Laboratório ou Soluções; mesma em todas as páginas) */
+.lcf-bar { margin: calc(-1 * 24px) calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 24px; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.lcf-in { max-width: 1120px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; }
+.lcf-logo { font: 800 20px "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; text-decoration: none; white-space: nowrap; }
+.lcf-logo span { color: #a85d08; }
+.lcf-nav { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 14.5px; font-weight: 500; }
+.lcf-nav a { text-decoration: none; padding-bottom: 2px; border-bottom: 2px solid transparent; }
+.lcf-tag { font: 600 11.5px ui-monospace, Menlo, monospace; letter-spacing: .1em; text-transform: uppercase; }
+.lcf-lab { background: #13232b; border-bottom: 1px solid #26363d; }
+.lcf-lab .lcf-logo { color: #ffffff; } .lcf-lab .lcf-logo span { color: #f0a443; }
+.lcf-lab .lcf-logo i { font: normal 600 12px ui-monospace, Menlo, monospace; letter-spacing: .14em; color: #f0a443; margin-left: 10px; }
+.lcf-lab .lcf-nav a { color: #98abb2; } .lcf-lab .lcf-nav a[aria-current="page"] { color: #ffffff; border-color: #f0a443; }
+.lcf-lab .lcf-tag { color: #f0a443; border: 1px solid #f0a443; border-radius: 99px; padding: 3px 10px; }
+.lcf-sol { background: var(--surface, #ffffff); border-bottom: 1px solid var(--line, #cdd8dc); }
+.lcf-sol .lcf-logo { color: var(--ink, #13232b); }
+.lcf-sol .lcf-nav a { color: var(--ink, #13232b); } .lcf-sol .lcf-nav a.lcf-muted { color: var(--muted, #50646d); }
+.lcf-sol .lcf-nav a[aria-current="page"] { border-color: currentColor; }
+.lcf-btn { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 16px; border-radius: 10px; font-weight: 600; font-size: 14.5px; text-decoration: none; background: #1f5a44; color: #ffffff; }
+.lcf-end { border-radius: 16px; padding: 26px; display: grid; gap: 16px; }
+.lcf-end h2 { margin: 0; font: 800 24px "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; }
+.lcf-end .lcf-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.lcf-labend { background: #13232b; color: #e2ebee; }
+.lcf-labend .lcf-kick { font: 600 12px ui-monospace, Menlo, monospace; letter-spacing: .14em; text-transform: uppercase; color: #f0a443; margin: 0; }
+.lcf-labend a.lcf-card { background: #1b2f38; border: 1px solid #26363d; border-radius: 14px; padding: 16px; text-decoration: none; color: #e2ebee; display: grid; gap: 4px; }
+.lcf-labend a.lcf-card:hover { border-color: #f0a443; }
+.lcf-labend a.lcf-card b { color: #ffffff; } .lcf-labend a.lcf-card span { color: #98abb2; font-size: 14px; }
+.lcf-labend p { margin: 0; color: #98abb2; font-size: 14px; } .lcf-labend p a { color: #f0a443; }
+.lcf-solend { background: var(--surface, #ffffff); border: 1px solid var(--line, #cdd8dc); grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: center; gap: 24px; }
+.lcf-solend ul { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
+.lcf-solend .lcf-box { background: var(--bg, #eef2f3); border: 1px solid var(--line, #cdd8dc); border-radius: 14px; padding: 20px; display: grid; gap: 12px; justify-items: start; }
+.lcf-solend .lcf-box p { margin: 0; }
+/* FRAME-END */
 </style>
 </head>
 <body>
+<!-- FRAME-BAR -->
+<div class="lcf-bar lcf-lab" id="lcfBar"><div class="lcf-in">
+  <a class="lcf-logo" href="/pt/#laboratorio">Lucent<span>Crypto</span><i>LAB</i></a>
+  <nav class="lcf-nav" aria-label="Laboratório"><a href="/encrypt/" aria-current="page">Encrypt</a><a href="/segredo/">Segredo</a><a href="/amigo-oculto/">Amigo Oculto</a></nav>
+  <span class="lcf-tag">Demonstração</span>
+</div></div>
+<!-- /FRAME-BAR -->
 <div class="wrap">
 <header class="top">
   <div>
@@ -248,6 +287,13 @@ footer { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
     <p>Esta página é uma demonstração, feita de boa-fé e com cuidado. Ela é oferecida “como está”, <b>sem garantia de qualquer tipo</b>, inclusive de funcionamento, de segurança ou de adequação a um uso específico. Os autores e a LucentCrypto não se responsabilizam por qualquer dano decorrente do uso. O código ainda não passou por auditoria independente.</p>
   </div>
 </details>
+<!-- FRAME-END -->
+<section class="lcf-end lcf-labend" id="lcfEnd" aria-label="Mais no Laboratório">
+  <p class="lcf-kick">Mais no Laboratório</p>
+  <div class="lcf-cards"><a class="lcf-card" href="/segredo/"><b>Segredo</b><span>Divida um segredo entre pessoas de confiança.</span></a><a class="lcf-card" href="/amigo-oculto/"><b>Amigo Oculto</b><span>Cada um recebe o seu amigo pelo próprio link.</span></a></div>
+  <p>Feito pela <a href="/pt/">LucentCrypto</a>, que faz sorteios, publicações de dados e votações verificáveis para organizações.</p>
+</section>
+<!-- /FRAME-END -->
 
 <footer>
   <p>Formato LucentEncrypt/1 · frase de 7 palavras (77 bits) → Argon2id (64 MiB, 3 passadas) com o identificador como sal → uma chave por modo; KEM e AES-256-GCM. Especificação: <a href="https://github.com/jeroenvdgraaf/lucentcrypto/blob/main/spec/ENCRYPT.md" target="_blank" rel="noopener">spec/ENCRYPT.md</a>. Funciona salva, sem internet.</p>
@@ -2445,7 +2491,7 @@ const LE = (() => {
 
   // ---- tema
   const THEMES = ["auto", "light", "dark"], LABEL = { auto: "Tema: automático", light: "Tema: claro", dark: "Tema: escuro" };
-  let theme = "auto"; try { theme = localStorage.getItem("lucent-theme") || "auto"; } catch {}
+  let theme = "dark"; try { theme = localStorage.getItem("lucent-theme") || "dark"; } catch {} // Laboratório: escuro por padrão
   if (!THEMES.includes(theme)) theme = "auto";
   const applyTheme = (t) => { if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = t; $("themeBtn").textContent = LABEL[t]; };
   $("themeBtn").addEventListener("click", () => { theme = THEMES[(THEMES.indexOf(theme) + 1) % 3]; try { localStorage.setItem("lucent-theme", theme); } catch {} applyTheme(theme); });

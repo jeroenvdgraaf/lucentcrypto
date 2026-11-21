@@ -146,9 +146,48 @@ button.mine { background: var(--berry); border-color: var(--berry); color: #fff;
 .done { font-size: 22px; font-weight: 700; color: var(--pine); }
 footer { color: var(--muted); font-size: 13px; }
 @media (prefers-reduced-motion: no-preference) { .secret { transition: color .12s; } }
+/* FRAME-BEGIN (moldura do site: Laboratório ou Soluções; mesma em todas as páginas) */
+.lcf-bar { margin: calc(-1 * max(20px, env(safe-area-inset-top, 0px))) calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 24px; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.lcf-in { max-width: 1120px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; }
+.lcf-logo { font: 800 20px "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; text-decoration: none; white-space: nowrap; }
+.lcf-logo span { color: #a85d08; }
+.lcf-nav { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 14.5px; font-weight: 500; }
+.lcf-nav a { text-decoration: none; padding-bottom: 2px; border-bottom: 2px solid transparent; }
+.lcf-tag { font: 600 11.5px ui-monospace, Menlo, monospace; letter-spacing: .1em; text-transform: uppercase; }
+.lcf-lab { background: #13232b; border-bottom: 1px solid #26363d; }
+.lcf-lab .lcf-logo { color: #ffffff; } .lcf-lab .lcf-logo span { color: #f0a443; }
+.lcf-lab .lcf-logo i { font: normal 600 12px ui-monospace, Menlo, monospace; letter-spacing: .14em; color: #f0a443; margin-left: 10px; }
+.lcf-lab .lcf-nav a { color: #98abb2; } .lcf-lab .lcf-nav a[aria-current="page"] { color: #ffffff; border-color: #f0a443; }
+.lcf-lab .lcf-tag { color: #f0a443; border: 1px solid #f0a443; border-radius: 99px; padding: 3px 10px; }
+.lcf-sol { background: var(--surface, #ffffff); border-bottom: 1px solid var(--line, #cdd8dc); }
+.lcf-sol .lcf-logo { color: var(--ink, #13232b); }
+.lcf-sol .lcf-nav a { color: var(--ink, #13232b); } .lcf-sol .lcf-nav a.lcf-muted { color: var(--muted, #50646d); }
+.lcf-sol .lcf-nav a[aria-current="page"] { border-color: currentColor; }
+.lcf-btn { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 16px; border-radius: 10px; font-weight: 600; font-size: 14.5px; text-decoration: none; background: #1f5a44; color: #ffffff; }
+.lcf-end { border-radius: 16px; padding: 26px; display: grid; gap: 16px; }
+.lcf-end h2 { margin: 0; font: 800 24px "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; }
+.lcf-end .lcf-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.lcf-labend { background: #13232b; color: #e2ebee; }
+.lcf-labend .lcf-kick { font: 600 12px ui-monospace, Menlo, monospace; letter-spacing: .14em; text-transform: uppercase; color: #f0a443; margin: 0; }
+.lcf-labend a.lcf-card { background: #1b2f38; border: 1px solid #26363d; border-radius: 14px; padding: 16px; text-decoration: none; color: #e2ebee; display: grid; gap: 4px; }
+.lcf-labend a.lcf-card:hover { border-color: #f0a443; }
+.lcf-labend a.lcf-card b { color: #ffffff; } .lcf-labend a.lcf-card span { color: #98abb2; font-size: 14px; }
+.lcf-labend p { margin: 0; color: #98abb2; font-size: 14px; } .lcf-labend p a { color: #f0a443; }
+.lcf-solend { background: var(--surface, #ffffff); border: 1px solid var(--line, #cdd8dc); grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: center; gap: 24px; }
+.lcf-solend ul { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
+.lcf-solend .lcf-box { background: var(--bg, #eef2f3); border: 1px solid var(--line, #cdd8dc); border-radius: 14px; padding: 20px; display: grid; gap: 12px; justify-items: start; }
+.lcf-solend .lcf-box p { margin: 0; }
+/* FRAME-END */
 </style>
 </head>
 <body>
+<!-- FRAME-BAR -->
+<div class="lcf-bar lcf-lab" id="lcfBar"><div class="lcf-in">
+  <a class="lcf-logo" href="/pt/#laboratorio">Lucent<span>Crypto</span><i>LAB</i></a>
+  <nav class="lcf-nav" aria-label="Laboratório"><a href="/encrypt/">Encrypt</a><a href="/segredo/">Segredo</a><a href="/amigo-oculto/" aria-current="page">Amigo Oculto</a></nav>
+  <span class="lcf-tag">Demonstração</span>
+</div></div>
+<!-- /FRAME-BAR -->
 <div class="wrap">
   <header>
     <div class="fam">LucentCrypto</div>
@@ -282,6 +321,13 @@ footer { color: var(--muted); font-size: 13px; }
   <main id="badLink" hidden>
     <section class="card"><h2>Este link não abriu</h2><p class="hint">O link parece incompleto. Peça ao organizador para enviar de novo, ou copie o link inteiro da mensagem.</p></section>
   </main>
+<!-- FRAME-END -->
+<section class="lcf-end lcf-labend" id="lcfEnd" aria-label="Mais no Laboratório">
+  <p class="lcf-kick">Mais no Laboratório</p>
+  <div class="lcf-cards"><a class="lcf-card" href="/encrypt/"><b>Encrypt</b><span>Cifra clássica e pós-quântica, lado a lado.</span></a><a class="lcf-card" href="/segredo/"><b>Segredo</b><span>Divida um segredo entre pessoas de confiança.</span></a></div>
+  <p>Feito pela <a href="/pt/">LucentCrypto</a>, que faz sorteios, publicações de dados e votações verificáveis para organizações.</p>
+</section>
+<!-- /FRAME-END -->
 
   <footer id="footer">Lucent Amigo Oculto · parte da família LucentCrypto. Nada é guardado em servidor: o sorteio acontece no navegador de quem organiza, e o amigo de cada pessoa viaja só dentro do link dela, depois do sinal #, parte que o site nunca recebe. Para sorteios com certificado: <a href="/sorteios/" style="color:inherit">Lucent Sorteios</a>.</footer>
 </div>
@@ -817,8 +863,8 @@ async function copyTo(btn, text, label) {
 function roomReveal(item) {
   const o = decodePayload(item.payload);
   const y = window.scrollY;
-  $("organizer").hidden = true; $("footer").hidden = true;
-  showReveal(o, () => { $("revealView").hidden = true; $("organizer").hidden = false; $("footer").hidden = false; $("tagline").textContent = TAGLINE; renderLinks(); window.scrollTo(0, y); });
+  $("organizer").hidden = true; $("footer").hidden = true; $("lcfEnd").hidden = true;
+  showReveal(o, () => { $("revealView").hidden = true; $("organizer").hidden = false; $("footer").hidden = false; $("lcfEnd").hidden = false; $("tagline").textContent = TAGLINE; renderLinks(); window.scrollTo(0, y); });
   window.scrollTo(0, 0);
 }
 // Has this person already looked on this device (current version of their link)?
