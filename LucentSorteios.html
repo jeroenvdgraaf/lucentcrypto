@@ -803,7 +803,7 @@ const STR = {
   vResultTitle: "Resultado recalculado",
   ruleTitle: "A regra, para conferir sem esta página",
   ruleText1: "Tudo é SHA-256 sobre texto UTF-8. C é o hash do registro lacrado em JSON canônico (chaves ordenadas, sem espaços). A semente resume a versão, C e o valor de cada fonte, uma por linha, na ordem eth, drand, megasena, federal, com \"-\" para fonte não usada. Em LucentDraw/3, cada peso vira uma fração exata, todas vão para o mesmo denominador e viram inteiros; W é a soma. Para a escolha j, r = H(\"LucentDraw/3\\npick\\n\" + semente + \"\\n\" + j) lido como inteiro de 256 bits, x = ⌊r·W/2²⁵⁶⌋, e sai a primeira opção cuja soma acumulada passa de x. Sem reposição, ela sai da lista antes da próxima escolha.",
-  ruleText2: "O verificador de referência verify_draw.py faz a conferência completa, inclusive das assinaturas dos carimbos de tempo e das versões /2 e /1. O mesmo cálculo em poucas linhas de Python:",
+  ruleText2: "O verificador de referência verify_draw.py faz a conferência completa, inclusive das assinaturas dos carimbos de tempo e das versões /2 e /1 (as mensagens dele são em inglês). O mesmo cálculo em poucas linhas de Python:",
   passMeansTitle: "O que significa passar",
   passIdle: "Depois da conferência, aqui aparece o que ela prova para este sorteio.",
   passCommon: "O resultado decorre das opções e pesos lacrados e de um valor aleatório público que ninguém podia escolher depois de ver o lacre.",

@@ -68,7 +68,7 @@ class Vectors(unittest.TestCase):
     def test_example_weights(self):
         ints, L, W = v.integer_weights(["3", "0,35", "1/7", "0"])
         self.assertEqual((ints, L, W), ([420, 49, 20, 0], 140, 489))
-        self.assertEqual([v.share_text(i, W) for i in ints], ["85,9 %", "10,0 %", "4,1 %", "0 %"])
+        self.assertEqual([v.share_text(i, W) for i in ints], ["85.9%", "10.0%", "4.1%", "0%"])
 
     def test_agrees_with_spec_reference_and_html_core(self):
         # v3_cross.json foi resolvido pelo núcleo do HTML; o teste Node confere o mesmo arquivo.
@@ -118,16 +118,16 @@ class Weights(unittest.TestCase):
         bad = lambda **p: v.validate_task({**base, **p})  # noqa: E731
         self.assertEqual(bad(), [])
         self.assertTrue(bad(options=[]))
-        self.assertTrue(any("repetidas" in p for p in bad(options=["A", "A", "B", "C"])))
-        self.assertTrue(any("peso 2" in p for p in bad(weights=["1", "1/0", "1", "1"])))
-        self.assertTrue(any("maior que zero" in p for p in bad(weights=["0", "0", "0", "0/2"])))
-        self.assertTrue(any("sem reposição" in p for p in bad(count=4)))
+        self.assertTrue(any("repeated" in p for p in bad(options=["A", "A", "B", "C"])))
+        self.assertTrue(any("weight 2" in p for p in bad(weights=["1", "1/0", "1", "1"])))
+        self.assertTrue(any("greater than zero" in p for p in bad(weights=["0", "0", "0", "0/2"])))
+        self.assertTrue(any("without replacement" in p for p in bad(count=4)))
         self.assertEqual(bad(count=4, replace=True), [])
         self.assertTrue(bad(replace=1))
         self.assertTrue(bad(count=True))
         self.assertTrue(bad(preset="roleta"))
         spec = json.loads(VECTORS[3]["canonical"])
-        self.assertTrue(any("booleano" in p for p in v.validate_spec({**spec, "title": True})))
+        self.assertTrue(any("boolean" in p for p in v.validate_spec({**spec, "title": True})))
 
 
 class Lottery(unittest.TestCase):
@@ -188,7 +188,7 @@ class LotteryTiming(unittest.TestCase):
         t = next(x for x in rep["checks"] if x["id"] == "megasenaTiming")
         self.assertEqual(t["status"], v.UNVERIFIED)
         self.assertIn(c["sealedAt"], t["detail"])
-        self.assertIn("sorteio em 2027-01-21", t["detail"])
+        self.assertIn("lottery draw on 2027-01-21", t["detail"])
         self.assertEqual(failing(rep), [])
         self.assertEqual(rep["verdict"], "incompleto")
 
@@ -213,7 +213,7 @@ class Certificates(unittest.TestCase):
         rep = verify(w.cert("v3-live-eth-weights"))
         self.assertEqual(rep["v3"]["ints"], [420, 49, 20, 0])
         out = v.format_report(rep)
-        for s in ("W = 489", "0,35", "49", "85,9 %", "Resultado recalculado"):
+        for s in ("W = 489", "0,35", "49", "85.9%", "Recomputed result"):
             self.assertIn(s, out)
 
     def test_cli_json(self):
@@ -292,7 +292,7 @@ class OwnSeed(unittest.TestCase):
             self.assertEqual(v.canon_own_seed(case["typed"])["value"], cert["randomness"]["own"]["value"])
             rep = v.verify_certificate(cert, {})
             self.assertEqual(rep["verdict"], "incompleto", rep["checks"])
-            self.assertTrue(rep["message"].startswith("Confere, desde que a lista"))
+            self.assertTrue(rep["message"].startswith("Checks out, provided the list"))
             self.assertEqual([c["id"] for c in rep["checks"] if c["status"] != v.PASS], ["own"])
             bad = copy.deepcopy(cert)
             bad["randomness"]["own"]["value"] += " "

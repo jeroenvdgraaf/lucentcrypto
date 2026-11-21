@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2026 Jeroen van de Graaf
-"""verify_draw.py: verificador de referência do Lucent Sorteios (protocolos LucentDraw/3, /2 e /1).
+"""verify_draw.py: reference verifier for Lucent Draw / Lucent Sorteios (protocols LucentDraw/3, /2 and /1).
 
-Segunda implementação, independente da página HTML, do algoritmo de conferência
-(SPEC, seção 9; SPEC-v3, seção 7 para LucentDraw/3). Usa apenas a biblioteca padrão do Python; o pacote `requests`
-só é necessário para buscar os valores nas fontes (blocos Ethereum, farol drand,
-resultados da Caixa). A verificação BLS do drand é feita aqui mesmo, em Python
-puro (BLS12-381, RFC 9380), sem bibliotecas externas.
+A second implementation of the verification algorithm, independent of the HTML page
+(SPEC, section 9; SPEC-v3, section 7 for LucentDraw/3). It uses only the Python standard library; the `requests`
+package is needed only to fetch the values from the sources (Ethereum blocks, drand beacon,
+Caixa lottery results). The drand BLS verification is done right here, in pure Python
+(BLS12-381, RFC 9380), without external libraries.
 
-Uso:
-    python3 verify_draw.py comprovante-sorteio-<id>.json
-    python3 verify_draw.py comprovante.json --rpc https://meu-no-ethereum.example
-    python3 verify_draw.py comprovante.json --confirm-lottery   # conferi os números a olho
-    python3 verify_draw.py comprovante.json --values valores.json  # sem rede (valores já obtidos)
-    python3 verify_draw.py comprovante.json --tsa-ca cadeia-tsa.pem # valida assinaturas RFC 3161
+Usage:
+    python3 verify_draw.py draw-proof-<id>.json        (or comprovante-sorteio-<id>.json)
+    python3 verify_draw.py proof.json --rpc https://my-ethereum-node.example
+    python3 verify_draw.py proof.json --confirm-lottery   # I checked the numbers by eye
+    python3 verify_draw.py proof.json --values values.json  # offline (values already obtained)
+    python3 verify_draw.py proof.json --tsa-ca tsa-chain.pem # validates RFC 3161 signatures
 
-Função pura para testes e uso programático:
+Pure function for tests and programmatic use:
     verify_certificate(cert, fetched, ...) -> dict
-onde `fetched` contém os valores das fontes obtidos de forma independente
-(ver docstring de verify_certificate).
+where `fetched` holds the source values obtained independently
+(see the docstring of verify_certificate).
 
-Códigos de saída: 0 = confere, 1 = não confere, 2 = conferência incompleta, 3 = erro de uso.
+Exit codes: 0 = checks out, 1 = does not check out, 2 = incomplete check, 3 = usage error.
 """
 
 from __future__ import annotations
@@ -87,7 +87,7 @@ OID_TSTINFO = "1.2.840.113549.1.9.16.1.4"
 
 # Status das checagens
 PASS, FAIL, UNVERIFIED, WARN = "passou", "falhou", "nao_verificado", "atencao"
-STATUS_LABEL = {PASS: "passou", FAIL: "falhou", UNVERIFIED: "não verificado", WARN: "atenção"}
+STATUS_LABEL = {PASS: "passed", FAIL: "failed", UNVERIFIED: "not verified", WARN: "attention"}
 
 # Caracteres removidos por "trim": o mesmo conjunto de String.prototype.trim do ECMAScript,
 # para que a página e este verificador concordem byte a byte.
@@ -118,19 +118,19 @@ def _check_json_types(v, path="spec", bool_paths=()):
     if isinstance(v, bool):
         if path in bool_paths:
             return
-        raise ValueError(f"{path}: valor booleano não é permitido")
+        raise ValueError(f"{path}: a boolean value is not allowed")
     if isinstance(v, float):
-        raise ValueError(f"{path}: número não inteiro não é permitido")
+        raise ValueError(f"{path}: a non-integer number is not allowed")
     if isinstance(v, dict):
         for k, x in v.items():
             if not isinstance(k, str):
-                raise ValueError(f"{path}: chave não textual")
+                raise ValueError(f"{path}: non-text key")
             _check_json_types(x, f"{path}.{k}", bool_paths)
     elif isinstance(v, list):
         for i, x in enumerate(v):
             _check_json_types(x, f"{path}[{i}]", bool_paths)
     elif v is not None and not isinstance(v, (str, int)):
-        raise ValueError(f"{path}: tipo não suportado")
+        raise ValueError(f"{path}: unsupported type")
 
 
 def _bool_paths(spec):
@@ -180,10 +180,10 @@ _W_INT = re.compile(r"[0-9]+")
 _W_DEC = re.compile(r"[0-9]*\.[0-9]+|[0-9]+\.[0-9]*")
 _W_FRAC = re.compile(r"([0-9]+)[ \t]*/[ \t]*([0-9]+)")
 WEIGHT_ERRORS = {
-    "empty": "peso vazio: use 1 para chance normal ou 0 para deixar fora do sorteio",
-    "syntax": "use um inteiro (3), um decimal (0,35) ou uma fração (1/7)",
-    "negative": "peso negativo não é permitido",
-    "zeroDen": "fração com denominador zero",
+    "empty": "empty weight: use 1 for a normal chance or 0 to leave it out of the draw",
+    "syntax": "use a whole number (3), a decimal (0.35) or a fraction (1/7)",
+    "negative": "negative weights are not allowed",
+    "zeroDen": "fraction with a zero denominator",
 }
 
 
@@ -223,15 +223,15 @@ def integer_weights(weights):
 def share_text(w: int, W: int) -> str:
     """Porcentagem exata de w/W arredondada a 0,1 (só para exibir)."""
     if not W or w == 0:
-        return "0 %"
+        return "0%"
     if w == W:
-        return "100 %"
+        return "100%"
     tenths = (w * 2000 + W) // (2 * W)
     if tenths == 0:
-        return "< 0,1 %"
+        return "< 0.1%"
     if tenths >= 1000:
-        return "> 99,9 %"
-    return f"{tenths // 10},{tenths % 10} %"
+        return "> 99.9%"
+    return f"{tenths // 10}.{tenths % 10}%"
 
 
 def seed_v3(C: str, values: dict) -> str:
@@ -271,7 +271,7 @@ def inmetro_serialize(p: dict) -> bytes:
     for t in INMETRO_LISTS:
         e = next((x for x in lv if isinstance(x, dict) and x.get("type") == t), None)
         if e is None:
-            raise ValueError("listValues sem " + t)
+            raise ValueError("listValues without " + t)
         h_(e["value"])
     h_(p["precommitmentValue"]); u32(p["statusCode"]); h_(p["signatureValue"])
     return b"".join(out)
@@ -334,7 +334,7 @@ def select_picks(seed: str, task: dict):
     for j in range(task["count"]):
         W = sum(ints[i] for i in alive)
         if W == 0:
-            raise ValueError("sem opções restantes")
+            raise ValueError("no options left")
         r = pick_hash(seed, j)
         x = (int(r, 16) * W) >> 256  # em [0, W)
         acc = 0
@@ -352,74 +352,74 @@ def select_picks(seed: str, task: dict):
 def validate_task(task) -> list:
     """Regras de task (SPEC-v3 2). Lista de problemas, vazia se bem formada."""
     if not isinstance(task, dict):
-        return ["task não é um objeto"]
+        return ["task is not an object"]
     problems = []
     expected = {"preset", "options", "weights", "count", "replace"}
     missing, extra = expected - task.keys(), task.keys() - expected
     if missing:
-        problems.append("task: campos ausentes: " + ", ".join(sorted(missing)))
+        problems.append("task: missing fields: " + ", ".join(sorted(missing)))
     if extra:
-        problems.append("task: campos desconhecidos: " + ", ".join(sorted(extra)))
+        problems.append("task: unknown fields: " + ", ".join(sorted(extra)))
     if task.get("preset") not in TASK_PRESETS:
-        problems.append('task.preset deve ser "list", "coin", "die" ou "cards"')
+        problems.append('task.preset must be "list", "coin", "die" or "cards"')
     opts = task.get("options") if isinstance(task.get("options"), list) else None
     if not opts:
-        problems.append("task.options precisa ser uma lista com pelo menos uma opção")
+        problems.append("task.options must be a list with at least one option")
     for i, o in enumerate(opts or []):
         if not isinstance(o, str) or not o:
-            problems.append(f"opção {i + 1} vazia ou inválida")
+            problems.append(f"option {i + 1} empty or invalid")
         elif norm_text(o) != o:
-            problems.append(f"opção {i + 1} não está normalizada (NFC, sem espaços nas pontas)")
+            problems.append(f"option {i + 1} is not normalized (NFC, no leading or trailing spaces)")
     strs = [o for o in (opts or []) if isinstance(o, str)]
     dups = sorted({o for o in strs if strs.count(o) > 1})
     if dups:
-        problems.append("opções repetidas: " + ", ".join(dups))
+        problems.append("repeated options: " + ", ".join(dups))
     ws = task.get("weights") if isinstance(task.get("weights"), list) else None
     positive, bad_weight = 0, False
     if ws is None:
-        problems.append("task.weights não é uma lista")
+        problems.append("task.weights is not a list")
     else:
         if opts is not None and len(ws) != len(opts):
-            problems.append("task.weights precisa ter um peso para cada opção")
+            problems.append("task.weights must have one weight for each option")
         for i, w in enumerate(ws):
             if not isinstance(w, str):
                 bad_weight = True
-                problems.append(f"peso {i + 1}: " + WEIGHT_ERRORS["syntax"])
+                problems.append(f"weight {i + 1}: " + WEIGHT_ERRORS["syntax"])
                 continue
             if norm_text(w) != w:
-                problems.append(f"peso {i + 1} não está normalizado (NFC, sem espaços nas pontas)")
+                problems.append(f"weight {i + 1} is not normalized (NFC, no leading or trailing spaces)")
             try:
                 if parse_weight(w) > 0:
                     positive += 1
             except ValueError as e:
                 bad_weight = True
-                problems.append(f"peso {i + 1}: " + WEIGHT_ERRORS.get(str(e), str(e)))
+                problems.append(f"weight {i + 1}: " + WEIGHT_ERRORS.get(str(e), str(e)))
         if not bad_weight and positive == 0:
-            problems.append("pelo menos um peso precisa ser maior que zero")
+            problems.append("at least one weight must be greater than zero")
     count = task.get("count")
     if not _is_int(count) or count < 1:
-        problems.append("task.count precisa ser um inteiro maior ou igual a 1")
+        problems.append("task.count must be an integer greater than or equal to 1")
     if not isinstance(task.get("replace"), bool):
-        problems.append("task.replace precisa ser true ou false")
+        problems.append("task.replace must be true or false")
     elif not task["replace"] and _is_int(count) and ws is not None and positive > 0 and count > positive:
-        problems.append("sem reposição, task.count não pode passar do número de opções com peso maior que zero")
+        problems.append("without replacement, task.count cannot exceed the number of options with a weight above zero")
     return problems
 
 
 def task_summary(task: dict) -> str:
     n, preset = task["count"], task["preset"]
     if preset == "coin":
-        return f"{n} lançamento" + ("" if n == 1 else "s")
+        return f"{n} toss" + ("" if n == 1 else "es")
     if preset == "die":
         loaded = any(w != "1" for w in task["weights"])
-        return (f"{n} dado" + ("" if n == 1 else "s") + f" de {len(task['options'])} faces"
-                + (" (dado viciado: pesos diferentes)" if loaded else ""))
+        return (f"{n} " + ("die" if n == 1 else "dice") + f" with {len(task['options'])} faces"
+                + (" (loaded die: different weights)" if loaded else ""))
     if preset == "cards":
-        return "embaralhar o baralho (52 cartas, sem reposição)" if n == 52 else (
-            f"{n} carta" + ("" if n == 1 else "s") + ", sem reposição")
+        return "shuffle the deck (52 cards, without replacement)" if n == 52 else (
+            f"{n} card" + ("" if n == 1 else "s") + ", without replacement")
     o = len(task["options"])
-    return (f"{o} opç" + ("ão" if o == 1 else "ões") + f", {n} escolha" + ("" if n == 1 else "s")
-            + (", com reposição" if task["replace"] else ", sem reposição"))
+    return (f"{o} option" + ("" if o == 1 else "s") + f", {n} pick" + ("" if n == 1 else "s")
+            + (", with replacement" if task["replace"] else ", without replacement"))
 
 
 # ----------------------------------------------------------------- strings de valor (SPEC 4)
@@ -561,13 +561,13 @@ def _der_read(buf: bytes, pos: int):
         raise DERError("DER truncado")
     tag = buf[pos]
     if tag & 0x1F == 0x1F:
-        raise DERError("tag DER longa não suportada")
+        raise DERError("long DER tag not supported")
     ln = buf[pos + 1]
     pos += 2
     if ln & 0x80:
         n = ln & 0x7F
         if n == 0 or n > 4 or pos + n > len(buf):
-            raise DERError("comprimento DER inválido")
+            raise DERError("invalid DER length")
         ln = int.from_bytes(buf[pos:pos + n], "big")
         pos += n
     if pos + ln > len(buf):
@@ -605,7 +605,7 @@ def parse_generalized_time(s: str) -> int:
     """GeneralizedTime (UTC, 'Z') para milissegundos unix."""
     m = re.fullmatch(r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(?:[.,](\d+))?Z", s)
     if not m:
-        raise DERError("genTime em formato não suportado: " + s)
+        raise DERError("genTime in unsupported format: " + s)
     y, mo, d, hh, mi, ss, frac = m.groups()
     dt = _dt.datetime(int(y), int(mo), int(d), int(hh), int(mi), int(ss), tzinfo=_dt.timezone.utc)
     ms = int((frac or "0")[:3].ljust(3, "0"))
@@ -634,33 +634,33 @@ def parse_timestamp_response(der: bytes) -> dict:
     """
     tag, s, e = _der_read(der, 0)
     if tag != 0x30 or e != len(der):
-        raise DERError("TimeStampResp não é uma SEQUENCE")
+        raise DERError("TimeStampResp is not a SEQUENCE")
     kids = _der_children(der, s, e)
     if not kids or kids[0][0] != 0x30:
-        raise DERError("PKIStatusInfo ausente")
+        raise DERError("PKIStatusInfo missing")
     st = _der_children(der, kids[0][1], kids[0][2])
     if not st or st[0][0] != 0x02:
-        raise DERError("status ausente")
+        raise DERError("status missing")
     status = int.from_bytes(der[st[0][1]:st[0][2]], "big")
     if status not in (0, 1):
         raise DERError(f"TSA recusou o pedido (status {status})")
     if len(kids) < 2:
-        raise DERError("token ausente")
+        raise DERError("token missing")
     ttag, ts, te, tpos = kids[1]
     token = der[tpos:te]
     ci = _der_children(der, ts, te)
     if len(ci) < 2 or ci[0][0] != 0x06 or _der_oid(der[ci[0][1]:ci[0][2]]) != OID_SIGNED_DATA:
-        raise DERError("token não é SignedData")
+        raise DERError("token is not SignedData")
     if ci[1][0] != 0xA0:
-        raise DERError("conteúdo do token ausente")
+        raise DERError("token content missing")
     sd_tag, sds, sde = _der_read(der, ci[1][1])
     sd = _der_children(der, sds, sde)
     # SignedData: version, digestAlgorithms, encapContentInfo, ...
     if len(sd) < 3 or sd[2][0] != 0x30:
-        raise DERError("encapContentInfo ausente")
+        raise DERError("encapContentInfo missing")
     eci = _der_children(der, sd[2][1], sd[2][2])
     if len(eci) < 2 or _der_oid(der[eci[0][1]:eci[0][2]]) != OID_TSTINFO:
-        raise DERError("conteúdo não é TSTInfo")
+        raise DERError("content is not TSTInfo")
     _, os_s, os_e = _der_read(der, eci[1][1])  # [0] EXPLICIT -> OCTET STRING
     tst = _der_children(der, *_der_read(der, os_s)[1:])
     # TSTInfo: version, policy, messageImprint, serialNumber, genTime, ...
@@ -671,7 +671,7 @@ def parse_timestamp_response(der: bytes) -> dict:
     hash_alg = _der_oid(der[alg[0][1]:alg[0][2]])
     imprint = der[mi[1][1]:mi[1][2]].hex()
     if tst[4][0] != 0x18:
-        raise DERError("genTime ausente")
+        raise DERError("genTime missing")
     gt = der[tst[4][1]:tst[4][2]].decode("ascii")
     gms = parse_generalized_time(gt)
     return {"status": status, "hashAlg": hash_alg, "imprint": imprint,
@@ -687,7 +687,7 @@ def openssl_tsa_validator(ca_files=()):
 
     def validate(resp_der: bytes, token_der: bytes, commitment: str):
         if not exe:
-            return None, "assinatura da TSA não validada (openssl não encontrado)"
+            return None, "TSA signature not validated (openssl not found)"
         with tempfile.TemporaryDirectory() as d:
             tok = os.path.join(d, "token.der")
             with open(tok, "wb") as f:
@@ -696,7 +696,7 @@ def openssl_tsa_validator(ca_files=()):
             r = subprocess.run([exe, "cms", "-verify", "-noverify", "-inform", "DER", "-in", tok,
                                 "-binary", "-out", os.devnull], capture_output=True, text=True)
             if r.returncode != 0:
-                return FAIL, "assinatura da TSA inválida"
+                return FAIL, "invalid TSA signature"
             # 2) cadeia até uma CA confiável
             # As CAs pedidas (--tsa-ca), as que acompanham o verificador (tsa-ca/: a raiz da FreeTSA,
             # que não está nas listas do sistema) e a lista de CAs do sistema (DigiCert e outras).
@@ -706,7 +706,7 @@ def openssl_tsa_validator(ca_files=()):
                     cas.append(c)
                     break
             if not cas:
-                return WARN, "assinatura válida; cadeia não validada (nenhuma CA disponível)"
+                return WARN, "valid signature; chain not validated (no CA available)"
             bundle = os.path.join(d, "ca.pem")
             with open(bundle, "w") as out:
                 for c in cas:
@@ -718,8 +718,8 @@ def openssl_tsa_validator(ca_files=()):
             r = subprocess.run([exe, "ts", "-verify", "-digest", commitment, "-sha256", "-in", resp,
                                 "-CAfile", bundle], capture_output=True, text=True)
             if r.returncode == 0:
-                return PASS, "assinatura e cadeia da TSA válidas (openssl ts -verify)"
-            return WARN, "assinatura válida, mas a cadeia não chega a uma CA confiável (use --tsa-ca)"
+                return PASS, "TSA signature and chain valid (openssl ts -verify)"
+            return WARN, "valid signature, but the chain does not reach a trusted CA (use --tsa-ca)"
 
     return validate
 
@@ -955,20 +955,20 @@ def g1_decompress(b: bytes):
         raise ValueError("assinatura G1 deve ter 48 bytes")
     flags = b[0]
     if not flags & 0x80:
-        raise ValueError("ponto G1 não comprimido")
+        raise ValueError("G1 point not compressed")
     if flags & 0x40:
         raise ValueError("ponto G1 no infinito")
     x = int.from_bytes(bytes([flags & 0x1F]) + b[1:], "big")
     if x >= _P:
-        raise ValueError("coordenada G1 fora do corpo")
+        raise ValueError("G1 coordinate outside the field")
     y = _fp_sqrt(x * x * x + _B_G1)
     if y is None:
-        raise ValueError("ponto G1 fora da curva")
+        raise ValueError("G1 point not on the curve")
     if (y > (_P - 1) // 2) != bool(flags & 0x20):
         y = (-y) % _P
     pt = (x, y)
     if _ec_mul(_Fp, pt, _R) is not None:
-        raise ValueError("ponto G1 fora do subgrupo")
+        raise ValueError("G1 point not in the subgroup")
     return pt
 
 
@@ -977,28 +977,28 @@ def g2_decompress(b: bytes):
         raise ValueError("chave G2 deve ter 96 bytes")
     flags = b[0]
     if not flags & 0x80 or flags & 0x40:
-        raise ValueError("chave G2 inválida")
+        raise ValueError("invalid G2 key")
     x1 = int.from_bytes(bytes([flags & 0x1F]) + b[1:48], "big")
     x0 = int.from_bytes(b[48:], "big")
     if x0 >= _P or x1 >= _P:
-        raise ValueError("coordenada G2 fora do corpo")
+        raise ValueError("G2 coordinate outside the field")
     x = (x0, x1)
     y = _fp2_sqrt(_Fp2.add(_Fp2.mul(_Fp2.mul(x, x), x), _B_G2))
     if y is None:
-        raise ValueError("ponto G2 fora da curva")
+        raise ValueError("G2 point not on the curve")
     largest = (y[1] > (_P - 1) // 2) if y[1] else (y[0] > (_P - 1) // 2)
     if largest != bool(flags & 0x20):
         y = _Fp2.neg(y)
     pt = (x, y)
     if _ec_mul(_Fp2, pt, _R) is not None:
-        raise ValueError("ponto G2 fora do subgrupo")
+        raise ValueError("G2 point not in the subgroup")
     return pt
 
 
 def _expand_message_xmd(msg: bytes, dst: bytes, length: int) -> bytes:
     ell = -(-length // 32)
     if ell > 255 or len(dst) > 255:
-        raise ValueError("expand_message_xmd: parâmetros inválidos")
+        raise ValueError("expand_message_xmd: invalid parameters")
     dst_prime = dst + bytes([len(dst)])
     b0 = hashlib.sha256(bytes(64) + msg + length.to_bytes(2, "big") + b"\x00" + dst_prime).digest()
     bi = hashlib.sha256(b0 + b"\x01" + dst_prime).digest()
@@ -1246,7 +1246,7 @@ def validate_spec(spec) -> list:
     """Lista de problemas do spec (vazia se bem formado)."""
     problems = []
     if not isinstance(spec, dict):
-        return ["spec não é um objeto"]
+        return ["spec is not an object"]
     v = spec.get("v")
     try:
         _check_json_types(spec, "spec", _bool_paths(spec))
@@ -1257,50 +1257,50 @@ def validate_spec(spec) -> list:
                     else {"v", "id", "title", "mode", "candidates", "contribution", "sources"})
         missing, extra = expected - spec.keys(), spec.keys() - expected
         if missing:
-            problems.append("campos ausentes: " + ", ".join(sorted(missing)))
+            problems.append("missing fields: " + ", ".join(sorted(missing)))
         if extra:
-            problems.append("campos desconhecidos: " + ", ".join(sorted(extra)))
+            problems.append("unknown fields: " + ", ".join(sorted(extra)))
         if spec.get("mode") not in ("live", "scheduled"):
-            problems.append("mode deve ser \"live\" ou \"scheduled\"")
+            problems.append("mode must be \"live\" or \"scheduled\"")
     for f in ("id", "title", "contribution"):
         if f in spec and not _is_norm_str(spec[f]):
-            problems.append(f"{f} não está normalizado (NFC, sem espaços nas pontas)")
+            problems.append(f"{f} is not normalized (NFC, no leading or trailing spaces)")
     if not isinstance(spec.get("id"), str) or not spec.get("id"):
-        problems.append("o ID do sorteio está vazio")
+        problems.append("the draw ID is empty")
     if v == V3:
         problems.extend(validate_task(spec.get("task")))
     else:
         cands = spec.get("candidates")
         if not isinstance(cands, list):
-            problems.append("candidates não é uma lista")
+            problems.append("candidates is not a list")
             cands = []
         if len(cands) < 2:
-            problems.append("são necessários pelo menos 2 participantes")
+            problems.append("at least 2 participants are needed")
         for i, n in enumerate(cands):
             if not isinstance(n, str) or not n:
-                problems.append(f"participante {i + 1} vazio ou inválido")
+                problems.append(f"participant {i + 1} empty or invalid")
             elif norm_text(n) != n:
-                problems.append(f"participante {i + 1} não está normalizado (NFC, sem espaços nas pontas)")
+                problems.append(f"participant {i + 1} is not normalized (NFC, no leading or trailing spaces)")
         strs = [n for n in cands if isinstance(n, str)]
         dups = sorted({n for n in strs if strs.count(n) > 1})
         if dups:
             problems.append("nomes repetidos: " + ", ".join(dups))
     src = spec.get("sources")
     if not isinstance(src, dict) or not src:
-        problems.append("sources vazio ou inválido")
+        problems.append("sources empty or invalid")
         return problems
     allowed = SOURCE_ORDER + ("own", "inmetro") if v == V3 else SOURCE_ORDER if v == V2 else ("eth", "drand")
     for k in src:
         if k not in allowed:
-            problems.append(f"fonte desconhecida: {k}")
+            problems.append(f"unknown source: {k}")
     strict = v in (V2, V3)
 
     def need(name, obj, fields):
         if not isinstance(obj, dict):
-            problems.append(f"sources.{name} não é um objeto")
+            problems.append(f"sources.{name} is not an object")
             return False
         if strict and set(obj.keys()) != set(fields):
-            problems.append(f"sources.{name} deve ter exatamente os campos " + ", ".join(fields))
+            problems.append(f"sources.{name} must have exactly the fields " + ", ".join(fields))
             return False
         return True
 
@@ -1311,35 +1311,35 @@ def validate_spec(spec) -> list:
             if strict and (e.get("chain") != "ethereum-mainnet" or e.get("rule") != "first-block-after"):
                 problems.append("sources.eth: chain/rule inesperados")
             if not _is_int(e.get("notBefore")) or not _is_int(e.get("confirmations")) or e.get("confirmations", 0) < 1:
-                problems.append("sources.eth: notBefore/confirmations inválidos")
+                problems.append("sources.eth: invalid notBefore/confirmations")
     if "drand" in src:
         d = src["drand"]
         if need("drand", d, ("chain", "chainHash", "round") if strict else ()):
             if d.get("chainHash") != QUICKNET_HASH or (strict and d.get("chain") != "quicknet"):
-                problems.append("sources.drand: a cadeia não é a quicknet")
+                problems.append("sources.drand: the chain is not quicknet")
             if not _is_int(d.get("round")) or d.get("round", 0) < 1:
-                problems.append("sources.drand: rodada inválida")
+                problems.append("sources.drand: invalid round")
     if "inmetro" in src:
         if len(src) != 1:
-            problems.append("o farol do Inmetro não se combina com outras fontes")
+            problems.append("the Inmetro beacon cannot be combined with other sources")
         if need("inmetro", src["inmetro"], ("chain", "rule", "notBefore")):
             i_ = src["inmetro"]
             if not (_is_int(i_.get("chain")) and i_["chain"] >= 0 and i_.get("rule") == INMETRO_RULE
                     and _is_int(i_.get("notBefore")) and i_["notBefore"] > 0):
-                problems.append('sources.inmetro precisa de chain (inteiro), rule "first-pulse-after" e notBefore (ms, inteiro)')
+                problems.append('sources.inmetro needs chain (integer), rule "first-pulse-after" and notBefore (ms, integer)')
     if "own" in src:
         if len(src) != 1:
-            problems.append("a semente própria não se combina com outras fontes")
+            problems.append("the own seed cannot be combined with other sources")
         if need("own", src["own"], ("format", "label")):
             if src["own"].get("format") not in OWN_FORMATS:
-                problems.append("formato da semente própria desconhecido (megasena, federal ou outro)")
+                problems.append("unknown own-seed format (megasena, federal or outro)")
             if not _is_norm_str(src["own"].get("label")):
-                problems.append("sources.own.label não está normalizado (NFC, sem espaços nas pontas)")
+                problems.append("sources.own.label is not normalized (NFC, no leading or trailing spaces)")
     for g in ("megasena", "federal"):
         if g in src and need(g, src[g], ("contest",)):
             c = src[g].get("contest")
             if (not contest_ok_v3(c)) if v == V3 else (not _is_int(c) or c < 1):
-                problems.append(f"sources.{g}: concurso inválido")
+                problems.append(f"sources.{g}: invalid draw number")
     return problems
 
 
@@ -1387,17 +1387,17 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
 
     # 1. Formato
     if not isinstance(cert, dict) or not isinstance(cert.get("spec"), dict):
-        add("parse", FAIL, "O comprovante não tem o objeto spec.")
+        add("parse", FAIL, "The proof has no spec object.")
         return result()
     spec = cert["spec"]
     v = spec.get("v")
     if v not in (V1, V2, V3):
-        add("parse", FAIL, f"Versão de protocolo desconhecida: {v!r}.")
+        add("parse", FAIL, f"Unknown protocol version: {v!r}.")
         return result()
     if not isinstance(cert.get("commitment"), str):
-        add("parse", FAIL, "O comprovante não tem o compromisso (commitment).")
+        add("parse", FAIL, "The proof has no commitment.")
         return result()
-    add("parse", PASS, f"Comprovante lido (protocolo {v}).")
+    add("parse", PASS, f"Proof read (protocol {v}).")
 
     # 2. Spec bem formado
     problems = validate_spec(spec)
@@ -1406,29 +1406,29 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         ints, _, W = integer_weights(spec["task"]["weights"])
         v3info.update({"task": spec["task"], "ints": ints, "W": W, "seed": None, "picks": None, "result": None, "steps": None})
     if problems:
-        add("spec", FAIL, "O registro lacrado não está bem formado.", "; ".join(problems))
+        add("spec", FAIL, "The sealed record is not well formed.", "; ".join(problems))
     elif v == V3:
         t = spec["task"]
         n = len(t["options"])
         pairs = ", ".join(f"{w} → {i}" for w, i in list(zip(t["weights"], ints))[:12]) + (", …" if n > 12 else "")
-        add("spec", PASS, "Registro lacrado bem formado.",
-            f"{n} opç" + ("ão" if n == 1 else "ões") + f" · W = {W} · {task_summary(t)} · "
-            f"pesos (digitado → inteiro): {pairs}")
+        add("spec", PASS, "Sealed record well formed.",
+            f"{n} option" + ("" if n == 1 else "s") + f" · W = {W} · {task_summary(t)} · "
+            f"weights (typed → integer): {pairs}")
     else:
-        add("spec", PASS, "Registro lacrado bem formado.",
-            f"{len(spec['candidates'])} participantes, nomes únicos e normalizados")
+        add("spec", PASS, "Sealed record well formed.",
+            f"{len(spec['candidates'])} participants, names unique and normalized")
 
     # 3. Compromisso
     try:
         C = commitment_of(spec)
     except ValueError as e:
-        add("commitment", FAIL, "Não foi possível calcular o compromisso.", str(e))
+        add("commitment", FAIL, "Could not compute the commitment.", str(e))
         return result()
     if C == cert["commitment"]:
-        add("commitment", PASS, "O compromisso confere com o registro lacrado.", C)
+        add("commitment", PASS, "The commitment matches the sealed record.", C)
     else:
-        add("commitment", FAIL, "O compromisso não confere com o registro lacrado.",
-            f"calculado {C}, comprovante {cert['commitment']}")
+        add("commitment", FAIL, "The commitment does not match the sealed record.",
+            f"computed {C}, proof {cert['commitment']}")
 
     sources = spec.get("sources") if isinstance(spec.get("sources"), dict) else {}
     rand = cert.get("randomness") if isinstance(cert.get("randomness"), dict) else {}
@@ -1445,19 +1445,19 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         so = sources["own"] if isinstance(sources["own"], dict) else {}
         ev = rand.get("own") if isinstance(rand.get("own"), dict) else None
         if not ev or not isinstance(ev.get("value"), str):
-            add("own", missing, "Lacre: a semente própria ainda não foi registrada." if is_seal
-                else "A semente própria não está no comprovante.")
+            add("own", missing, "Seal: the own seed has not been recorded yet." if is_seal
+                else "The own seed is not in the proof.")
         else:
             c = canon_own_seed(ev["value"])
             if "error" in c or c["value"] != ev["value"] or c["reading"] != ev.get("reading"):
-                add("own", FAIL, "A semente própria não está na forma canônica.", json.dumps(ev["value"], ensure_ascii=False))
+                add("own", FAIL, "The own seed is not in canonical form.", json.dumps(ev["value"], ensure_ascii=False))
             elif own_format_error(so.get("format"), c):
-                add("own", FAIL, f"A semente própria não tem o formato declarado: {so.get('format')}", c["value"])
+                add("own", FAIL, f"The own seed does not have the declared format: {so.get('format')}", c["value"])
             else:
                 claimed["own"] = c["value"]
-                add("own", UNVERIFIED, f"Semente própria ({so.get('label')}): {c['value']}",
-                    "informada pelo organizador; a origem não pode ser conferida automaticamente. "
-                    "Confira-a na fonte indicada.")
+                add("own", UNVERIFIED, f"Own seed ({so.get('label')}): {c['value']}",
+                    "given by the organizer; its origin cannot be checked automatically. "
+                    "Check it at the stated source.")
 
     # 4a. eth
     if "eth" in sources:
@@ -1470,40 +1470,40 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         if nb is not None:
             rtimes["eth"] = nb + 1
         if not ev or not _is_int(ev.get("number")):
-            add("eth", missing, "Lacre: o bloco Ethereum ainda não foi registrado." if is_seal
-                else "O comprovante não indica o bloco Ethereum usado.")
+            add("eth", missing, "Seal: the Ethereum block has not been recorded yet." if is_seal
+                else "The proof does not say which Ethereum block was used.")
         elif "error" in f or "block" not in f:
-            add("eth", UNVERIFIED, f"Bloco Ethereum #{ev['number']} não pôde ser consultado.",
-                f.get("error", "não consultado"))
+            add("eth", UNVERIFIED, f"Ethereum block #{ev['number']} could not be looked up.",
+                f.get("error", "not looked up"))
         else:
             b, p = f.get("block"), f.get("parent")
             if not b or not p:
-                add("eth", FAIL, f"Bloco #{ev['number']} ou seu antecessor não existe na cadeia consultada.")
+                add("eth", FAIL, f"Block #{ev['number']} or its predecessor does not exist on the chain consulted.")
             else:
                 bh = norm_hex(b["hash"])
                 rtimes["eth"] = b["timestamp"]
                 is_first = nb is not None and b["timestamp"] > nb >= p["timestamp"]
                 same = bh == claimed.get("eth")
                 conf = f.get("head", b["number"]) - b["number"]
-                det = (f"notBefore {_fmt_unix(nb or 0)} · bloco {_fmt_unix(b['timestamp'])} · "
-                       f"anterior {_fmt_unix(p['timestamp'])} · {conf} confirmações agora")
+                det = (f"notBefore {_fmt_unix(nb or 0)} · block {_fmt_unix(b['timestamp'])} · "
+                       f"previous {_fmt_unix(p['timestamp'])} · {conf} confirmations now")
                 if not is_first:
-                    add("eth", FAIL, f"O bloco #{b['number']} não é o primeiro bloco após o lacre.", det)
+                    add("eth", FAIL, f"Block #{b['number']} is not the first block after the seal.", det)
                 elif not same:
                     indep["eth"] = bh
-                    add("eth", FAIL, f"O hash do bloco #{b['number']} difere da cadeia canônica "
-                        "(reorganização da cadeia ou valor adulterado). Pela regra, vale o bloco canônico.",
-                        f"canônico {bh} · comprovante {claimed.get('eth')} · {det}")
+                    add("eth", FAIL, f"The hash of block #{b['number']} differs from the canonical chain "
+                        "(a chain reorganization or a tampered value). By the rule, the canonical block counts.",
+                        f"canonical {bh} · proof {claimed.get('eth')} · {det}")
                 elif ev.get("timestamp") not in (None, b["timestamp"]) or (
                         ev.get("parentTimestamp") not in (None, p["timestamp"])):
                     indep["eth"] = bh
-                    add("eth", FAIL, "Os horários do bloco no comprovante não conferem com a cadeia.", det)
+                    add("eth", FAIL, "The block times in the proof do not match the chain.", det)
                 elif conf < s.get("confirmations", 1):
                     indep["eth"] = bh
-                    add("eth", WARN, f"Bloco #{b['number']} confere, mas ainda tem só {conf} confirmações.", det)
+                    add("eth", WARN, f"Block #{b['number']} matches, but has only {conf} confirmations so far.", det)
                 else:
                     indep["eth"] = bh
-                    add("eth", PASS, f"Bloco #{b['number']} é o primeiro após o lacre e está na cadeia canônica.",
+                    add("eth", PASS, f"Block #{b['number']} is the first after the seal and is on the canonical chain.",
                         f"{bh} · {det}")
 
     # 4b. drand
@@ -1517,10 +1517,10 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
             rtimes["drand"] = drand_round_time(rnd)
         f = fetched.get("drand") or {}
         if not ev:
-            add("drand", missing, f"Lacre: a rodada drand #{rnd} ainda não foi registrada." if is_seal
-                else f"O comprovante não traz a rodada drand #{rnd}.")
+            add("drand", missing, f"Seal: drand round #{rnd} has not been recorded yet." if is_seal
+                else f"The proof does not contain drand round #{rnd}.")
         elif "error" in f or "signature" not in f:
-            add("drand", UNVERIFIED, f"Rodada drand #{rnd} não pôde ser consultada.", f.get("error", "não consultada"))
+            add("drand", UNVERIFIED, f"drand round #{rnd} could not be looked up.", f.get("error", "not looked up"))
         else:
             sig = norm_hex(f["signature"])
             r_hex = norm_hex(f.get("randomness"))
@@ -1529,18 +1529,18 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
             except ValueError:
                 sig_hash = None
             if f.get("round") != rnd:
-                add("drand", FAIL, f"A fonte devolveu a rodada {f.get('round')} em vez de {rnd}.")
+                add("drand", FAIL, f"The source returned round {f.get('round')} instead of {rnd}.")
             elif sig_hash != r_hex:
-                add("drand", FAIL, "A aleatoriedade drand não é o SHA-256 da assinatura.")
+                add("drand", FAIL, "The drand randomness is not the SHA-256 of the signature.")
             elif not drand_beacon_valid(rnd, sig, drand_pubkey):
-                add("drand", FAIL, f"A assinatura BLS da rodada drand #{rnd} é inválida.")
+                add("drand", FAIL, f"The BLS signature of drand round #{rnd} is invalid.")
             elif r_hex != claimed.get("drand"):
                 indep["drand"] = r_hex
-                add("drand", FAIL, f"Rodada drand #{rnd} verificada, mas o comprovante traz outro valor.",
-                    f"farol {r_hex} · comprovante {claimed.get('drand')}")
+                add("drand", FAIL, f"drand round #{rnd} verified, but the proof contains a different value.",
+                    f"beacon {r_hex} · proof {claimed.get('drand')}")
             else:
                 indep["drand"] = r_hex
-                add("drand", PASS, f"Rodada drand #{rnd}: assinatura BLS verificada, valor confere.", r_hex)
+                add("drand", PASS, f"drand round #{rnd}: BLS signature verified, value matches.", r_hex)
 
     # 4c. loterias
     for game, label in (("megasena", "Mega-Sena"), ("federal", "Loteria Federal")):
@@ -1553,29 +1553,29 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         if ok_ev:
             claimed[game] = lottery_value(game, contest, ev, v)
             if draw_day_start(ev.get("drawDate")) is not None:
-                draw_dates[game] = (ev["drawDate"], "comprovante")
-        manual = " (resultado inserido manualmente)" if ev and ev.get("source") == "manual" else ""
-        f = fetched.get(game, {"error": "não consultado"})
+                draw_dates[game] = (ev["drawDate"], "the proof")
+        manual = " (result entered by hand)" if ev and ev.get("source") == "manual" else ""
+        f = fetched.get(game, {"error": "not looked up"})
         if not ok_ev:
-            add(game, missing, f"Lacre: o resultado do concurso {contest} ({label}) ainda não foi registrado." if is_seal
-                else f"{label}: o comprovante não traz um resultado válido do concurso {contest}.")
+            add(game, missing, f"Seal: the result of draw no. {contest} ({label}) has not been recorded yet." if is_seal
+                else f"{label}: the proof does not contain a valid result for draw no. {contest}.")
             continue
         if isinstance(f, dict) and "error" not in f:
             off = lottery_value(game, contest, f, v)
             indep[game] = off
             if draw_day_start(f.get("drawDate")) is not None:
-                draw_dates[game] = (f["drawDate"], "oficial")
+                draw_dates[game] = (f["drawDate"], "the official page")
             if off == claimed[game]:
-                add(game, PASS, f"{label}, concurso {contest}: confere com o resultado oficial{manual}.",
+                add(game, PASS, f"{label}, draw no. {contest}: matches the official result{manual}.",
                     f"{off} · {link}")
             else:
-                add(game, FAIL, f"{label}, concurso {contest}: o comprovante difere do resultado oficial{manual}.",
-                    f"oficial {off} · comprovante {claimed[game]} · {link}")
+                add(game, FAIL, f"{label}, draw no. {contest}: the proof differs from the official result{manual}.",
+                    f"official {off} · proof {claimed[game]} · {link}")
         else:
-            why = "sem resultado publicado" if f is None else f.get("error", "")
-            add(game, UNVERIFIED, f"{label}, concurso {contest}: não verificado automaticamente{manual}. "
-                "Compare os números com a página oficial.",
-                f"números usados: {claimed[game]} · {link} · ({why})")
+            why = "no result published" if f is None else f.get("error", "")
+            add(game, UNVERIFIED, f"{label}, draw no. {contest}: not verified automatically{manual}. "
+                "Compare the numbers with the official page.",
+                f"numbers used: {claimed[game]} · {link} · ({why})")
 
     # 4c. farol do Inmetro
     if "inmetro" in sources:
@@ -1585,33 +1585,33 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         if T is not None:
             rtimes["inmetro"] = T / 1000
         if not p:
-            add("inmetro", missing, "Lacre: o pulso do Inmetro ainda não foi registrado." if is_seal
-                else "O pulso do Inmetro não está no comprovante.")
+            add("inmetro", missing, "Seal: the Inmetro pulse has not been recorded yet." if is_seal
+                else "The Inmetro pulse is not in the proof.")
         else:
             ts = iso_to_ms(p.get("timeStamp")) if isinstance(p.get("timeStamp"), str) else None
-            det = f"notBefore {ms_to_iso(s.get('notBefore') or 0)} · pulso {p.get('timeStamp')} · nº {p.get('pulseIndex')}"
+            det = f"notBefore {ms_to_iso(s.get('notBefore') or 0)} · pulse {p.get('timeStamp')} · no. {p.get('pulseIndex')}"
             if not inmetro_intact(p):
-                add("inmetro", FAIL, "O pulso do Inmetro foi alterado: o outputValue não é o SHA-512 dos seus campos.", det)
+                add("inmetro", FAIL, "The Inmetro pulse was altered: the outputValue is not the SHA-512 of its fields.", det)
             elif p.get("chainIndex") != s.get("chain"):
-                add("inmetro", FAIL, f"O pulso é da cadeia {p.get('chainIndex')} do Inmetro, mas o lacre previa a cadeia {s.get('chain')}.", det)
+                add("inmetro", FAIL, f"The pulse is from Inmetro chain {p.get('chainIndex')}, but the seal specified chain {s.get('chain')}.", det)
             elif ts is None or not ts > s.get("notBefore", 0):
-                add("inmetro", FAIL, "O pulso do Inmetro não é posterior ao lacre.", det)
+                add("inmetro", FAIL, "The Inmetro pulse is not after the seal.", det)
             else:
                 claimed["inmetro"] = norm_hex(p["outputValue"])
                 rtimes["inmetro"] = ts / 1000
                 f = fetched.get("inmetro") or {}
                 if "error" in f or "pulse" not in f:
-                    title = (f"Pulso nº {p['pulseIndex']} do Inmetro íntegro e no minuto certo, mas não comparado com o arquivo do Inmetro"
+                    title = (f"Inmetro pulse no. {p['pulseIndex']} intact and in the right minute, but not compared with Inmetro's archive"
                              if ts == T else
-                             f"Pulso nº {p['pulseIndex']} do Inmetro íntegro, mas não foi possível confirmar no Inmetro que é o primeiro após o lacre")
-                    add("inmetro", UNVERIFIED, title, f"{f.get('error', 'não consultado')} · {det}")
+                             f"Inmetro pulse no. {p['pulseIndex']} intact, but it could not be confirmed with Inmetro that it is the first after the seal")
+                    add("inmetro", UNVERIFIED, title, f"{f.get('error', 'not looked up')} · {det}")
                 elif not isinstance(f["pulse"], dict) or norm_hex(f["pulse"].get("outputValue")) != claimed["inmetro"]:
-                    add("inmetro", FAIL, f"O arquivo do Inmetro tem outro valor para o pulso nº {p['pulseIndex']}.", det)
+                    add("inmetro", FAIL, f"Inmetro's archive has a different value for pulse no. {p['pulseIndex']}.", det)
                 elif ts != T and f.get("atT"):
-                    add("inmetro", FAIL, f"Há um pulso do Inmetro em {ms_to_iso(T)}, antes do pulso usado: não é o primeiro após o lacre.", det)
+                    add("inmetro", FAIL, f"There is an Inmetro pulse at {ms_to_iso(T)}, before the pulse used: it is not the first after the seal.", det)
                 else:
                     indep["inmetro"] = claimed["inmetro"]
-                    add("inmetro", PASS, f"Pulso nº {p['pulseIndex']} do Inmetro: íntegro, o primeiro após o lacre, e igual ao arquivo do Inmetro",
+                    add("inmetro", PASS, f"Inmetro pulse no. {p['pulseIndex']}: intact, the first after the seal, and equal to Inmetro's archive",
                         f"{claimed['inmetro']} · {det}")
 
     # 5. Semente e ordem
@@ -1623,10 +1623,10 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
     if v == V3:
         claims = cert.get("result") is not None or cert.get("picks") is not None
         if not all(used.get(k) for k in sources):
-            add("result", FAIL if claims else UNVERIFIED, "Faltam valores de aleatoriedade para recalcular o resultado.",
-                "um comprovante sem aleatoriedade é apenas um lacre")
+            add("result", FAIL if claims else UNVERIFIED, "Randomness values are missing to recompute the result.",
+                "a proof without randomness is only a seal")
         elif not task_ok:
-            add("result", FAIL, "O resultado não pode ser recalculado: a tarefa lacrada (task) é inválida.")
+            add("result", FAIL, "The result cannot be recomputed: the sealed task is invalid.")
         else:
             seed = seed_own(used["own"]) if "own" in sources else seed_v3(C, used)
             picks, steps = select_picks(seed, spec["task"])
@@ -1634,22 +1634,22 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
             v3info.update({"seed": seed, "picks": picks, "result": res, "steps": steps})
             preview = " · ".join(f"{i + 1}. {n}" for i, n in enumerate(res[:5])) + (" …" if len(res) > 5 else "")
             if cert.get("seed") != seed:
-                add("result", FAIL, "A semente recalculada difere da semente do comprovante.",
-                    f"recalculada {seed} · comprovante {cert.get('seed')}")
+                add("result", FAIL, "The recomputed seed differs from the proof's seed.",
+                    f"recomputed {seed} · proof {cert.get('seed')}")
             elif not _same_list(cert.get("picks"), picks):
-                add("result", FAIL, "Os índices escolhidos (picks) diferem dos recalculados.",
-                    "corretos: " + ", ".join(map(str, picks)) + f" · comprovante: {json.dumps(cert.get('picks'))}")
+                add("result", FAIL, "The chosen indices (picks) differ from the recomputed ones.",
+                    "correct: " + ", ".join(map(str, picks)) + f" · proof: {json.dumps(cert.get('picks'))}")
             elif not _same_list(cert.get("result"), res):
-                add("result", FAIL, "O resultado recalculado difere do resultado do comprovante.", "correto: " + preview)
+                add("result", FAIL, "The recomputed result differs from the proof's result.", "correct: " + preview)
             elif not all_indep:
-                add("result", UNVERIFIED, "Resultado consistente com os valores do comprovante, "
-                    "mas nem todas as fontes foram consultadas.", preview)
+                add("result", UNVERIFIED, "Result consistent with the proof's values, "
+                    "but not all sources were looked up.", preview)
             else:
-                add("result", PASS, "Resultado recalculado, idêntico ao do comprovante.", f"semente {seed} · {preview}")
+                add("result", PASS, "Result recomputed, identical to the proof's.", f"seed {seed} · {preview}")
     elif not all(used.get(k) for k in sources):
         add("order", FAIL if cert.get("order") else UNVERIFIED,
-            "Faltam valores de aleatoriedade para recalcular a ordem.",
-            "um comprovante sem aleatoriedade é apenas um lacre")
+            "Randomness values are missing to recompute the order.",
+            "a proof without randomness is only a seal")
     else:
         if v == V2:
             seed = seed_v2(C, used)
@@ -1662,15 +1662,15 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         preview = " · ".join(f"{i + 1}. {n}" for i, n in enumerate(computed_order[:3])) + (
             " …" if len(computed_order) > 3 else "")
         if not same_seed:
-            add("order", FAIL, "A semente recalculada difere da semente do comprovante.",
-                f"recalculada {seed} · comprovante {cert.get('seed')}")
+            add("order", FAIL, "The recomputed seed differs from the proof's seed.",
+                f"recomputed {seed} · proof {cert.get('seed')}")
         elif not same_order:
-            add("order", FAIL, "A ordem recalculada difere da ordem do comprovante.", "correta: " + preview)
+            add("order", FAIL, "The recomputed order differs from the proof's order.", "correct: " + preview)
         elif not all_indep:
-            add("order", UNVERIFIED, "Ordem consistente com os valores do comprovante, "
-                "mas nem todas as fontes foram consultadas.", preview)
+            add("order", UNVERIFIED, "Order consistent with the proof's values, "
+                "but not all sources were looked up.", preview)
         else:
-            add("order", PASS, "Ordem recalculada, idêntica à do comprovante.", f"semente {seed} · {preview}")
+            add("order", PASS, "Order recomputed, identical to the proof's.", f"seed {seed} · {preview}")
 
     # 6. Carimbos de tempo e horário
     anchors = cert.get("anchors") if isinstance(cert.get("anchors"), list) else []
@@ -1678,7 +1678,7 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
     anchor_notes, anchor_bad, anchor_warn = [], [], []
     for a in anchors:
         if not isinstance(a, dict):
-            anchor_bad.append("âncora inválida")
+            anchor_bad.append("invalid anchor")
             continue
         if a.get("type") == "rfc3161":
             tsa = a.get("tsa", "?")
@@ -1686,13 +1686,13 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
                 der = base64.b64decode(a.get("token", ""), validate=True)
                 tok = parse_timestamp_response(der)
             except (ValueError, DERError) as e:
-                anchor_bad.append(f"{tsa}: token ilegível ({e})")
+                anchor_bad.append(f"{tsa}: unreadable token ({e})")
                 continue
             if tok["hashAlg"] != OID_SHA256 or tok["imprint"] != C:
-                anchor_bad.append(f"{tsa}: o token não carimba este compromisso")
+                anchor_bad.append(f"{tsa}: the token does not stamp this commitment")
                 continue
             if a.get("time") is not None and iso_to_ms(a.get("time")) != tok["genTimeMs"]:
-                anchor_bad.append(f"{tsa}: o horário no comprovante difere do token ({tok['genTime']})")
+                anchor_bad.append(f"{tsa}: the time in the proof differs from the token ({tok['genTime']})")
                 continue
             note = ""
             if tsa_validator:
@@ -1703,31 +1703,31 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
                 if st == WARN:
                     anchor_warn.append(f"{tsa}: {note}")
             else:
-                note = "assinatura da TSA não validada"
+                note = "TSA signature not validated"
             times.append(tok["genTimeMs"])
             anchor_notes.append(f"{tsa}: {tok['genTime']}" + (f" ({note})" if note else ""))
         elif a.get("type") == "ots":
-            anchor_notes.append("registro público de longo prazo (OpenTimestamps): "
-                                + ("completo" if a.get("complete") else "pendente")
-                                + "; confira com `ots verify`")
+            anchor_notes.append("long-term public record (OpenTimestamps): "
+                                + ("complete" if a.get("complete") else "pending")
+                                + "; check with `ots verify`")
         else:
-            anchor_bad.append(f"tipo de âncora desconhecido: {a.get('type')}")
+            anchor_bad.append(f"unknown anchor type: {a.get('type')}")
     if anchors:
         if anchor_bad:
-            add("anchors", FAIL, "Há carimbos de tempo que não conferem.", "; ".join(anchor_bad + anchor_notes))
+            add("anchors", FAIL, "Some timestamps do not match.", "; ".join(anchor_bad + anchor_notes))
         elif anchor_warn:
-            add("anchors", WARN, "Carimbos de tempo lidos, com ressalvas.", "; ".join(anchor_warn + anchor_notes))
+            add("anchors", WARN, "Timestamps read, with reservations.", "; ".join(anchor_warn + anchor_notes))
         else:
-            add("anchors", PASS, "Carimbos de tempo correspondem a este compromisso.", "; ".join(anchor_notes))
+            add("anchors", PASS, "Timestamps correspond to this commitment.", "; ".join(anchor_notes))
 
-    labels = {"eth": "bloco Ethereum", "drand": "rodada drand", "inmetro": "pulso do Inmetro"}
+    labels = {"eth": "Ethereum block", "drand": "drand round", "inmetro": "Inmetro pulse"}
     live = [k for k in sources if k in labels]
     if live:
         missing_t = [k for k in live if k not in rtimes]
         deadline = min(rtimes.values()) if rtimes else None
         if not times:
-            add("timing", WARN, "Atenção: sem carimbo de tempo. Não é possível provar que o lacre veio antes do sorteio.",
-                ("o lacre precisa ter sido divulgado antes de " + _fmt_unix(deadline)) if deadline else "")
+            add("timing", WARN, "Attention: no timestamp. There is no proof that the seal came before the draw.",
+                ("the seal must have been published before " + _fmt_unix(deadline)) if deadline else "")
         else:
             earliest = min(times)
             parts, ok = [], True
@@ -1737,12 +1737,12 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
                     ok = ok and before
                     parts.append(f"{ms_to_iso(earliest)} {'<' if before else '≥'} {labels[k]} {_fmt_unix(rtimes[k])}")
             if missing_t:
-                add("timing", UNVERIFIED, "Horário de alguma fonte desconhecido; comparação incompleta.",
-                    "; ".join(parts + [f"{labels[k]}: horário desconhecido" for k in missing_t]))
+                add("timing", UNVERIFIED, "The time of some source is unknown; comparison incomplete.",
+                    "; ".join(parts + [f"{labels[k]}: time unknown" for k in missing_t]))
             elif ok:
-                add("timing", PASS, "O carimbo de tempo mais antigo é anterior à aleatoriedade.", "; ".join(parts))
+                add("timing", PASS, "The earliest timestamp is before the randomness.", "; ".join(parts))
             else:
-                add("timing", FAIL, "O carimbo de tempo mais antigo não é anterior à aleatoriedade.", "; ".join(parts))
+                add("timing", FAIL, "The earliest timestamp is not before the randomness.", "; ".join(parts))
 
     # 6b. Loterias: o carimbo mais antigo precisa ser anterior ao INÍCIO do dia do sorteio (00:00, Brasília).
     for game, label in (("megasena", "Mega-Sena"), ("federal", "Loteria Federal")):
@@ -1751,23 +1751,23 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         contest = sources[game].get("contest")
         cid = game + "Timing"
         if game not in draw_dates:
-            add(cid, UNVERIFIED, f"{label}, concurso {contest}: data do sorteio desconhecida; horário não comparado.",
-                "o resultado ainda não foi registrado" if is_seal else "o comprovante não traz uma data de sorteio válida")
+            add(cid, UNVERIFIED, f"{label}, draw no. {contest}: date of the lottery draw unknown; time not compared.",
+                "the result has not been recorded yet" if is_seal else "the proof does not contain a valid lottery draw date")
             continue
         date, origin = draw_dates[game]
         day0 = draw_day_start(date)
-        det = f"sorteio em {date} (data {origin}); início do dia {_fmt_unix(day0)} (00:00 em Brasília)"
+        det = f"lottery draw on {date} (date from {origin}); start of the day {_fmt_unix(day0)} (00:00 in Brasília)"
         if not times:
-            add(cid, UNVERIFIED, f"{label}, concurso {contest}: sem carimbo de tempo; não é possível provar que o lacre "
-                "veio antes do dia do sorteio.",
-                f"lacre declarado em {cert.get('sealedAt')} (declaração do operador, não verificada) · {det}")
+            add(cid, UNVERIFIED, f"{label}, draw no. {contest}: no timestamp; there is no proof that the seal "
+                "came before the day of the lottery draw.",
+                f"seal declared at {cert.get('sealedAt')} (the operator's statement, not verified) · {det}")
         else:
             earliest = min(times)
-            cmp = f"carimbo mais antigo {ms_to_iso(earliest)} {'<' if earliest < day0 * 1000 else '≥'} {det}"
+            cmp = f"earliest timestamp {ms_to_iso(earliest)} {'<' if earliest < day0 * 1000 else '≥'} {det}"
             if earliest < day0 * 1000:
-                add(cid, PASS, f"{label}, concurso {contest}: o carimbo de tempo mais antigo é anterior ao dia do sorteio.", cmp)
+                add(cid, PASS, f"{label}, draw no. {contest}: the earliest timestamp is before the day of the lottery draw.", cmp)
             else:
-                add(cid, FAIL, f"{label}, concurso {contest}: o carimbo de tempo mais antigo não é anterior ao dia do sorteio.", cmp)
+                add(cid, FAIL, f"{label}, draw no. {contest}: the earliest timestamp is not before the day of the lottery draw.", cmp)
 
     return result(computed_order)
 
@@ -1778,7 +1778,7 @@ def _verdict(cert, checks, lottery_confirmed, order):
     open_ = [c for c in checks if c["status"] in (UNVERIFIED, WARN)
              and not (lottery_confirmed and c["id"] in lottery_ids and c["status"] == UNVERIFIED)]
     if fails:
-        verdict, msg = "nao_confere", "Este sorteio não confere: " + "; ".join(c["title"] for c in fails)
+        verdict, msg = "nao_confere", "This draw does not check out: " + "; ".join(c["title"] for c in fails)
     elif open_:
         verdict = "incompleto"
         anchors = cert.get("anchors") if isinstance(cert, dict) else None
@@ -1787,17 +1787,17 @@ def _verdict(cert, checks, lottery_confirmed, order):
         src = cert.get("spec", {}).get("sources") if isinstance(cert.get("spec"), dict) else None
         own = src.get("own") if isinstance(src, dict) and isinstance(src.get("own"), dict) else None
         if own and all(c["id"] == "own" for c in open_):
-            msg = (f"Confere, desde que a lista (nesta ordem) e a semente ({own.get('label')}) tenham sido combinadas "
-                   "antes. As contas estão certas; confira a semente na fonte indicada.")
+            msg = (f"Checks out, provided the list (in this order) and the seed ({own.get('label')}) were agreed "
+                   "beforehand. The computation is right; check the seed at the stated source.")
         elif only_stamp:
-            msg = ("Confere, menos o momento do lacre. As contas estão certas, mas sem carimbo de tempo não dá "
-                   "para provar que o lacre veio antes do valor aleatório. Se você viu o lacre antes (na reunião, "
-                   "no grupo), o sorteio confere.")
+            msg = ("Checks out, except for the moment of sealing. The computation is right, but without a timestamp "
+                   "there is no proof the seal came before the random value. If you saw the seal beforehand (at the meeting, "
+                   "in the group), the draw checks out.")
         else:
-            msg = ("Conferência incompleta: nenhum item falhou, mas estes não puderam ser confirmados: "
+            msg = ("Incomplete check: nothing failed, but these could not be confirmed: "
                    + "; ".join(c["title"] for c in open_))
     else:
-        verdict, msg = "confere", "Este sorteio confere."
+        verdict, msg = "confere", "This draw checks out."
     spec = cert.get("spec") if isinstance(cert, dict) and isinstance(cert.get("spec"), dict) else {}
     return {"drawId": spec.get("id"), "version": spec.get("v"), "checks": checks,
             "verdict": verdict, "message": msg, "order": order}
@@ -1812,7 +1812,7 @@ def _requests():
         import requests  # noqa: WPS433
         return requests
     except ImportError:
-        raise SystemExit("Instale o pacote requests (pip install requests) ou use --values.")
+        raise SystemExit("Install the requests package (pip install requests) or use --values.")
 
 
 def fetch_eth(number: int, rpcs=DEFAULT_RPCS, session=None):
@@ -1888,7 +1888,7 @@ def fetch_lottery(game: str, contest, relay: str = None, session=None):
             n = normalize_caixa(game, contest, r.json())
             if n:
                 return n
-            errors.append("Caixa: resposta sem resultado")
+            errors.append("Caixa: response without a result")
         else:
             errors.append(f"Caixa: HTTP {r.status_code}")
     except Exception as e:
@@ -1932,15 +1932,15 @@ def fetch_all(cert, rpcs=DEFAULT_RPCS, relay=None, session=None):
 # =============================================================================
 
 def format_report(rep: dict) -> str:
-    lines = [f"Sorteio: {rep.get('drawId')}  ({rep.get('version')})",
-             "Lembrete: um segundo lacre com o mesmo ID invalida o sorteio. Confira se este é o único.", ""]
+    lines = [f"Draw: {rep.get('drawId')}  ({rep.get('version')})",
+             "Reminder: a second seal with the same ID invalidates the draw. Check that this is the only one.", ""]
     for c in rep["checks"]:
         lines.append(f"[{STATUS_LABEL[c['status']]:>14}] {c['title']}")
         if c.get("detail"):
             lines.append(f"{'':17}{c['detail']}")
     if rep.get("order"):
         lines.append("")
-        lines.append("Ordem recalculada:")
+        lines.append("Recomputed order:")
         for i, n in enumerate(rep["order"], 1):
             lines.append(f"  {i:>3}. {n}")
     v3 = rep.get("v3")
@@ -1948,31 +1948,31 @@ def format_report(rep: dict) -> str:
         # SPEC-v3 7: pesos como digitados, pesos inteiros e W, para acompanhar a conta.
         t, W = v3["task"], v3["W"]
         lines.append("")
-        lines.append(f"Pesos (W = {W}; {task_summary(t)}):")
-        lines.append(f"  {'opção':<24} {'digitado':>12} {'inteiro':>14} {'chance':>9}")
+        lines.append(f"Weights (W = {W}; {task_summary(t)}):")
+        lines.append(f"  {'option':<24} {'typed':>12} {'integer':>14} {'chance':>9}")
         for o, w, i in zip(t["options"], t["weights"], v3["ints"]):
             lines.append(f"  {o:<24} {w:>12} {i:>14} {share_text(i, W):>9}")
         if v3.get("result") is not None:
             lines.append("")
-            lines.append("Resultado recalculado (r = SHA-256 da escolha j; x = floor(r·W/2^256)):")
+            lines.append("Recomputed result (r = SHA-256 of pick j; x = floor(r·W/2^256)):")
             for s in v3["steps"]:
-                lines.append(f"  {s['j'] + 1:>3}. {t['options'][s['index']]}   [índice {s['index']}; x = {s['x']} de W = {s['W']}]")
+                lines.append(f"  {s['j'] + 1:>3}. {t['options'][s['index']]}   [index {s['index']}; x = {s['x']} of W = {s['W']}]")
     lines.append("")
     lines.append(rep["message"])
     return "\n".join(lines)
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="Confere um comprovante do Lucent Sorteios (LucentDraw/3, /2 ou /1).")
-    ap.add_argument("certificate", help="arquivo JSON do comprovante (ou - para entrada padrão)")
+    ap = argparse.ArgumentParser(description="Verifies a Lucent Draw / Lucent Sorteios proof (LucentDraw/3, /2 or /1).")
+    ap.add_argument("certificate", help="JSON file of the proof (or - for standard input)")
     ap.add_argument("--rpc", action="append", help="endpoint JSON-RPC Ethereum (pode repetir)")
-    ap.add_argument("--relay", help="URL do relay (para resultados de loteria)")
-    ap.add_argument("--values", help="JSON com os valores das fontes já obtidos (modo sem rede)")
+    ap.add_argument("--relay", help="relay URL (for lottery results)")
+    ap.add_argument("--values", help="JSON with the source values already obtained (offline mode)")
     ap.add_argument("--confirm-lottery", action="store_true",
-                    help="declara que você conferiu a olho os números da loteria na página oficial")
-    ap.add_argument("--tsa-ca", action="append", default=[], help="arquivo PEM com a CA de uma TSA (pode repetir)")
-    ap.add_argument("--no-tsa-check", action="store_true", help="não valida assinaturas RFC 3161 com openssl")
-    ap.add_argument("--json", action="store_true", help="saída em JSON")
+                    help="states that you checked the lottery numbers by eye on the official page")
+    ap.add_argument("--tsa-ca", action="append", default=[], help="PEM file with a TSA's CA (can be repeated)")
+    ap.add_argument("--no-tsa-check", action="store_true", help="do not validate RFC 3161 signatures with openssl")
+    ap.add_argument("--json", action="store_true", help="JSON output")
     a = ap.parse_args(argv)
     try:
         if a.certificate == "-":
@@ -1982,7 +1982,7 @@ def main(argv=None):
                 raw = f.read()
         cert = json.loads(raw)
     except (OSError, ValueError) as e:
-        print(f"Não foi possível ler o comprovante: {e}", file=sys.stderr)
+        print(f"Could not read the proof: {e}", file=sys.stderr)
         return 3
     if a.values:
         with open(a.values, encoding="utf-8") as f:

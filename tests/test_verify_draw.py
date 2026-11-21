@@ -127,7 +127,7 @@ class Certificates(unittest.TestCase):
         rep = verify(w.cert("v2-scheduled-federal-drand-manual"))
         st = status(rep)
         self.assertEqual(st["federal"], v.PASS)
-        self.assertIn("manualmente", next(x for x in rep["checks"] if x["id"] == "federal")["title"])
+        self.assertIn("entered by hand", next(x for x in rep["checks"] if x["id"] == "federal")["title"])
         self.assertEqual(st["timing"], v.WARN)
         self.assertEqual(rep["verdict"], "incompleto")
 
@@ -165,7 +165,7 @@ class Certificates(unittest.TestCase):
         world["eth"]["blocks"]["23700000"]["hash"] = "ff" * 32
         rep = verify(c, w.fetched_for(c, world))
         eth = next(x for x in rep["checks"] if x["id"] == "eth")
-        self.assertIn("reorganização", eth["title"])
+        self.assertIn("reorganization", eth["title"])
         self.assertEqual(status(rep)["order"], v.FAIL)
 
     def test_invalid_bls_from_source_fails(self):
@@ -226,7 +226,7 @@ class TimestampTokens(unittest.TestCase):
         st, note = val(self.der, v.parse_timestamp_response(self.der)["token"], self.cert["commitment"])
         self.assertEqual(st, v.PASS, note)
         rep = verify(self.cert, tsa_validator=val)
-        self.assertIn("cadeia da TSA válidas", next(x for x in rep["checks"] if x["id"] == "anchors")["detail"])
+        self.assertIn("TSA signature and chain valid", next(x for x in rep["checks"] if x["id"] == "anchors")["detail"])
 
     def test_untrusted_chain_is_warning(self):
         val = v.openssl_tsa_validator([OTHER_CA])
@@ -327,9 +327,9 @@ class CLI(unittest.TestCase):
             dump(w.fetched_for(c), vp)
             code, out = self.run_cli(cp, "--values", vp, "--no-tsa-check")
             self.assertEqual(code, 0, out)
-            self.assertIn("Este sorteio confere.", out)
+            self.assertIn("This draw checks out.", out)
             self.assertIn("fila-creche-2027-03", out)
-            self.assertIn("mesmo ID invalida", out)
+            self.assertIn("same ID invalidates", out)
             c["order"].reverse()
             dump(c, cp)
             self.assertEqual(self.run_cli(cp, "--values", vp, "--no-tsa-check")[0], 1)
