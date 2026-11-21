@@ -5,15 +5,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LucentCrypto · sorteios e provas verificáveis</title>
-<meta name="description" content="Resultados que qualquer pessoa pode conferir: sorteios verificáveis (vagas de garagem, listas, moeda, dados) e provas de embaralhamento. Grátis, no navegador, sem cadastro.">
+<title>LucentCrypto · provas, não promessas</title>
+<meta name="description" content="Sorteios, publicações de dados e votações cujo resultado qualquer pessoa pode conferir, sem expor ninguém. Criptografia verificável e LGPD.">
 <link rel="canonical" href="https://lucentcrypto.org/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23a85d08'/%3E%3Cpath d='M22 14h8v28h16v8H22z' fill='%23fff'/%3E%3C/svg%3E">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:site_name" content="LucentCrypto">
-<meta property="og:title" content="LucentCrypto · sorteios e provas verificáveis">
-<meta property="og:description" content="Resultados que qualquer pessoa pode conferir: sorteios verificáveis (vagas de garagem, listas, moeda, dados) e provas de embaralhamento. Grátis, no navegador, sem cadastro.">
+<meta property="og:title" content="LucentCrypto · provas, não promessas">
+<meta property="og:description" content="Sorteios, publicações de dados e votações cujo resultado qualquer pessoa pode conferir, sem expor ninguém.">
 <meta property="og:url" content="https://lucentcrypto.org/">
 <meta property="og:image" content="https://lucentcrypto.org/og/lucentcrypto.png">
 <meta property="og:image:width" content="1200">
@@ -21,128 +21,240 @@
 <meta name="twitter:card" content="summary_large_image">
 <style>
 :root {
-  --bg: #eef2f3; --surface: #ffffff; --ink: #13232b; --muted: #50646d; --line: #cdd8dc; --accent: #a85d08; --pine: #1f5a44;
+  --bg: #eef2f3; --surface: #ffffff; --ink: #13232b; --text: #2c3d45; --muted: #50646d; --line: #cdd8dc;
+  --accent: #a85d08; --pine: #1f5a44; --pine-ink: #ffffff; --blue: #2b4c9a;
+  --lab: #13232b; --lab-card: #1b2f38; --lab-line: #26363d; --lab-ink: #e2ebee; --lab-muted: #98abb2; --lab-accent: #f0a443;
   --display: "Avenir Next", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
   --body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --bg: #0d1417; --surface: #141f24; --ink: #e2ebee; --muted: #98abb2; --line: #26363d; --accent: #f0a443; --pine: #4fb487; color-scheme: dark; }
+  :root:not([data-theme="light"]) { --bg: #0d1417; --surface: #141f24; --ink: #e2ebee; --text: #c9d6db; --muted: #98abb2; --line: #26363d; --accent: #f0a443; --pine: #4fb487; --pine-ink: #0b1712; --blue: #7d9ee8; --lab: #071014; --lab-card: #111e24; color-scheme: dark; }
 }
-:root[data-theme="dark"] { --bg: #0d1417; --surface: #141f24; --ink: #e2ebee; --muted: #98abb2; --line: #26363d; --accent: #f0a443; --pine: #4fb487; color-scheme: dark; }
+:root[data-theme="dark"] { --bg: #0d1417; --surface: #141f24; --ink: #e2ebee; --text: #c9d6db; --muted: #98abb2; --line: #26363d; --accent: #f0a443; --pine: #4fb487; --pine-ink: #0b1712; --blue: #7d9ee8; --lab: #071014; --lab-card: #111e24; color-scheme: dark; }
 * { box-sizing: border-box; }
-[hidden] { display: none !important; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 var(--body); padding: 40px 16px 48px; }
-main { max-width: 760px; margin: 0 auto; display: grid; gap: 28px; }
-.family { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-h1 { font: 800 clamp(32px, 7vw, 48px)/1.05 var(--display); letter-spacing: -0.02em; margin: 6px 0 10px; }
-.lead { margin: 0; color: var(--muted); max-width: 60ch; }
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-a.card { display: grid; gap: 8px; text-decoration: none; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; border-top: 4px solid var(--c); }
-a.card:hover { border-color: var(--c); }
-a.card:focus-visible { outline: 2px solid var(--c); outline-offset: 3px; }
-a.card h2 { font: 700 22px/1.2 var(--display); margin: 0; color: var(--c); }
-a.card p { margin: 0; font-size: 15px; }
-a.card .go { font-weight: 600; color: var(--c); }
-section h2.sec { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
-.how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; counter-reset: s; }
-.how div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
-.how b { display: block; font: 700 16px var(--display); color: var(--accent); margin-bottom: 4px; }
-.how b::before { counter-increment: s; content: counter(s) ". "; }
-.how p { margin: 0; font-size: 14.5px; }
-@media (max-width: 620px) { .how { grid-template-columns: 1fr; } }
-.tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--c); color: var(--c); font: 600 11px var(--body); vertical-align: 3px; }
-.soon { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
-.soon > * { border: 1px dashed var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 4px; }
-.soon b { font: 700 16px var(--display); }
-.soon p { margin: 0; font-size: 14.5px; color: var(--muted); }
-.soon a { color: var(--accent); font-weight: 600; }
-.season { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; justify-content: space-between; border-radius: 12px; padding: 12px 16px; border: 1px solid var(--line); background: var(--surface); text-decoration: none; color: inherit; }
-.season.on { border: 2px solid var(--pine); }
-.season b { color: var(--pine); font: 700 16px var(--display); }
-.season p { margin: 0; font-size: 14.5px; }
-.season .go { font-weight: 600; color: var(--pine); white-space: nowrap; }
-.who p { margin: 0; font-size: 14.5px; }
-.who a { color: var(--accent); }
-footer { color: var(--muted); font-size: 13px; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 var(--body); }
+a { color: var(--pine); }
+.in { max-width: 1120px; margin: 0 auto; padding-inline: 24px; }
+.mono { font-family: var(--mono); font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase; }
+h1, h2, h3 { font-family: var(--display); margin: 0; }
+h2.sec { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
+p { margin: 0; }
+.btn { display: inline-flex; align-items: center; min-height: 44px; padding: 12px 22px; border-radius: 12px; font-weight: 600; text-decoration: none; }
+.btn.primary { background: var(--pine); color: var(--pine-ink); }
+.btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.btn:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* cabeçalho */
+.top { background: var(--surface); border-bottom: 1px solid var(--line); }
+.top .in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 32px; padding-block: 16px; }
+.logo { font: 800 22px var(--display); letter-spacing: -0.02em; color: var(--ink); text-decoration: none; }
+.logo span { color: var(--accent); }
+.top nav { display: flex; flex-wrap: wrap; gap: 6px 24px; font-weight: 500; font-size: 15px; }
+.top nav a { color: var(--ink); text-decoration: none; }
+.top nav a.lab { color: var(--muted); }
+.top nav a:hover { color: var(--pine); }
+
+/* abertura */
+.hero { padding-block: 84px 68px; display: grid; gap: 22px; }
+.hero .mono { color: var(--muted); }
+.hero h1 { font-size: clamp(40px, 7vw, 68px); line-height: 1.04; font-weight: 800; letter-spacing: -0.03em; }
+.hero p.lead { font-size: 20px; color: var(--text); max-width: 46ch; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* soluções */
+.solutions { padding-bottom: 80px; display: grid; gap: 24px; }
+.cards3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+.sol { background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--c); border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+.sol .mono { color: var(--c); }
+.sol h3 { font-size: 24px; font-weight: 700; }
+.sol p, .sol ul { color: var(--text); }
+.sol ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.sol .links { margin-top: auto; display: flex; flex-wrap: wrap; gap: 6px 20px; font-weight: 600; }
+.sol .links a { color: var(--c); }
+
+/* como funciona */
+.how { background: var(--surface); border-block: 1px solid var(--line); }
+.how .in { padding-block: 64px; display: grid; gap: 28px; }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px; }
+.steps div { display: grid; gap: 8px; align-content: start; }
+.steps .n { font: 500 14px var(--mono); color: var(--accent); }
+.steps h3 { font-size: 20px; }
+.steps p { color: var(--text); }
+
+/* serviços */
+.services { padding-block: 72px; display: grid; gap: 20px; }
+.services > p { color: var(--text); max-width: 60ch; }
+.cards4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.svc { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: grid; gap: 6px; align-content: start; }
+.svc h3 { font-size: 18px; }
+.svc p { color: var(--text); font-size: 15px; }
+
+/* laboratório */
+.labband { background: var(--lab); color: var(--lab-ink); }
+.labband .in { padding-block: 72px; display: grid; gap: 24px; }
+.labhead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px 24px; }
+.labhead > div { display: grid; gap: 8px; }
+.labhead .mono { color: var(--lab-accent); }
+.labhead h2 { color: #ffffff; }
+.labhead p { color: var(--lab-muted); max-width: 58ch; }
+.labcards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+.labcards a { background: var(--lab-card); border: 1px solid var(--lab-line); border-radius: 14px; padding: 18px; text-decoration: none; color: var(--lab-ink); display: grid; gap: 6px; align-content: start; }
+.labcards a:hover { border-color: var(--lab-accent); }
+.labcards b { color: #ffffff; font: 700 17px var(--display); }
+.labcards span { color: var(--lab-muted); font-size: 14px; }
+.labband .partner { color: var(--lab-muted); font-size: 14px; }
+.labband .partner a { color: var(--lab-accent); }
+
+/* quem faz e contato */
+.contact { padding-block: 72px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; }
+.contact .who { display: grid; gap: 12px; align-content: start; }
+.contact .who p { color: var(--text); }
+.contact .who .links { display: flex; flex-wrap: wrap; gap: 6px 18px; font-weight: 600; }
+.card-contact { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 28px; display: grid; gap: 14px; align-content: start; justify-items: start; }
+.card-contact h2 { font-size: 24px; font-weight: 800; }
+.card-contact p { color: var(--text); }
+
+footer { border-top: 1px solid var(--line); background: var(--surface); }
+footer .in { padding-block: 26px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 32px; font-size: 14px; color: var(--muted); }
+footer b { color: var(--ink); }
+footer .links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+footer a { color: var(--muted); }
 </style>
 </head>
 <body>
-<main>
-  <header>
-    <div class="family">LucentCrypto</div>
-    <h1>Resultados que qualquer pessoa pode conferir</h1>
-    <p class="lead">Com criptografia, não é preciso confiar em quem organiza: a matemática permite conferir. Ferramentas gratuitas, que funcionam no seu navegador, sem cadastro e sem guardar seus dados em servidor.</p>
-  </header>
-
-  <a class="season on" id="season" href="/amigo-oculto/" hidden>
-    <div><b>É época de amigo secreto 🎁</b><p>Lucent Amigo Oculto: cada pessoa recebe o seu amigo pelo próprio link, no WhatsApp.</p></div>
-    <span class="go">Organizar o amigo secreto →</span>
-  </a>
-
-  <section>
-    <h2 class="sec">Como funciona</h2>
-    <div class="how">
-      <div><b>Lacrar</b><p>Tudo o que decide o resultado é fixado e publicado antes: as opções, os pesos, os dados.</p></div>
-      <div><b>Prova pública</b><p>O acaso vem de uma fonte pública, ou quem publica apresenta uma prova matemática.</p></div>
-      <div><b>Conferir</b><p>Depois, qualquer pessoa confere com o certificado. A especificação e um verificador independente são públicos.</p></div>
-    </div>
-  </section>
-
-  <div class="cards">
-    <a class="card" href="/sorteios/" style="--c: var(--accent)">
-      <h2>Lucent Sorteios</h2>
-      <p>Sorteios que qualquer pessoa pode conferir: vagas de garagem, ordem de uma lista com pesos, moeda, dados e cartas. As opções são lacradas antes, e o certificado mostra que ninguém mexeu.</p>
-      <span class="go">Abrir Lucent Sorteios →</span>
-    </a>
-    <a class="card" href="/embaralhamento/" style="--c: var(--accent)">
-      <h2>Embaralhamento verificável <span class="tag">demonstração</span></h2>
-      <p>Prove que uma lista publicada sem nomes, como salários ou lances de uma licitação, corresponde exatamente aos dados lacrados, sem revelar quem é quem.</p>
-      <span class="go">Ver a demonstração →</span>
-    </a>
-    <a class="card" href="/segredo/" style="--c: var(--accent)">
-      <h2>Lucent Segredo <span class="tag">demonstração</span></h2>
-      <p>Divida um segredo entre pessoas de confiança: menos guardiões do que o combinado não descobrem nada; o número combinado, juntos, recupera.</p>
-      <span class="go">Ver a demonstração →</span>
-    </a>
-    <a class="card" href="/encrypt/" style="--c: var(--accent)">
-      <h2>Lucent Encrypt <span class="tag">demonstração</span></h2>
-      <p>Uma frase de 7 palavras vira a sua chave: publique um link e receba mensagens que só você abre. Clássico, pós-quântico e híbrido, lado a lado.</p>
-      <span class="go">Ver a demonstração →</span>
-    </a>
-    <a class="card" href="/votacao/" style="--c: var(--accent)">
-      <h2>Lucent Votação <span class="tag">demonstração</span></h2>
-      <p>Votações secretas numa reunião, com até 20 pessoas: os participantes votam pelo celular em cada questão que a mesa abrir, uma depois da outra. As cédulas ficam cifradas num quadro público e só os totais são abertos.</p>
-      <span class="go">Ver a demonstração →</span>
-    </a>
+<header class="top">
+  <div class="in">
+    <a class="logo" href="/">Lucent<span>Crypto</span></a>
+    <nav aria-label="Principal">
+      <a href="#sorteios">Sorteios</a>
+      <a href="#conformidade">Conformidade</a>
+      <a href="#votacao">Votação</a>
+      <a href="#servicos">Serviços</a>
+      <a class="lab" href="#laboratorio">Laboratório</a>
+    </nav>
+    <a class="btn primary" href="#contato">Fale conosco</a>
   </div>
+</header>
 
-  <section>
-    <h2 class="sec">Em breve</h2>
-    <div class="soon">
-      <div><b>Lucent Votações e Credenciais</b><p>Votações verificáveis para condomínios, cooperativas e conselhos, com controle de procurações. Já dá para experimentar a <a href="/votacao/">demonstração</a>. <a href="mailto:info@lucentcrypto.org?subject=Lucent%20Vota%C3%A7%C3%B5es">Quero saber quando lançar</a></p></div>
-      <div><b>Sorteio com valor jurídico</b><p>Lacre com carimbo do tempo ICP-Brasil, antes de um concurso futuro da Loteria Federal, com ata assinada. <a href="mailto:info@lucentcrypto.org?subject=Or%C3%A7amento%3A%20sorteio%20com%20valor%20jur%C3%ADdico">Pedir orçamento</a></p></div>
+<main>
+  <section class="in hero">
+    <p class="mono">Criptografia verificável · LGPD</p>
+    <h1>Provas, não promessas.</h1>
+    <p class="lead">Sorteios, publicações de dados e votações cujo resultado qualquer pessoa pode conferir, sem expor ninguém.</p>
+    <div class="row">
+      <a class="btn primary" href="#contato">Conversar sobre um projeto</a>
+      <a class="btn ghost" href="#solucoes">Ver as soluções</a>
     </div>
   </section>
 
-  <a class="season" id="seasonOff" href="/amigo-oculto/">
-    <div><b>Lucent Amigo Oculto</b><p>Para o fim do ano: cada pessoa recebe o seu amigo secreto pelo próprio link, no WhatsApp.</p></div>
-    <span class="go">Abrir →</span>
-  </a>
-
-  <section class="who">
-    <h2 class="sec">Quem faz</h2>
-    <p>O LucentCrypto é desenvolvido por Jeroen van de Graaf, professor do Departamento de Ciência da Computação da UFMG, com mais de duas décadas de pesquisa em sistemas de votação e criptografia. É coautor de um artigo sobre sorteios públicos verificáveis (SBSeg 2017). <a href="http://lattes.cnpq.br/0069989873499216">Currículo Lattes</a> · <a href="https://scholar.google.com.br/citations?user=-w8olWwAAAAJ">Google Scholar</a></p>
+  <section class="in solutions" id="solucoes">
+    <h2 class="sec">Soluções</h2>
+    <div class="cards3">
+      <article class="sol" id="sorteios" style="--c: var(--accent)">
+        <p class="mono">Disponível</p>
+        <h3>Sorteios verificáveis</h3>
+        <p>Sorteios lacrados antes e conferíveis depois, por qualquer participante.</p>
+        <ul>
+          <li>Seleções públicas: moradias, vagas em escolas</li>
+          <li>Amostras para auditoria e fiscalização</li>
+          <li>Com valor jurídico: carimbo do tempo ICP-Brasil e ata</li>
+        </ul>
+        <p class="links"><a href="/sorteios/">Experimentar</a><a href="mailto:info@lucentcrypto.org?subject=Or%C3%A7amento%3A%20sorteio%20verific%C3%A1vel">Pedir orçamento →</a></p>
+      </article>
+      <article class="sol" id="conformidade" style="--c: var(--pine)">
+        <p class="mono">Pilotos sob consulta</p>
+        <h3>Conformidade sem exposição</h3>
+        <p>Provar que os dados estão certos sem entregar os dados, com provas de conhecimento zero.</p>
+        <ul>
+          <li>Publicação verificável de dados salariais</li>
+          <li>Cruzar listas sem revelar quem está nelas (PSI)</li>
+          <li>Cadeia de custódia de documentos e evidências</li>
+        </ul>
+        <p class="links"><a href="/embaralhamento/">Ver uma demonstração</a><a href="mailto:info@lucentcrypto.org?subject=Piloto%3A%20conformidade%20sem%20exposi%C3%A7%C3%A3o">Conversar sobre um piloto →</a></p>
+      </article>
+      <article class="sol" id="votacao" style="--c: var(--blue)">
+        <p class="mono">Em desenvolvimento</p>
+        <h3>Votação segura</h3>
+        <p>Eleições com voto secreto e apuração que qualquer eleitor confere, para sindicatos e associações.</p>
+        <ul>
+          <li>Até 10.000 eleitores</li>
+          <li>Autenticação de várias formas, conforme o estatuto</li>
+          <li>Urna pré-configurada (Raspberry Pi) e voto cifrado pelo correio</li>
+        </ul>
+        <p class="links"><a href="mailto:info@lucentcrypto.org?subject=Vota%C3%A7%C3%A3o%20segura">Quero saber mais →</a></p>
+      </article>
+    </div>
   </section>
 
-  <footer>LucentCrypto · <a href="/spec/SPEC-v3.md" style="color:inherit">especificação do protocolo</a> · <a href="/verifier/verify_draw.py" style="color:inherit">verificador em Python</a> · <a href="mailto:info@lucentcrypto.org" style="color:inherit">info@lucentcrypto.org</a></footer>
+  <section class="how">
+    <div class="in">
+      <h2 class="sec">Como funciona</h2>
+      <div class="steps">
+        <div><p class="n">01</p><h3>Lacrar</h3><p>As regras e os dados são fixados antes, com carimbo do tempo. Ninguém muda nada depois sem que se perceba.</p></div>
+        <div><p class="n">02</p><h3>Prova pública</h3><p>O resultado sai com uma prova matemática. Os dados pessoais continuam protegidos.</p></div>
+        <div><p class="n">03</p><h3>Conferir</h3><p>Qualquer pessoa confere no navegador, ou com um verificador independente e aberto.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="in services" id="servicos">
+    <h2 class="sec">Serviços especializados</h2>
+    <p>Mais de duas décadas de pesquisa em criptografia e votação eletrônica, à disposição do seu projeto.</p>
+    <div class="cards4">
+      <div class="svc"><h3>Consultoria</h3><p>Desenho de sistemas que precisam ser auditáveis e respeitar a LGPD.</p></div>
+      <div class="svc"><h3>Revisão de segurança</h3><p>Análise independente de sistemas criptográficos e de votação de terceiros.</p></div>
+      <div class="svc"><h3>Perícia técnica</h3><p>Pareceres em processos que envolvem criptografia, sorteios ou votação eletrônica.</p></div>
+      <div class="svc"><h3>Formação</h3><p>Cursos e palestras para equipes jurídicas, de TI e de conformidade.</p></div>
+    </div>
+  </section>
+
+  <section class="labband" id="laboratorio">
+    <div class="in">
+      <div class="labhead">
+        <div>
+          <p class="mono">Laboratório</p>
+          <h2 class="sec">Experimente no navegador</h2>
+          <p>Demonstrações gratuitas, para conhecer a criptografia por trás das soluções. Sem cadastro e sem garantias.</p>
+        </div>
+      </div>
+      <div class="labcards">
+        <a href="/sorteios/"><b>Sorteio rápido</b><span>Moeda, dados, cartas e listas, na hora ou verificável.</span></a>
+        <a href="/encrypt/"><b>Encrypt</b><span>Cifra clássica e pós-quântica, lado a lado.</span></a>
+        <a href="/segredo/"><b>Segredo</b><span>Divida um segredo entre pessoas de confiança.</span></a>
+        <a href="/votacao/"><b>Votação em reunião</b><span>Voto secreto pelo celular, até 20 pessoas.</span></a>
+        <a href="/amigo-oculto/"><b>Amigo Oculto</b><span>Cada um recebe o seu amigo pelo próprio link.</span></a>
+      </div>
+      <p class="partner">Para guardar segredos por décadas: <a href="https://grifortis.com" rel="noopener">DuraShare, da Grifortis</a>, empresa parceira.</p>
+    </div>
+  </section>
+
+  <section class="in contact" id="contato">
+    <div class="who">
+      <h2 class="sec">Quem faz</h2>
+      <p>Uma equipe liderada por Jeroen van de Graaf, professor do Departamento de Ciência da Computação da UFMG, que pesquisa criptografia e votação eletrônica há mais de duas décadas. É coautor de um artigo sobre sorteios públicos verificáveis (SBSeg 2017).</p>
+      <p class="links"><a href="http://lattes.cnpq.br/0069989873499216">Currículo Lattes</a><a href="https://scholar.google.com.br/citations?user=-w8olWwAAAAJ">Google Scholar</a></p>
+    </div>
+    <div class="card-contact">
+      <h2>Fale conosco</h2>
+      <p>Conte o que você precisa provar, e para quem.</p>
+      <a class="btn primary" href="mailto:info@lucentcrypto.org">info@lucentcrypto.org</a>
+    </div>
+  </section>
 </main>
-<script>
-// Amigo Oculto em destaque de 15/11 a 6/1; no resto do ano, discreto no fim da página.
-(() => { const d = new Date(), m = d.getMonth() + 1, day = d.getDate();
-  const on = (m === 11 && day >= 15) || m === 12 || (m === 1 && day <= 6);
-  document.getElementById("season").hidden = !on; document.getElementById("seasonOff").hidden = on; })();
-</script>
+
+<footer>
+  <div class="in">
+    <span><b>LucentCrypto</b></span>
+    <span class="links">
+      <a href="https://github.com/jeroenvdgraaf/lucentcrypto" rel="noopener">Código aberto no GitHub</a>
+      <a href="/spec/SPEC-v3.md">Especificação dos sorteios</a>
+      <a href="/verifier/verify_draw.py">Verificador em Python</a>
+      <a href="#laboratorio">Laboratório</a>
+    </span>
+  </div>
+</footer>
 </body>
 </html>
