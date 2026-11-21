@@ -4,7 +4,7 @@
 
 A teaser for a larger voting application: secret ballots during **one meeting**, online or in person, with at most **20 participants** (up to **100** with a release code, section 2.1). The person running the meeting (the **admin**, usually the president) opens items one at a time, improvising as needed; voters vote from a personal link on their phone; a public **board** on our Worker holds the encrypted ballots; the result of each item is decrypted only as a total. Where this document says MUST, the behavior affects verification or privacy.
 
-Interface language is Portuguese; terms in *italics* are the interface words.
+The interface exists in Portuguese (`/votacao/`) and English (`/en/votacao/`); terms in *italics* are the Portuguese interface words. The protocol is the same in both: option names and actions stay in Portuguese in the data.
 
 ## 1. Roles and links
 

@@ -4,7 +4,7 @@
 
 A demonstration of public-key encryption that needs nothing installed and nothing stored. A person's key pair is derived from a **phrase of 7 words** plus an **identifier** (name, phone or e-mail). They publish a **public link**; anyone can use it to encrypt a short text message for them; only the phrase opens it. Three modes show the cost of post-quantum security side by side: **X25519** (classic), **ML-KEM-768** (post-quantum) and **X-Wing** (hybrid of both).
 
-No server is involved: everything runs in one self-contained page and travels in links. Interface language is Portuguese; terms in *italics* are the interface words. Where this document says MUST, the behavior affects compatibility or security. **Every parameter in sections 2–4 is part of the format: changing one changes every key, so it needs a new version.**
+No server is involved: everything runs in one self-contained page and travels in links. The interface exists in Portuguese (`/encrypt/`) and English (`/en/encrypt/`), with the same Portuguese word list in both; terms in *italics* are the Portuguese interface words. Where this document says MUST, the behavior affects compatibility or security. **Every parameter in sections 2–4 is part of the format: changing one changes every key, so it needs a new version.**
 
 ## 1. Flow
 
@@ -32,7 +32,7 @@ No server is involved: everything runs in one self-contained page and travels in
 
 **Identifier** (it becomes the salt). It is normalized, and the page shows the result (*identificador: 5531999990000*):
 - **E-mail** (contains `@`): spaces removed, lowercase.
-- **Phone** (only digits, spaces and `+ ( ) - .`, with 10 or more digits): digits only; `55` is prepended when 10 or 11 digits are given.
+- **Phone** (only digits, spaces and `+ ( ) - .`, with 10 or more digits): digits only. A number written with a leading `+` already carries its country code and is kept as is; otherwise `55` (Brazil) is prepended when 10 or 11 digits are given. (The `+` rule was added on 21 November 2026, before any keys were in use, so the version stays LucentEncrypt/1.)
 - **Name** (anything else): NFKD, combining marks removed, uppercase, runs of spaces become one space, trimmed.
 - At most 128 bytes after normalization. It must not be empty.
 

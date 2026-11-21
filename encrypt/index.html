@@ -2403,7 +2403,7 @@ const LE = (() => {
     const s = String(raw || "").trim(); if (!s) return null;
     let kind, value;
     if (s.includes("@")) { kind = "e-mail"; value = s.replace(/\s+/g, "").toLowerCase(); }
-    else if (/^[\d\s+().-]+$/.test(s) && s.replace(/\D/g, "").length >= 10) { const d = s.replace(/\D/g, ""); kind = "celular"; value = d.length <= 11 ? "55" + d : d; }
+    else if (/^[\d\s+().-]+$/.test(s) && s.replace(/\D/g, "").length >= 10) { const d = s.replace(/\D/g, ""); kind = "celular"; value = s.trim().startsWith("+") || d.length > 11 ? d : "55" + d; }
     else { kind = "nome"; value = s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/\s+/g, " ").trim(); }
     if (!value || te.encode(value).length > ID_MAX) return null;
     return { kind, value };

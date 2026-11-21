@@ -43,6 +43,8 @@ test("identificador: e-mail, celular e nome normalizados", () => {
   assert.deepEqual(LE.normId(" Maria@Exemplo.COM "), { kind: "e-mail", value: "maria@exemplo.com" });
   assert.deepEqual(LE.normId("(31) 99999-0000"), { kind: "celular", value: "5531999990000" });
   assert.deepEqual(LE.normId("+55 31 99999 0000"), { kind: "celular", value: "5531999990000" });
+  assert.deepEqual(LE.normId("+1 555 010 0000"), { kind: "celular", value: "15550100000" }, "com +, o código do país já está lá");
+  assert.deepEqual(LE.normId("555 010 0000"), { kind: "celular", value: "555550100000" }, "sem +, 10 ou 11 algarismos são do Brasil");
   assert.deepEqual(LE.normId("  maría   da  Conceição "), { kind: "nome", value: "MARIA DA CONCEICAO" });
   assert.equal(LE.normId("   "), null); assert.equal(LE.normId("x".repeat(129)), null);
 });

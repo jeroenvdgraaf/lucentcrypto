@@ -189,7 +189,7 @@ footer { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
 <!-- ===== Criar ===== -->
 <section class="panel" id="viewCreate" role="tabpanel">
   <h2>1. Your identifier</h2>
-  <label class="f"><span>Name, phone or e-mail <small>goes into the key computation and appears in every link</small></span><input type="text" id="cId" maxlength="160" autocomplete="off" placeholder="Mary Smith, +44 7700 900123 or mary@example.com"></label>
+  <label class="f"><span>Name, phone or e-mail <small>goes into the key computation and appears in every link</small></span><input type="text" id="cId" maxlength="160" autocomplete="off" placeholder="Mary Smith, +1 555 010 0000 or mary@example.com"></label>
   <p class="small muted" id="cIdNorm"></p>
   <p class="small muted">The identifier is visible in every link. Use a name if you don’t want to expose a phone number or e-mail. To recreate the key later, you will need the phrase and this identifier, typed the same way.</p>
 
@@ -299,7 +299,7 @@ footer { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
 <!-- /FRAME-END -->
 
 <footer>
-  <p>Format LucentEncrypt/1 · 7-word phrase (77 bits) → Argon2id (64 MiB, 3 passes) with the identifier as salt → one key per mode; KEM and AES-256-GCM. Specification (in Portuguese): <a href="https://github.com/jeroenvdgraaf/lucentcrypto/blob/main/spec/ENCRYPT.md" target="_blank" rel="noopener">spec/ENCRYPT.md</a>. Works when saved, offline.</p>
+  <p>Format LucentEncrypt/1 · 7-word phrase (77 bits) → Argon2id (64 MiB, 3 passes) with the identifier as salt → one key per mode; KEM and AES-256-GCM. Specification: <a href="https://github.com/jeroenvdgraaf/lucentcrypto/blob/main/spec/ENCRYPT.md" target="_blank" rel="noopener">spec/ENCRYPT.md</a>. Works when saved, offline.</p>
   <p>Libraries: noble-curves, noble-post-quantum and noble-hashes, by Paul Miller; hash-wasm, by Dani Biró; qrcode-generator, by Kazuhiko Arase (all MIT licensed). Word list: the Portuguese BIP-39 list, via @scure/bip39 (MIT license).</p>
   <p><a href="/">LucentCrypto</a></p>
 </footer>
@@ -2404,7 +2404,7 @@ const LE = (() => {
     const s = String(raw || "").trim(); if (!s) return null;
     let kind, value;
     if (s.includes("@")) { kind = "e-mail"; value = s.replace(/\s+/g, "").toLowerCase(); }
-    else if (/^[\d\s+().-]+$/.test(s) && s.replace(/\D/g, "").length >= 10) { const d = s.replace(/\D/g, ""); kind = "celular"; value = d.length <= 11 ? "55" + d : d; }
+    else if (/^[\d\s+().-]+$/.test(s) && s.replace(/\D/g, "").length >= 10) { const d = s.replace(/\D/g, ""); kind = "celular"; value = s.trim().startsWith("+") || d.length > 11 ? d : "55" + d; }
     else { kind = "nome"; value = s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/\s+/g, " ").trim(); }
     if (!value || te.encode(value).length > ID_MAX) return null;
     return { kind, value };
