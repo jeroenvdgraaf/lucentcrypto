@@ -166,16 +166,16 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
 
 <!-- ===== Criar ===== -->
 <section id="viewCreate" class="panel" hidden>
-  <h2>Criar uma reunião</h2>
+  <h2>Preparar a votação</h2>
   <div class="grid2">
     <label class="f"><span>Nome da reunião <small>por exemplo “Assembleia do condomínio, novembro”</small></span><input type="text" id="cTitle" maxlength="128" autocomplete="off"></label>
     <label class="f"><span>Seu nome <small>quem conduz; aparece no quadro</small></span><input type="text" id="cBy" maxlength="128" autocomplete="off"></label>
   </div>
   <label class="f"><span>Seu celular ou e-mail <small>opcional: só para enviar a você mesmo o link do organizador</small></span><input type="text" id="cMe" maxlength="80" autocomplete="off" placeholder="(31) 99999-0000 ou nome@exemplo.com"></label>
-  <h3>Eleitores</h3>
+  <h3>Participantes</h3>
   <p class="small muted">No máximo 50. Cada um recebe um link pessoal para votar durante toda a reunião. Dá para incluir e excluir pessoas depois, também durante a reunião.</p>
   <table class="g"><thead><tr><th></th><th>Nome</th><th>Celular ou e-mail <small>(opcional, para enviar)</small></th><th></th></tr></thead><tbody id="cRows"></tbody></table>
-  <div class="row"><button class="btn small" id="cAdd" type="button">+ Eleitor</button><button class="btn small" id="cImportOpen" type="button">Colar uma lista</button></div>
+  <div class="row"><button class="btn small" id="cAdd" type="button">+ Participante</button><button class="btn small" id="cImportOpen" type="button">Colar uma lista</button></div>
   <div class="import" id="cImport" hidden>
     <label class="f"><span>Uma pessoa por linha <small>nome e, se quiser, celular ou e-mail; por exemplo “Bruno; (31) 98888-7777”. Pode colar duas colunas de uma planilha.</small></span><textarea id="cImportText" rows="5" spellcheck="false"></textarea></label>
     <p class="small muted" id="cImportPreview" aria-live="polite"></p>
@@ -186,7 +186,8 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
     <small class="muted">Com os nomes, todos podem conferir que a lista não tem gente estranha. Como cada um votou nunca aparece.</small>
   </div>
   <label class="check"><input type="checkbox" id="cSplit" checked><span>Guardar metade da chave comigo (recomendado) <small>— a chave fica dividida entre você e a LucentCrypto; nenhum dos dois, sozinho, consegue ler uma cédula.</small></span></label>
-  <div class="row"><button class="btn primary" id="cGo" type="button">Criar a reunião</button></div>
+  <div class="row"><button class="btn primary" id="cGo" type="button">Confirmar a lista de participantes</button></div>
+  <p class="small muted">Dá para incluir e excluir pessoas depois, também durante a reunião.</p>
   <div class="msg bad" id="cErr" hidden role="alert"></div>
   <div id="mySessions" hidden>
     <h3>Reuniões neste aparelho</h3>
@@ -210,8 +211,7 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
         <div class="row" style="justify-content:space-between"><h2 id="aTitle"></h2><span class="pill" id="aState"></span></div>
         <p class="small muted" id="aSecrecy"></p>
         <div class="row">
-          <a class="btn small" id="aTela" target="_blank" rel="noopener">Abrir o telão</a>
-          <a class="btn small" id="aBoard" target="_blank" rel="noopener">Ver o quadro</a>
+          <a class="btn small" id="aBoard" target="_blank" rel="noopener">Abrir o quadro <small>(para projetar: Tela cheia)</small></a>
           <button class="btn small" id="aShowLink" type="button">Meu link de organizador</button>
         </div>
         <div class="msg" id="aCheck"></div>
@@ -234,11 +234,11 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
         <div class="row"><button class="btn primary" id="nGo" type="button">Abrir votação</button><span class="small muted" id="nNote"></span></div>
       </section>
       <section class="panel">
-        <div class="row" style="justify-content:space-between"><h2>Eleitores</h2><span class="pill" id="aCount"></span></div>
+        <div class="row" style="justify-content:space-between"><h2>Participantes</h2><span class="pill" id="aCount"></span></div>
         <p class="small muted" id="aSendIntro"></p>
         <div class="voters" id="aVoters"></div>
         <div class="grid2">
-          <label class="f"><span>Incluir eleitor <small>vota a partir da próxima votação aberta</small></span><input type="text" id="aNewName" maxlength="128" placeholder="Nome"></label>
+          <label class="f"><span>Incluir participante <small>vota a partir da próxima votação aberta</small></span><input type="text" id="aNewName" maxlength="128" placeholder="Nome"></label>
           <label class="f"><span>&nbsp;</span><input type="text" id="aNewContact" maxlength="80" placeholder="Celular ou e-mail (opcional)"></label>
         </div>
         <div class="row"><button class="btn small" id="aAddVoter" type="button">Incluir</button><span class="small muted" id="aVoterNote"></span></div>
@@ -267,26 +267,18 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
   </div>
 </section>
 
-<!-- ===== Telão ===== -->
-<section id="viewTela" hidden>
-  <div class="wrap" style="max-width:none">
-    <p class="kicker" id="tTitle"></p>
-    <section class="panel" id="tMain"></section>
-    <p class="small muted" id="tCheck"></p>
-  </div>
-</section>
-
 <!-- ===== Quadro ===== -->
 <section id="viewBoard" hidden>
   <div class="wrap" style="max-width:none">
-    <section class="panel">
-      <h2 id="bTitle"></h2>
+    <section class="panel strong" id="bNow"></section>
+    <section class="panel" id="bInfo">
+      <div class="row" style="justify-content:space-between"><h2 id="bTitle"></h2><button class="btn small" id="bFull" type="button">Tela cheia</button></div>
       <p class="small muted" id="bSecrecy"></p>
       <div class="msg" id="bCheck"></div>
       <div class="row"><button class="btn small" id="bAta" type="button">Baixar a ata (JSON)</button><span class="small muted" id="bDelete"></span></div>
     </section>
-    <section class="panel" id="bResults" hidden><h2>Resultados</h2><div class="items" id="bResultsList"></div></section>
-    <section class="panel"><h2>Quadro, mais recente primeiro</h2><ul class="events" id="bEvents"></ul></section>
+    <section class="panel" id="bResults" hidden data-notela><h2>Resultados</h2><div class="items" id="bResultsList"></div></section>
+    <section class="panel" data-notela><h2>Quadro, mais recente primeiro</h2><ul class="events" id="bEvents"></ul></section>
   </div>
 </section>
 
@@ -297,7 +289,7 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
     <li><b>Contado como votado:</b> cada pessoa vê a sua cédula no quadro, e qualquer um confere que o resultado é exatamente a soma das cédulas aceitas. O quadro tem uma cadeia de hashes: o histórico não pode ser reescrito sem que as páginas percebam.</li>
     <li><b>Quem votou aparece</b> (pelo nome ou por uma impressão digital, com a hora); como votou, não.</li>
     <li><b>O organizador controla a lista.</b> Cada inclusão e exclusão aparece no quadro. Com os nomes à vista, todos podem notar um nome estranho.</li>
-    <li><b>Grupos pequenos:</b> quando há poucos eleitores, ou quando todos votam igual, o resultado pode revelar como cada um votou.</li>
+    <li><b>Grupos pequenos:</b> quando há poucos participantes, ou quando todos votam igual, o resultado pode revelar como cada um votou.</li>
     <li><b>Não protege:</b> quem vota sob o olhar de outra pessoa ou repassa o seu link; vírus no celular; a perda do link do organizador.</li>
     <li><b>Tudo é apagado</b> 24 horas depois da meia-noite seguinte ao fim da reunião. A ata baixada continua conferível.</li>
   </ul>
@@ -380,7 +372,7 @@ function parsePeople(text) {
   const out = [];
   for (const raw of String(text).split(/\r?\n/)) {
     const line = raw.trim(); if (!line) continue;
-    if (!out.length && /^(nome|name|eleitor|pessoa)\b/i.test(line) && !/\d|@/.test(line)) continue;
+    if (!out.length && /^(nome|name|eleitor|participante|pessoa)\b/i.test(line) && !/\d|@/.test(line)) continue;
     let name = line, contact = "";
     const mail = line.match(/[^\s;,\t<>()]+@[^\s;,\t<>()]+\.[^\s;,\t<>()]+/);
     if (mail) { contact = mail[0]; name = line.replace(mail[0], ""); }
@@ -477,7 +469,7 @@ function viewCreate() {
     const tb = $("cRows"); tb.innerHTML = "";
     rows.forEach((r, i) => {
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td class="num">${i + 1}</td><td><input type="text" maxlength="128" aria-label="Nome do eleitor ${i + 1}" value="${esc(r.name)}"></td><td><input type="text" maxlength="80" aria-label="Contato do eleitor ${i + 1}" value="${esc(r.contact)}" placeholder="(31) 99999-0000 ou nome@exemplo.com"></td><td class="del"><button class="x" type="button" aria-label="Excluir eleitor ${i + 1}">✕</button></td>`;
+      tr.innerHTML = `<td class="num">${i + 1}</td><td><input type="text" maxlength="128" aria-label="Nome do participante ${i + 1}" value="${esc(r.name)}"></td><td><input type="text" maxlength="80" aria-label="Contato do participante ${i + 1}" value="${esc(r.contact)}" placeholder="(31) 99999-0000 ou nome@exemplo.com"></td><td class="del"><button class="x" type="button" aria-label="Excluir participante ${i + 1}">✕</button></td>`;
       const [n, c] = tr.querySelectorAll("input"), d = tr.querySelector("button");
       n.addEventListener("input", () => { r.name = n.value; }); c.addEventListener("input", () => { r.contact = c.value; });
       d.disabled = rows.length <= 1; d.addEventListener("click", () => { rows.splice(i, 1); render(); });
@@ -501,10 +493,10 @@ function viewCreate() {
     if (!by) return err("Digite o seu nome.");
     if ([title, by].some((x) => utf8Len(x) > V.MAX_TEXT)) return err("Nome longo demais (máximo de " + V.MAX_TEXT + " bytes).");
     const names = rows.map((r) => r.name.trim());
-    if (!names.length) return err("Inclua pelo menos um eleitor.");
-    if (names.some((x) => !x)) return err("Dê um nome a cada eleitor (ou exclua as linhas vazias).");
+    if (!names.length) return err("Inclua pelo menos um participante.");
+    if (names.some((x) => !x)) return err("Dê um nome a cada participante (ou exclua as linhas vazias).");
     if (names.some((x) => utf8Len(x) > V.MAX_TEXT)) return err("Há um nome longo demais (máximo de " + V.MAX_TEXT + " bytes).");
-    if (new Set(names.map((x) => x.toLowerCase())).size !== names.length) return err("Há dois eleitores com o mesmo nome; diferencie-os.");
+    if (new Set(names.map((x) => x.toLowerCase())).size !== names.length) return err("Há dois participantes com o mesmo nome; diferencie-os.");
     $("cGo").disabled = true;
     try {
       const s = b64u(V.randBytes(16)), m = V.hex(V.randBytes(32)), adm = V.deriveAdmin(m), key = await aesKey(adm.kr);
@@ -566,7 +558,7 @@ async function viewAdmin() {
     const name = $("aNewName").value.trim(), contact = $("aNewContact").value.trim(), st = board.st;
     if (!name) { $("aVoterNote").textContent = "Digite o nome."; return; }
     if (utf8Len(name) > V.MAX_TEXT) { $("aVoterNote").textContent = "Nome longo demais."; return; }
-    if (st.roll.size >= V.MAX_VOTERS) { $("aVoterNote").textContent = "Já há " + V.MAX_VOTERS + " eleitores."; return; }
+    if (st.roll.size >= V.MAX_VOTERS) { $("aVoterNote").textContent = "Já há " + V.MAX_VOTERS + " participantes."; return; }
     const i = board.events.filter((e) => e.type === "eleitor-incluido").reduce((mx, e) => Math.max(mx, e.i), 0) + 1;
     const r = await post("admin", { t: adm.t, acao: "incluir", voter: { i, f: V.fingerprint(adm.voterSecret(i)), name, priv: await sealPriv(key, { name, contact }) } });
     $("aVoterNote").textContent = r.ok ? "Incluído: vota a partir da próxima votação aberta." : r.error;
@@ -578,7 +570,7 @@ async function viewAdmin() {
     const r = await post("admin", { t: adm.t, acao: "fim" }); if (!r.ok) alertMsg(r.error); render();
   });
   $("aForget").addEventListener("click", () => { LSwrite((d) => { if (d.sessions) delete d.sessions[sid]; delete d["head:" + sid]; }); location.href = BASE; });
-  $("aTela").href = BASE + "#s=" + sid + "&tela"; $("aBoard").href = BASE + "#s=" + sid;
+  $("aBoard").href = BASE + "#s=" + sid;
   const alertMsg = (t) => { $("fatal").hidden = !t; $("fatal").textContent = t || ""; };
 
   // apuração automática: se há item encerrado esperando a metade do organizador, este navegador a envia.
@@ -629,10 +621,10 @@ async function viewAdmin() {
     const privs = await Promise.all(roll.map((v) => privOf(v.f, v.priv)));
     const anyPhone = privs.some((p) => contactOf(p?.contact).phone), anyMail = privs.some((p) => contactOf(p?.contact).mail);
     const ways = [anyPhone && "pelo WhatsApp", anyMail && "por e-mail"].filter(Boolean);
-    $("aSendIntro").textContent = "Cada eleitor recebe um link pessoal, que vale para a reunião toda. " + (ways.length ? "Envie " + ways.join(" ou ") + ", ou copie o link" : "Copie o link") + " (para o Signal, por exemplo), ou mostre o QR na tela. Não encaminhe o link de uma pessoa a outra.";
+    $("aSendIntro").textContent = "Cada participante recebe um link pessoal, que vale para a reunião toda. " + (ways.length ? "Envie " + ways.join(" ou ") + ", ou copie o link" : "Copie o link") + " (para o Signal, por exemplo), ou mostre o QR na tela. Não encaminhe o link de uma pessoa a outra.";
     const box = $("aVoters"); box.innerHTML = "";
     roll.forEach((v, k) => {
-      const p = privs[k], name = p?.name || v.name || "eleitor " + v.i, link = voterLink(sid, adm.voterSecret(v.i));
+      const p = privs[k], name = p?.name || v.name || "participante " + v.i, link = voterLink(sid, adm.voterSecret(v.i));
       const msg = "Olá, " + name + ". Este é o seu link pessoal para votar na reunião «" + S.title + "», conduzida por " + S.by + ". Ele vale para todas as votações da reunião. Não o encaminhe a ninguém:\n" + link;
       const el = document.createElement("div"); el.className = "voter" + (sent.has(v.f) ? " sent" : "");
       el.innerHTML = `<span class="pill">${v.i}</span><span class="who">${esc(name)} ${p?.contact ? `<small>· ${esc(p.contact)}</small>` : ""} <small class="mono">· ${v.f.slice(0, 8)}</small></span><div class="row"></div>`;
@@ -662,7 +654,7 @@ function viewVoter() {
   $("viewVoter").hidden = false;
   const f = /^[0-9a-f]{32}$/.test(voterS || "") ? V.fingerprint(voterS) : null;
   let chosen = null, busy = false, lastOpen = null, voteErr = "";
-  const mine = () => LSread()["mine:" + sid] || {};
+  const mine = () => (LSread()["mine:" + sid] || {})[f] || {};
   $("vBoard").href = BASE + "#s=" + sid;
   async function render() {
     const st = board.st;
@@ -672,7 +664,7 @@ function viewVoter() {
     const S = st.session, meNow = st.roll.get(f);
     const everIn = board.events.find((e) => e.type === "eleitor-incluido" && e.f === f);
     $("vTitle").textContent = S.title;
-    $("vHello").innerHTML = everIn ? (meNow ? "Olá" + (meNow.name ? ", <b>" + esc(meNow.name) + "</b>" : "") + ". Este é o seu link pessoal; não o encaminhe." : "<b>Seu link foi excluído da lista de eleitores.</b> Você não vota nas próximas votações.") + ` <span class="small muted mono">Sua impressão digital: ${f.slice(0, 8)}</span>` : "<b>Este link não está na lista de eleitores desta reunião.</b>";
+    $("vHello").innerHTML = everIn ? (meNow ? "Olá" + (meNow.name ? ", <b>" + esc(meNow.name) + "</b>" : "") + ". Este é o seu link pessoal; não o encaminhe." : "<b>Seu link foi excluído da lista de participantes.</b> Você não vota nas próximas votações.") + ` <span class="small muted mono">Sua impressão digital: ${f.slice(0, 8)}</span>` : "<b>Este link não está na lista de participantes desta reunião.</b>";
     $("vSecrecy").textContent = secrecyText(S);
     const [cls, txt] = checkText(); $("vCheck").textContent = txt; $("vCheck").style.color = cls === "bad" ? "var(--bad)" : "";
     const cur = $("vCurrent"), open = st.open ? st.items.get(st.open) : null;
@@ -700,32 +692,13 @@ function viewVoter() {
         $("vGo")?.addEventListener("click", async () => {
           busy = true; render();
           const ballot = V.makeBallot(sid, S.K, open.n, open.spec.m, f, chosen), fp = V.ballotFingerprint(ballot);
-          LSwrite((d) => { d["mine:" + sid] = { ...(d["mine:" + sid] || {}), [open.n]: fp }; });
+          LSwrite((d) => { const all = d["mine:" + sid] || {}; all[f] = { ...(all[f] || {}), [open.n]: fp }; d["mine:" + sid] = all; });
           const r = await post("votar", { s: voterS, item: open.n, ballot });
           busy = false; voteErr = r.ok ? "" : r.error || "Não foi possível votar."; render();
         });
       }
     }
     const h = itemsHtml(st, { skipOpen: true }); $("vResults").hidden = !h; $("vResultsList").innerHTML = h;
-  }
-  live(render);
-}
-
-// ================= Telão =================
-function viewTela() {
-  document.body.classList.add("tela");
-  ["topHeader", "demoNote", "scope"].forEach((id) => { $(id).hidden = true; }); document.querySelector("footer").hidden = true;
-  $("viewTela").hidden = false;
-  function render() {
-    const st = board.st; if (board.missing) { $("tMain").innerHTML = "<h2>Reunião não encontrada.</h2>"; return; }
-    if (!st?.session) return;
-    $("tTitle").textContent = "Lucent Votação · " + st.session.title;
-    const [cls, txt] = checkText(); $("tCheck").textContent = txt; $("tCheck").style.color = cls === "bad" ? "var(--bad)" : "";
-    const open = st.open ? st.items.get(st.open) : null, last = [...st.order].reverse().map((n) => st.items.get(n)).find((it) => it.state !== "cancelado");
-    if (open) $("tMain").innerHTML = `<p class="kicker">Votação ${open.n} · aberta</p><p class="question">${esc(open.spec.q)}</p><p class="muted" style="font-size:clamp(18px,2.4vw,30px)">${esc(open.options.concat("Abstenção").join(" · "))}</p><p class="big">${open.ballots.length} <span class="muted" style="font-size:.5em">de ${open.roll.size} votaram</span></p>`;
-    else if (last?.state === "encerrado") $("tMain").innerHTML = `<p class="kicker">Votação ${last.n}</p><p class="question">${esc(last.spec.q)}</p><p class="big">Apurando…</p>`;
-    else if (last?.state === "apurado") $("tMain").innerHTML = `<p class="kicker">Votação ${last.n} · resultado</p><p class="question">${esc(last.spec.q)}</p>` + resultHtml(last);
-    else $("tMain").innerHTML = `<p class="question">${st.ended ? "Reunião encerrada." : "Aguardando a primeira votação."}</p>`;
   }
   live(render);
 }
@@ -754,18 +727,39 @@ function viewBoard() {
   });
   const target = /^[0-9a-f]{8}$/.test(H.get("c") || "") ? H.get("c") : null;
   let scrolled = false;
+  // Tela cheia (para projetar): só o bloco da votação atual, em letras grandes.
+  const setFull = (on) => {
+    document.body.classList.toggle("tela", on);
+    ["topHeader", "demoNote", "scope"].forEach((id) => { $(id).hidden = on; }); document.querySelector("footer").hidden = on;
+    document.querySelectorAll("[data-notela]").forEach((x) => { x.hidden = on || (x.id === "bResults" && !$("bResultsList").innerHTML); });
+    $("bFull").textContent = on ? "Sair da tela cheia" : "Tela cheia";
+    if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+    if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  };
+  let full = isTela;
+  $("bFull").addEventListener("click", () => { full = !full; setFull(full); });
+  document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && full) { full = false; setFull(false); } });
+  function nowHtml(st) {
+    const open = st.open ? st.items.get(st.open) : null, last = [...st.order].reverse().map((n) => st.items.get(n)).find((it) => it.state !== "cancelado");
+    if (open) return `<p class="kicker">Votação ${open.n} · aberta</p><p class="question">${esc(open.spec.q)}</p><p class="muted">${esc(open.options.concat("Abstenção").join(" · "))}</p><p class="big">${open.ballots.length} <span class="muted" style="font-size:.5em">de ${open.roll.size} votaram</span></p>`;
+    if (last?.state === "encerrado") return `<p class="kicker">Votação ${last.n}</p><p class="question">${esc(last.spec.q)}</p><p class="big">Apurando…</p>`;
+    if (last?.state === "apurado") return `<p class="kicker">Votação ${last.n} · resultado</p><p class="question">${esc(last.spec.q)}</p>` + resultHtml(last);
+    return `<p class="question">${st.ended ? "Reunião encerrada." : "Aguardando a primeira votação."}</p>`;
+  }
   function render() {
     const st = board.st; if (board.missing) { $("fatal").hidden = false; $("fatal").textContent = "Reunião não encontrada: o link está errado ou o quadro já foi apagado."; return; }
     if (!st?.session) return;
-    const myFps = new Set(Object.values(LSread()["mine:" + sid] || {}));
+    $("bNow").innerHTML = `<p class="kicker">${esc(st.session.title)}</p>` + nowHtml(st);
+    const myFps = new Set(Object.values(LSread()["mine:" + sid] || {}).flatMap((x) => (x && typeof x === "object" ? Object.values(x) : [])));
     $("bTitle").textContent = st.session.title; $("bSecrecy").textContent = secrecyText(st.session);
     const [cls, txt] = checkText(); $("bCheck").className = "msg " + cls; $("bCheck").textContent = txt;
     $("bDelete").textContent = board.deleteAt ? deleteText(board.deleteAt) : "";
     const h = itemsHtml(st); $("bResults").hidden = !h; $("bResultsList").innerHTML = h;
     $("bEvents").innerHTML = [...board.events].reverse().map((e) => {
       const fp = e.type === "cedula" ? V.ballotFingerprint(e.ballot) : null, cls = [fp && myFps.has(fp) ? "mine" : "", fp && fp === target ? "target" : ""].filter(Boolean).join(" ");
-      return `<li${cls ? ` class="${cls}"` : ""}${fp ? ` data-fp="${fp}"` : ""}><span>${fmtTime(e.t)}</span><span>${describe(e, st)}${fp && myFps.has(fp) ? ` · <b>sua cédula</b>` : ""}</span></li>`;
+      return `<li${cls ? ` class="${cls}"` : ""}${fp ? ` data-fp="${fp}"` : ""}><span>${fmtTime(e.t)}</span><span>${describe(e, st)}${fp && myFps.has(fp) ? ` · <b>votada neste aparelho</b>` : ""}</span></li>`;
     }).join("");
+    if (full) setFull(true);
     if (target && !scrolled) { const li = document.querySelector(`#bEvents li[data-fp="${target}"]`); if (li) { li.scrollIntoView({ block: "center" }); scrolled = true; } }
   }
   live(render);
@@ -776,7 +770,6 @@ if (!sid) viewCreate();
 else if (!/^[A-Za-z0-9_-]{22}$/.test(sid)) { $("fatal").hidden = false; $("fatal").textContent = "Link inválido."; }
 else if (adminM && /^[0-9a-f]{64}$/.test(adminM)) { viewAdmin().catch((e) => { $("fatal").hidden = false; $("fatal").textContent = e.message; }); }
 else if (voterS !== null) viewVoter();
-else if (isTela) viewTela();
 else viewBoard();
 window.addEventListener("hashchange", () => location.reload());
 </script>

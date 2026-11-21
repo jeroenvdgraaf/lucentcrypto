@@ -12,8 +12,7 @@ Interface language is Portuguese; terms in *italics* are the interface words.
 |---|---|---|
 | Admin | `/votacao/#s=<sessão>&a=<segredo do admin>` | add or remove voters, open, close and cancel items, end the session; holds half of the key |
 | Voter | `/votacao/#s=<sessão>&v=<segredo do eleitor>` | vote once on each open item for which they are on the frozen roll; see results |
-| Projector (*telão*) | `/votacao/#s=<sessão>&tela` | read only: current item, how many have voted, results |
-| Board (*quadro*) | `/votacao/#s=<sessão>` | read only: everything on the board, verified in the browser; download the *ata* |
+| Board (*quadro*) | `/votacao/#s=<sessão>` | read only: at the top, large, the current item and how many have voted (or the latest result); below, all results, everything on the board, verified in the browser; download the *ata*. *Tela cheia* shows only the top block, for projecting (`&tela` opens it that way) |
 
 - `sessão`: 16 random bytes, base64url. Knowing it lets you read the board; it does not let you vote.
 - Everything after `#` stays in the browser, as in Segredo; the page sends to the Worker only what each request needs.
@@ -75,7 +74,7 @@ Keeping the admin link should need no understanding of cryptography:
 | **Split** (default) | *Guardar metade da chave comigo (recomendado)*, checked | `K = A + W` as above; both partial decryptions needed |
 | **Worker only** (opt-out) | the same box unchecked | `K = W`; no `A`, no admin proof; the Worker's partial decryption alone gives the counts |
 
-Ballots, proofs, board and verification are otherwise identical. The mode is recorded in the `criada` event and shown on the voter, projector and board pages (section 9), since the admin chooses it on the voters' behalf.
+Ballots, proofs, board and verification are otherwise identical. The mode is recorded in the `criada` event and shown on the voter and board pages (section 9), since the admin chooses it on the voters' behalf.
 
 **What the Worker decrypts (MUST).** The Worker computes `D^W` only for the totals `T_j` that it computes itself from the board, for an item that is closed. It MUST NOT decrypt any ciphertext submitted to it. Otherwise the admin could submit one voter's ballot as a "total" and read it.
 
@@ -115,7 +114,7 @@ The board is an append-only list of **events**. Each event has a sequence number
 
 ## 6. Verification (MUST, in every browser that shows a result)
 
-The board, voter and projector pages verify, from the event list alone:
+The board and voter pages verify, from the event list alone:
 
 1. the hash chain;
 2. the proofs of knowledge, and `K = A + W` (split) or `K = W` (Worker only);
@@ -149,4 +148,4 @@ The Durable Object deletes everything, including `w`, at **the first midnight (A
 - Page `/votacao/`: `index.html` plus the protocol module `core.mjs` and the vendored `vendor/noble.mjs`, all from the same origin; no other external requests except to `/api/votacao/`. The same `core.mjs` runs in the Worker and in the tests. Card on the home page, *em breve* line pointing to the full application.
 - Worker route `/api/votacao/<sessão>/…` → Durable Object class `Sessao` (SQLite storage), WebSocket for live updates, alarm for deletion.
 - Creating sessions is open to anyone; limits in section 5 and deletion keep the cost small. If abused, add Cloudflare Turnstile to *Criar*.
-- Tests: proofs and tallies in Node (as for Segredo); a Worker test with a local Durable Object; an end-to-end browser test with an admin, three voters and a projector.
+- Tests: proofs and tallies in Node (as for Segredo); a Worker test with a local Durable Object; an end-to-end browser test with an admin, three voters and the board in full-screen mode.
