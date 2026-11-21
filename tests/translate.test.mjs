@@ -23,8 +23,9 @@ test("translate: nenhum texto em português na versão em inglês", () => {
     const s = readFileSync(join(ROOT, p.out), "utf8")
       .replace(/\/\/ I18N-KEEP-BEGIN[\s\S]*?\/\/ I18N-KEEP-END/g, "")
       .replace(/<script>\n\/\/ qrcode-generator[\s\S]*?<\/script>/, "").replace(/<style>[\s\S]*?<\/style>/, "")
-      .replace(/<!--[\s\S]*?-->/g, "").replace(/^\s*\/\/.*$/gm, "")
-      .replace(/<option value="[^"]*">/g, "<option>").replace(/lang="pt-BR"[^>]*>Português/, "").replace(/Brasília/g, "");
+      .replace(/<!--[\s\S]*?-->/g, "").replace(/^\s*\/\/.*$/gm, "").replace(/\s\/\/ [^"`]*$/gm, "")
+      .replace(/<option value="[^"]*">/g, "<option>").replace(/lang="pt-BR"[^>]*>Português/, "").replace(/Brasília/g, "")
+      .replace(/\(\?:concurso\|draw no\\\.\)/, "");
     const bad = s.split("\n").filter((l) => /[ãõçáéíóúâêô]|\b(não|votação|reunião|cédula|participantes)\b/i.test(l));
     assert.deepEqual(bad.map((l) => l.trim().slice(0, 120)), [], p.out);
   }
@@ -37,4 +38,14 @@ test("translate: a página em inglês muda só o texto, não o protocolo", () =>
   assert.match(en, /<option value="Candidato">Candidate<\/option>/);
   assert.match(en, /acao: "encerrar"/);
   assert.match(en, /href="\/votacao\/" hreflang="pt"/);
+});
+
+test("translate: tabela de textos do Sorteios em inglês com as mesmas chaves e os mesmos argumentos", () => {
+  const obj = (text) => new Function(text.slice(text.indexOf("const STR = {\n")) + "\nreturn STR;")();
+  const pt = obj(readFileSync(join(ROOT, "LucentSorteios.html"), "utf8").match(/const STR = \{\n[\s\S]*?\n\};\n/)[0]);
+  const en = obj(readFileSync(join(ROOT, "sorteios/strings.en.js"), "utf8"));
+  const shape = (o) => typeof o === "function" ? "fn" + o.length : Array.isArray(o) ? o.map(shape) : o && typeof o === "object" ? Object.fromEntries(Object.keys(o).sort().map((k) => [k, shape(o[k])])) : typeof o;
+  assert.deepEqual(shape(en), shape(pt));
+  const sorteios = readFileSync(join(ROOT, "en/sorteios/index.html"), "utf8");
+  assert.ok(sorteios.includes('ataTitle: "Draw record"') && !sorteios.includes("ATA DO SORTEIO"));
 });
