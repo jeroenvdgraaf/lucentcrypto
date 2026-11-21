@@ -1,4 +1,4 @@
-// Gera tests/fixtures/v3_inmetro.json: um certificado com o farol do Inmetro, feito pelo código da página,
+// Gera tests/fixtures/v3_inmetro.json: um comprovante com o farol do Inmetro, feito pelo código da página,
 // usando o pulso real nº 1049644 (18:33:00Z). Lacre às 18:32:30Z, então esse é o primeiro pulso após o lacre.
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

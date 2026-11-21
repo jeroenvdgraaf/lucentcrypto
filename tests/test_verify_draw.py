@@ -200,7 +200,7 @@ class Tampering(unittest.TestCase):
         for name, fixture, mutate, expected, main in TAMPER:
             with self.subTest(name):
                 c = copy.deepcopy(w.cert(fixture))
-                fetched = w.fetched_for(c)  # a rede não muda quando o certificado é adulterado
+                fetched = w.fetched_for(c)  # a rede não muda quando o comprovante é adulterado
                 mutate(c)
                 rep = verify(c, fetched)
                 self.assertEqual(rep["verdict"], "nao_confere")

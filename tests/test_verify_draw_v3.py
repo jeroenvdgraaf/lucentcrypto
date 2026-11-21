@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # Copyright (C) 2026 Jeroen van de Graaf
 """Testes LucentDraw/3 do verify_draw.py (sem rede): vetores da SPEC-v3, pesos, regra de escolha,
-codificação das loterias, horário das loterias, certificados e adulterações (mesmas do teste Node)."""
+codificação das loterias, horário das loterias, comprovantes e adulterações (mesmas do teste Node)."""
 import copy
 import io
 import json
@@ -255,7 +255,7 @@ class Tampering(unittest.TestCase):
         for t in TAMPER:
             with self.subTest(t["name"]):
                 c = copy.deepcopy(w.cert(t["fixture"]))
-                fetched = w.fetched_for(c)  # a rede não muda quando o certificado é adulterado
+                fetched = w.fetched_for(c)  # a rede não muda quando o comprovante é adulterado
                 apply_ops(c, t["ops"])
                 rep = verify(c, fetched)
                 self.assertEqual(rep["verdict"], "nao_confere")
@@ -268,7 +268,7 @@ if __name__ == "__main__":
 
 
 class OwnSeed(unittest.TestCase):
-    """Semente própria (SPEC-v3 5.3): mesmos certificados que o teste Node."""
+    """Semente própria (SPEC-v3 5.3): mesmos comprovantes que o teste Node."""
 
     def test_canon(self):
         c = v.canon_own_seed
@@ -300,7 +300,7 @@ class OwnSeed(unittest.TestCase):
 
 
 class Inmetro(unittest.TestCase):
-    """Farol do Inmetro (SPEC-v3 5.4): pulso real nº 1049644 e o certificado feito pela página."""
+    """Farol do Inmetro (SPEC-v3 5.4): pulso real nº 1049644 e o comprovante feito pela página."""
 
     def setUp(self):
         self.pulse = w.load("inmetro_pulse_1049644.json")["pulse"]

@@ -9,10 +9,10 @@ This document extends [`SPEC.md`](SPEC.md) (LucentDraw/2). Everything in SPEC.md
 1. **One engine for everything:** a list of options with weights, from which `count` results are chosen, with or without replacement. Coin, dice, cards and the ordered list are presets of it.
 2. **Weights:** exact numbers such as `3`, `0.35`, `0,35` or `1/7`.
 3. **Two modes:**
-   - **Verificável:** seal, beacon, certificate, as in LucentDraw/2.
-   - **Rápido:** local cryptographic randomness, instant, no certificate.
+   - **Verificável:** seal, beacon, proof, as in LucentDraw/2.
+   - **Rápido:** local cryptographic randomness, instant, no proof.
 4. **Lottery encodings fixed:** the contest identifier is text, and the drawn numbers are written as plain integers (section 4).
-5. **The verifier keeps accepting LucentDraw/1 and LucentDraw/2 certificates.** New seals are always LucentDraw/3.
+5. **The verifier keeps accepting LucentDraw/1 and LucentDraw/2 proofs.** New seals are always LucentDraw/3.
 
 ## 2. The sealed `spec` (MUST)
 
@@ -88,24 +88,24 @@ Checking current Caixa practice showed two problems with the LucentDraw/2 encodi
 - **No draw calendar (owner decision, 2026-11-19).** Draw days and times change (Federal on Wednesday 20:00 and Sunday 11:00 in 2026, Mega-Sena with extra draws and delays of hours), so the app keeps no calendar and suggests neither a contest nor a date. This replaces the calendar and contest suggestion of SPEC.md 4.5.
   - The operator types the contest identifier as shown on Caixa's site, next to a link to `https://loterias.caixa.gov.br` and the hint: "Use o número do PRÓXIMO concurso, anunciado no site da Caixa. Um concurso já sorteado não serve: o resultado já seria conhecido."
   - At seal time, if Caixa or the relay already returns a result for that contest, the app refuses to seal ("Este concurso já foi sorteado"). This is best effort only; the timing check of section 7 is the real protection.
-  - No countdown for lottery sources. Because no draw time is known, the "lottery + drand" presets of SPEC.md 4.6 are not offered (the drand round must follow the draw); the verifier still accepts such certificates.
+  - No countdown for lottery sources. Because no draw time is known, the "lottery + drand" presets of SPEC.md 4.6 are not offered (the drand round must follow the draw); the verifier still accepts such proofs.
 - **Evidence (MUST):** `randomness.megasena` = `{ "contest", "numbers": [int × 6], "drawDate": "YYYY-MM-DD", "source" }`, `randomness.federal` = `{ "contest", "prizes": [int × 5, each 0–999999], "drawDate", "source" }`, with `contest` equal to the sealed string. `drawDate` is the official draw date, from the Caixa / relay result or typed by the operator with the numbers in manual mode (`"source": "manual"`).
 
 ## 5. Modes
 
 ### 5.1 Verificável (default when on a web address)
-Exactly the LucentDraw/2 flow: prepare, seal (the whole `spec`, including `task`), wait for the sources, compute, certificate and ata. Live presets as in SPEC.md 4.6. The certificate gains `result` (the chosen options) and `picks` (their indices); the LucentDraw/2 field `order` is not used in v3.
+Exactly the LucentDraw/2 flow: prepare, seal (the whole `spec`, including `task`), wait for the sources, compute, proof and ata. Live presets as in SPEC.md 4.6. The proof gains `result` (the chosen options) and `picks` (their indices); the LucentDraw/2 field `order` is not used in v3.
 
 ### 5.2 Rápido
 - seed = 32 bytes from `crypto.getRandomValues`, as lowercase hex; then the selection rule of section 3, with the same code.
 - If the operator types a semente própria, seed = SHA-256("LucentDraw/3\nown\n" + canonical value) as in 5.3 (no format check needed, no label), so the result equals the verifiable one.
-- **No seal, no certificate, no ata.** The result screen says plainly: "Modo rápido: resultado instantâneo, mas ninguém pode conferir depois. Para um sorteio que vale perante outras pessoas, use o modo verificável."
+- **No seal, no proof, no ata.** The result screen says plainly: "Modo rápido: resultado instantâneo, mas ninguém pode conferir depois. Para um sorteio que vale perante outras pessoas, use o modo verificável."
 - Works offline, and from a local file.
 - Optionally shows the seed under Detalhes técnicos.
 
 ### 5.3 Semente própria (source `own`)
 
-A seed the participants agreed on beforehand: the result of a past or present lottery contest, dice thrown in the room, any text. Nothing to wait for. On the free page it is the first and default source; the scheduled lottery mode (`megasena`/`federal` as sources) is no longer offered there, but certificates that use it still verify.
+A seed the participants agreed on beforehand: the result of a past or present lottery contest, dice thrown in the room, any text. Nothing to wait for. On the free page it is the first and default source; the scheduled lottery mode (`megasena`/`federal` as sources) is no longer offered there, but proofs that use it still verify.
 
 **Sealed spec:** `sources = { "own": { "format": "megasena" | "federal" | "outro", "label": "<normalized text>" } }`. `own` is the only source (MUST NOT be combined). For `megasena`/`federal` the UI builds the label as "Mega-Sena, concurso N" / "Loteria Federal, concurso N"; for `outro` the operator types it (required in the verifiable mode). `mode` is `"live"`, `contribution` is `""`.
 
@@ -132,7 +132,7 @@ The seed does **not** depend on C (title, ID, time): the result depends only on 
 
 **Verification:** `value` must equal its own canonical reading with the same `reading`, and pass the format check; otherwise FAIL. The origin of the seed cannot be checked automatically, so check `own` is UNVERIFIED and there is no timing check. If it is the only open item, verdict `incompleto` (exit code 2) with the message "Confere, desde que a lista (nesta ordem) e a semente (<label>) tenham sido combinadas antes. As contas estão certas; confira a semente na fonte indicada."
 
-**What remains a matter of trust:** if the list, its order or the seed's source was settled after the seed was known, the organizer could have arranged the outcome. The certificate says so; no page can prevent it.
+**What remains a matter of trust:** if the list, its order or the seed's source was settled after the seed was known, the organizer could have arranged the outcome. The proof says so; no page can prevent it.
 
 ### 5.4 Farol do Inmetro (source `inmetro`)
 
@@ -142,7 +142,7 @@ The randomness beacon of Inmetro, the Brazilian federal metrology institute (bea
 
 **Which pulse:** the first pulse of that chain with `timeStamp` strictly after `notBefore`. Pulses fall on whole minutes, so normally it is the minute T = ⌊notBefore / 60000⌋ · 60000 + 60000. If Inmetro had no pulse at T, the next existing pulse counts.
 
-**Randomness:** `randomness.inmetro` is the complete pulse object exactly as published (uri, version, cipherSuite, period, certificateId, chainIndex, pulseIndex, timeStamp, localRandomValue, external, listValues, precommitmentValue, statusCode, signatureValue, outputValue). The certificate is therefore self-contained.
+**Randomness:** `randomness.inmetro` is the complete pulse object exactly as published (uri, version, cipherSuite, period, certificateId, chainIndex, pulseIndex, timeStamp, localRandomValue, external, listValues, precommitmentValue, statusCode, signatureValue, outputValue). The proof is therefore self-contained.
 
 **Seed:** as in section 4, with one extra final line only when this source is used:
 
@@ -150,13 +150,13 @@ The randomness beacon of Inmetro, the Brazilian federal metrology institute (bea
 seed = SHA-256( "LucentDraw/3\nseed\n" + C + "\neth=…\ndrand=…\nmegasena=…\nfederal=…" + "\ninmetro=" + outputValue )
 ```
 
-(the four standard lines are `-` here, as always for unused sources). Certificates without `inmetro` are unchanged.
+(the four standard lines are `-` here, as always for unused sources). Proofs without `inmetro` are unchanged.
 
 **Integrity (MUST, offline):** `outputValue` = SHA-512 of the NIST serialization: uri, version (UTF-8, 4-byte length prefix); cipherSuite, period (uint32); certificateId (bytes, 4-byte length prefix); chainIndex, pulseIndex (uint64); timeStamp (UTF-8, prefixed); localRandomValue, external.sourceId (bytes, prefixed); external.statusCode (uint32); external.value; listValues previous, hour, day, month, year (bytes, prefixed, in that order); precommitmentValue (bytes, prefixed); statusCode (uint32); signatureValue (bytes, prefixed). All big-endian. Checked against Inmetro's pulse nº 1049644 (2026-11-20T18:33:00Z).
 
 **Verification:** FAIL if the pulse is not intact, is from another chain, or is not after `notBefore`. With network access the verifier fetches the same pulse from Inmetro by number (`/beacon/2.1/chain/<c>/pulse/<i>`) and compares `outputValue`; if the pulse is not at T, it also asks Inmetro whether a pulse exists at T (then FAIL: not the first). Without network the check is UNVERIFIED and the verdict `incompleto`, as for Ethereum. The pulse signature will be checked once Inmetro publishes the certificate for `certificateId`. The timing check (seal timestamp before the pulse) is the same as for Ethereum and drand.
 
-**Timestamps:** on lucentcrypto.org the relay of SPEC 6.2 runs inside the site's own Worker at `/api/relay` (worker/index.js imports relay/src/index.js), so every verifiable draw gets RFC 3161 timestamps (FreeTSA and DigiCert) without configuration. OpenTimestamps is not requested there: its Bitcoin anchor takes hours and adds nothing to proving the moment of sealing; certificates that carry an `ots` anchor still verify. The Python verifier ships FreeTSA's root CA in `verifier/tsa-ca/` (FreeTSA is not in the system trust lists) and also uses the system list (DigiCert). A relay address typed in "Detalhes técnicos" still takes precedence.
+**Timestamps:** on lucentcrypto.org the relay of SPEC 6.2 runs inside the site's own Worker at `/api/relay` (worker/index.js imports relay/src/index.js), so every verifiable draw gets RFC 3161 timestamps (FreeTSA and DigiCert) without configuration. OpenTimestamps is not requested there: its Bitcoin anchor takes hours and adds nothing to proving the moment of sealing; proofs that carry an `ots` anchor still verify. The Python verifier ships FreeTSA's root CA in `verifier/tsa-ca/` (FreeTSA is not in the system trust lists) and also uses the system list (DigiCert). A relay address typed in "Detalhes técnicos" still takes precedence.
 
 **Fetching from the browser:** directly from beacon.inmetro.gov.br; if the browser blocks it (CORS), through the site's own route `/api/inmetro/…` (worker/index.js), which accepts only the three pulse paths above and passes the response through unchanged. Trust does not depend on that route: every pulse is checked by its `outputValue`.
 
@@ -168,16 +168,16 @@ seed = SHA-256( "LucentDraw/3\nseed\n" + C + "\neth=…\ndrand=…\nmegasena=…
 - **Weights:** the list shows each option's share as a percentage, computed exactly from the integer weights. Invalid weights are marked in red with an explanation; `0` grays out the row ("fora do sorteio").
 - **The interval bar (key visual):** a horizontal bar for [0, 2²⁵⁶), split into segments proportional to the weights, each labeled. For each pick, a needle at x/W shows where the hash landed. Without replacement, show one bar per pick, the chosen segment removed from the next. More than about 20 options: show the needle and the selected segment's label only; tiny segments may be thinner than a pixel, which is fine.
 - **Result visuals:** a coin face (Cara/Coroa), dice drawn with pips for d6 and the number on a polygon for the others, playing cards with rank and suit (red for ♥ ♦). Animate only after the result is known. While waiting for a beacon, show the countdown, never a spinning coin or rolling dice.
-- Everything else (seal panel, status, certificate, ata, verify tab) as in LucentDraw/2, adapted to show `result`.
+- Everything else (seal panel, status, proof, ata, verify tab) as in LucentDraw/2, adapted to show `result`.
 
 ## 7. Verification (MUST, HTML and Python)
 
 As SPEC.md section 9, with these changes for `v: "LucentDraw/3"`:
 - **Well-formed:** check every `task` rule in section 2, including the weight grammar.
 - **Values:** lottery values use the section 4 encoding.
-- **Result:** recompute seed and picks; `result` and `picks` must equal the certificate's.
+- **Result:** recompute seed and picks; `result` and `picks` must equal the proof's.
 - **Display:** show the weights as typed, the integer weights and W, so a reader can follow the arithmetic.
-- **Lottery timing (MUST, all versions, owner decision):** for each `megasena` / `federal` source, a separate check compares the earliest valid anchor time with the **start of the draw day**, 00:00 in America/Sao_Paulo (UTC−3), of the draw date: the official one when the verifier fetched the result, otherwise the certificate's `drawDate`. Earliest anchor before that instant: *passou*; at or after: *falhou*. No anchors: *não verificado*, and the detail shows the operator's `sealedAt` claim next to the draw date so a person can judge. No valid draw date: *não verificado*. The general timing check of SPEC.md 6.4 then covers only `eth` and `drand`.
+- **Lottery timing (MUST, all versions, owner decision):** for each `megasena` / `federal` source, a separate check compares the earliest valid anchor time with the **start of the draw day**, 00:00 in America/Sao_Paulo (UTC−3), of the draw date: the official one when the verifier fetched the result, otherwise the proof's `drawDate`. Earliest anchor before that instant: *passou*; at or after: *falhou*. No anchors: *não verificado*, and the detail shows the operator's `sealedAt` claim next to the draw date so a person can judge. No valid draw date: *não verificado*. The general timing check of SPEC.md 6.4 then covers only `eth` and `drand`.
 
 ## 8. Test vectors (MUST pass in HTML and Python)
 

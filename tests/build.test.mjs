@@ -36,5 +36,5 @@ test("build.sh: home, /sorteios/, /amigo-oculto/, /embaralhamento/, /spec/, /ver
   // só um script embutido (o destaque sazonal do Amigo Oculto); nenhum script externo
   assert.ok(home.includes("prefers-color-scheme: dark") && !/<script[^>]*\bsrc=/i.test(home));
   const amigo = readFileSync(join(out, "amigo-oculto/index.html"), "utf8");
-  assert.match(amigo, /Para sorteios com certificado: <a href="\/sorteios\/"[^>]*>Lucent Sorteios<\/a>/);
+  assert.match(amigo, /Para sorteios com comprovante: <a href="\/sorteios\/"[^>]*>Lucent Sorteios<\/a>/);
 });

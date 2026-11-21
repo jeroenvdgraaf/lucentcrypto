@@ -114,8 +114,8 @@ test("certificate shape (SPEC 3.3), file name and ata (SPEC 7.3)", () => {
   assert.deepEqual(Object.keys(c).sort(), ["anchors", "commitment", "order", "randomness", "sealedAt", "seed", "spec"]);
   const seal = C.certificateOf({ spec: c.spec, commitment: c.commitment, sealedAt: c.sealedAt, randomness: {} });
   assert.ok(!("seed" in seal) && !("order" in seal));
-  assert.equal(C.certFileName("garagem-2027-blocoB"), "certificado-sorteio-garagem-2027-blocoB.json");
-  assert.equal(C.certFileName("a/b c"), "certificado-sorteio-a_b_c.json");
+  assert.equal(C.certFileName("garagem-2027-blocoB"), "comprovante-sorteio-garagem-2027-blocoB.json");
+  assert.equal(C.certFileName("a/b c"), "comprovante-sorteio-a_b_c.json");
   const ata = C.ataText(c);
   for (const s of [c.spec.title, c.spec.id, c.commitment, c.seed, "1. " + c.order[0], "inserido manualmente", "verify_draw.py", "Conferir", "Sem carimbo de tempo", "https://loterias.caixa.gov.br"]) assert.ok(ata.includes(s), s);
   assert.ok(!/bitcoin/i.test(ata));

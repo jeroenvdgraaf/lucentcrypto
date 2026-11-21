@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2026 Jeroen van de Graaf
 // Gera tests/fixtures/world.json (rede simulada) e tests/fixtures/certificates/*.json.
-// Os certificados são produzidos pelo núcleo do próprio LucentSorteios.html; os tokens RFC 3161
+// Os comprovantes são produzidos pelo núcleo do próprio LucentSorteios.html; os tokens RFC 3161
 // vêm do openssl com a TSA de TESTE; as rodadas drand vêm de drand_test_beacons.json (chave de TESTE).
 //   node tests/tools/gen_fixtures.mjs
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -87,6 +87,6 @@ certs["v2-seal-only"] = await finish({ spec: sealSpec, sealedAt: "2026-11-09T21:
 
 mkdirSync(join(FIX, "certificates"), { recursive: true });
 for (const [name, cert] of Object.entries(certs)) writeFileSync(join(FIX, "certificates", name + ".json"), JSON.stringify(cert, null, 2) + "\n");
-const v3names = await addV3(world, C); // certificados LucentDraw/3 e v3_cross.json
+const v3names = await addV3(world, C); // comprovantes LucentDraw/3 e v3_cross.json
 writeFileSync(join(FIX, "world.json"), JSON.stringify(world, null, 2) + "\n");
 console.log("fixtures:", Object.keys(certs).concat(v3names).join(", "));

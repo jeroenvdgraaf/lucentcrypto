@@ -22,7 +22,7 @@ guarda estado além dos logs da plataforma.
   não oficial da Caixa (a confirmar; ver `DECISIONS.md`). Em `/v1` (LucentDraw/2) o concurso é número e
   os bilhetes da Federal são texto com 5 algarismos. Em `/v3` (LucentDraw/3, SPEC-v3 4) o concurso é texto,
   como pedido (`6120`, `6054-2`), e os números são inteiros: Mega-Sena em ordem crescente, Federal com até
-  6 algarismos, na ordem dos prêmios. `drawDate` é a data oficial do sorteio, gravada no certificado.
+  6 algarismos, na ordem dos prêmios. `drawDate` é a data oficial do sorteio, gravada no comprovante.
 
 ## Configuração (`wrangler.toml`, seção `[vars]`)
 

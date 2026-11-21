@@ -609,7 +609,7 @@ footer a { color: var(--accent); }
 // ---- Tabela de textos (pt-BR). Para outra língua, troque só esta tabela.
 const STR = {
   family: "LucentCrypto · verifiable draws",
-  tagline: "Weighted lists, coins, dice and cards. In verifiable mode, everything is sealed before the public random value that decides the result exists, and anyone can check it afterwards. In quick mode, the result comes out right away, with no certificate.",
+  tagline: "Weighted lists, coins, dice and cards. In verifiable mode, everything is sealed before the public random value that decides the result exists, and anyone can check it afterwards. In quick mode, the result comes out right away, with no proof.",
   tabsAria: "Kind of draw and verification", tabList: "List", tabCoin: "Coin", tabDie: "Dice", tabCards: "Cards", tabVerify: "Verify",
   drawModeAria: "Draw mode", modeVerif: "Verifiable", modeQuick: "Quick",
   themeAuto: "Theme: auto", themeLight: "Theme: light", themeDark: "Theme: dark",
@@ -652,7 +652,7 @@ const STR = {
   sealBtn: "Seal the draw", sealing: "Sealing…", checkingContest: "Checking the draw number…",
   sealLockHint: "Once sealed, the options are locked.",
   quickBtn: "Draw now", againBtn: "Draw again",
-  quickHint: "Instant result on this device, with no seal and no certificate.",
+  quickHint: "Instant result on this device, with no seal and no proof.",
   ownFormatAria: "Seed format", ownMega: "Mega-Sena", ownFederal: "Loteria Federal", ownOther: "Free format",
   fOwnContest: "Draw number", fOwnDesc: "Origin of the seed", fOwnDescHint: "for example: EuroMillions, 14 November 2026; dice thrown at the meeting",
   fOwnMega: "Numbers drawn", fOwnFed: "Winning tickets (1st to 5th prize)", fOwnFree: "Seed",
@@ -745,7 +745,7 @@ const STR = {
   fetchNow: "Fetch the result now", manualOpen: "Enter the result by hand",
   lotteryUnavailable: "The result could not be obtained automatically (the Caixa website may refuse requests from this page). Type the official result below.",
   manualTitle: (label, c) => "Enter the result by hand · " + label + ", draw no. " + c,
-  manualHint: "Copy the numbers and the date exactly as published on the official page. The certificate and the record note that the result was entered by hand.",
+  manualHint: "Copy the numbers and the date exactly as published on the official page. The proof and the record note that the result was entered by hand.",
   manualNumsMega: "The 6 numbers drawn, separated by spaces", manualNumsFederal: "The 5 winning tickets, 1st to 5th prize, separated by spaces",
   manualDate: "Date of the lottery draw (as published)",
   manualConfirm: "I checked these numbers and the date on the official Caixa page.",
@@ -776,7 +776,7 @@ const STR = {
   barCaptionCard: (j, opt, n) => "Card " + j + ": " + opt + (n === 1 ? " (the last one left)" : " (out of " + n + " remaining)"),
   needleTech: (x, W) => "x = " + x + " of W = " + W + " (x = ⌊r · W / 2²⁵⁶⌋)",
   barsMore: (n) => "Show all " + n + " bars",
-  dlCert: "Download certificate", copyCert: "Copy certificate", copyAta: "Copy record", verifyMine: "Verify certificate", ataShow: "Show record", ataHide: "Hide record",
+  dlCert: "Download proof", copyCert: "Copy proof", copyAta: "Copy record", verifyMine: "Verify proof", ataShow: "Show record", ataHide: "Hide record",
   ataTitle: "Draw record",
   newDraw: "Start a new draw",
   errWait: (m) => m + " The seal is still valid: reload the page to keep waiting for the same targets.",
@@ -784,14 +784,14 @@ const STR = {
   errDrandMismatch: "The drand randomness does not match the signature.",
   errDrandRound: (got, r) => "drand returned round " + got + " instead of " + r + ".",
   errEthWait: (c) => "Could not read an Ethereum block after the seal with " + c + " confirmation.",
-  verifyTitle: "Verify a draw certificate",
-  verifyIntro: "Paste or load a certificate (LucentDraw/3, /2 or /1). This page recomputes the seal, fetches the values from the public sources again, verifies the drand signature and redoes the result.",
-  certIn: "Draw certificate (JSON)", loadFile: "Load file…",
+  verifyTitle: "Verify a draw proof",
+  verifyIntro: "Paste or load a proof (LucentDraw/3, /2 or /1). This page recomputes the seal, fetches the values from the public sources again, verifies the drand signature and redoes the result.",
+  certIn: "Draw proof (JSON)", loadFile: "Load file…",
   lotteryEye: "I checked the lottery numbers by eye on the official Caixa page (lets the check finish even without the automatic lookup).",
   verifyBtn: "Verify", verifying: "Verifying…",
   drawIdLabel: "Draw ID",
   sameIdReminder: "Reminder: a second seal with the same ID invalidates the draw. Check that this was the only seal announced for this ID.",
-  notJson: "This is not valid JSON. Paste the whole certificate.",
+  notJson: "This is not valid JSON. Paste the whole proof.",
   statusLabel: { passou: "passed", falhou: "failed", nao_verificado: "not verified", atencao: "attention" },
   verdictOk: "This draw checks out.",
   verdictBad: (list) => "This draw does not check out: " + list,
@@ -823,10 +823,10 @@ const STR = {
   footerHome: "LucentCrypto", footerSpec: "Specification", footerVerifier: "Python verifier",
   // Verification (SPEC 9)
   ck: {
-    parseNoSpec: "The certificate has no spec object.",
+    parseNoSpec: "The proof has no spec object.",
     parseVersion: (v) => "Unknown protocol version: " + v + ".",
-    parseNoCommit: "The certificate has no commitment.",
-    parseOk: (v) => "Certificate read (protocol " + v + ").",
+    parseNoCommit: "The proof has no commitment.",
+    parseOk: (v) => "Proof read (protocol " + v + ").",
     specBad: "The sealed record is not well formed.",
     specOk: "Sealed record well formed.",
     specOkD: (n) => n + " participants, names unique and normalized",
@@ -834,37 +834,37 @@ const STR = {
     commitOk: "The commitment matches the sealed record.",
     commitBad: "The commitment does not match the sealed record.",
     sealPending: (what) => "Seal: " + what + " not recorded yet.",
-    ethMissing: "The certificate does not say which Ethereum block was used.",
+    ethMissing: "The proof does not say which Ethereum block was used.",
     ethUnreach: (n) => "Ethereum block #" + n + " could not be looked up.",
     ethNoBlock: (n) => "Block #" + n + " or its predecessor does not exist on the chain consulted.",
     ethNotFirst: (n) => "Block #" + n + " is not the first block after the seal.",
     ethReorg: (n) => "The hash of block #" + n + " differs from the canonical chain (a chain reorganization or a tampered value). By the rule, the canonical block counts.",
-    ethTimes: "The block times in the certificate do not match the chain.",
+    ethTimes: "The block times in the proof do not match the chain.",
     ethFewConf: (n, c) => "Block #" + n + " matches, but has only " + c + " confirmations so far.",
     ethOk: (n) => "Block #" + n + " is the first after the seal and is on the canonical chain.",
-    drandMissing: (r) => "The certificate does not contain drand round #" + r + ".",
+    drandMissing: (r) => "The proof does not contain drand round #" + r + ".",
     drandUnreach: (r) => "drand round #" + r + " could not be looked up.",
     drandRound: (got, r) => "The source returned round " + got + " instead of " + r + ".",
     drandSha: "The drand randomness is not the SHA-256 of the signature.",
-    drandOtherValue: (r) => "drand round #" + r + " verified, but the certificate contains a different value.",
+    drandOtherValue: (r) => "drand round #" + r + " verified, but the proof contains a different value.",
     drandOk: (r) => "drand round #" + r + ": BLS signature verified, value matches.",
-    lotMissing: (l, c) => l + ": the certificate does not contain a valid result for draw no. " + c + ".",
+    lotMissing: (l, c) => l + ": the proof does not contain a valid result for draw no. " + c + ".",
     lotOk: (l, c, m) => l + ", draw no. " + c + ": matches the official result" + m + ".",
-    lotBad: (l, c, m) => l + ", draw no. " + c + ": the certificate differs from the official result" + m + ".",
+    lotBad: (l, c, m) => l + ", draw no. " + c + ": the proof differs from the official result" + m + ".",
     lotUnverified: (l, c, m) => l + ", draw no. " + c + ": not verified automatically" + m + ". Compare the numbers with the official page.",
     lotManual: " (result entered by hand)",
     lotNoResult: "no result published",
     orderMissing: "Randomness values are missing to recompute the order.",
-    orderMissingD: "a certificate without randomness is only a seal",
-    seedBad: "The recomputed seed differs from the certificate’s seed.",
-    orderBad: "The recomputed order differs from the certificate’s order.",
-    orderPartial: "Order consistent with the certificate’s values, but not all sources were looked up.",
-    orderOk: "Order recomputed, identical to the certificate’s.",
+    orderMissingD: "a proof without randomness is only a seal",
+    seedBad: "The recomputed seed differs from the proof’s seed.",
+    orderBad: "The recomputed order differs from the proof’s order.",
+    orderPartial: "Order consistent with the proof’s values, but not all sources were looked up.",
+    orderOk: "Order recomputed, identical to the proof’s.",
     anchorsBad: "Some timestamps do not match.",
     anchorsOk: "Timestamps correspond to this commitment.",
     anchorUnread: (t, m) => t + ": unreadable token (" + m + ")",
     anchorOther: (t) => t + ": the token does not stamp this commitment",
-    anchorTime: (t, g) => t + ": the time in the certificate differs from the token (" + g + ")",
+    anchorTime: (t, g) => t + ": the time in the proof differs from the token (" + g + ")",
     anchorNoSig: "TSA signature not validated on this page; use verify_draw.py",
     anchorUnknown: (t) => "unknown anchor type: " + t,
     anchorInvalid: "invalid anchor",
@@ -880,16 +880,16 @@ const STR = {
     lotTimeNoneD: (s) => "seal declared at " + s + " (the operator’s statement, not verified)",
     lotTimeNoDate: (l, c) => l + ", draw no. " + c + ": date of the lottery draw unknown; time not compared.",
     lotTimeNoDateSeal: "the result has not been recorded yet",
-    lotTimeNoDateD: "the certificate does not contain a valid lottery draw date",
+    lotTimeNoDateD: "the proof does not contain a valid lottery draw date",
     lotTimeD: (d, o, t) => "lottery draw on " + d + " (date from " + o + "); start of the day " + t + " (00:00 in Brasília)",
     lotTimeCmp: (e, before) => "earliest timestamp " + e + (before ? " <" : " ≥"),
     timingBad: "The earliest timestamp is not before the randomness.",
-    ownMissing: "The own seed is not in the certificate.",
+    ownMissing: "The own seed is not in the proof.",
     ownNotCanon: "The own seed is not in canonical form.",
     ownBadFormat: (m) => "The own seed does not have the declared format: " + m,
     ownOpen: (label, v) => "Own seed (" + label + "): " + v,
     ownOpenD: "given by the organizer; its origin cannot be checked automatically. Check it at the stated source.",
-    inmetroMissing: "The Inmetro pulse is not in the certificate.",
+    inmetroMissing: "The Inmetro pulse is not in the proof.",
     inmetroHash: "The Inmetro pulse was altered: the outputValue is not the SHA-512 of its fields.",
     inmetroChain: (c, s) => "The pulse is from Inmetro chain " + c + ", but the seal specified chain " + s + ".",
     inmetroEarly: "The Inmetro pulse is not after the seal.",
@@ -904,9 +904,9 @@ const STR = {
     resultMissing: "Randomness values are missing to recompute the result.",
     resultNoTask: "The result cannot be recomputed: the sealed task is invalid.",
     picksBad: "The chosen indices (picks) differ from the recomputed ones.",
-    resultBad: "The recomputed result differs from the certificate’s result.",
-    resultPartial: "Result consistent with the certificate’s values, but not all sources were looked up.",
-    resultOk: "Result recomputed, identical to the certificate’s.",
+    resultBad: "The recomputed result differs from the proof’s result.",
+    resultPartial: "Result consistent with the proof’s values, but not all sources were looked up.",
+    resultOk: "Result recomputed, identical to the proof’s.",
     task: {
       notObject: "task is not an object",
       missing: (l) => "task: missing fields: " + l,
@@ -998,9 +998,9 @@ const STR = {
     weightLine: (w, i, s) => "weight " + w + " → " + i + " (" + s + ")",
     result: "Result (in the order drawn)",
     pickIndex: (i) => "[index " + i + "]",
-    howV3: (file) => "Anyone can check this draw without trusting whoever organized it. Open Lucent Draw (lucentcrypto.org/en/sorteios/), go to the Verify tab and load the certificate (" + file + "); or run \"python3 verify_draw.py " + file + "\". The check recomputes the seal, fetches the values from the public sources again and redoes each pick by the published rule (LucentDraw/3: intervals proportional to the weights). A second seal with the same ID invalidates the draw.",
+    howV3: (file) => "Anyone can check this draw without trusting whoever organized it. Open Lucent Draw (lucentcrypto.org/en/sorteios/), go to the Verify tab and load the proof (" + file + "); or run \"python3 verify_draw.py " + file + "\". The check recomputes the seal, fetches the values from the public sources again and redoes each pick by the published rule (LucentDraw/3: intervals proportional to the weights). A second seal with the same ID invalidates the draw.",
     howTitle: "How to check",
-    how: (file) => "Anyone can check this draw without trusting whoever organized it. Open Lucent Draw (lucentcrypto.org/en/sorteios/), go to the Verify tab and load the certificate (" + file + "); or run \"python3 verify_draw.py " + file + "\". The check recomputes the seal, fetches the values from the public sources again and redoes the order by the published rule. A second seal with the same ID invalidates the draw.",
+    how: (file) => "Anyone can check this draw without trusting whoever organized it. Open Lucent Draw (lucentcrypto.org/en/sorteios/), go to the Verify tab and load the proof (" + file + "); or run \"python3 verify_draw.py " + file + "\". The check recomputes the seal, fetches the values from the public sources again and redoes the order by the published rule. A second seal with the same ID invalidates the draw.",
   },
 };
 
@@ -1222,7 +1222,7 @@ function ownFormatError(format, c) {
   return "format";
 }
 const seedOwn = (value) => sha256hex([V3, "own", value].join("\n"));
-// A linha "inmetro=" entra só quando a fonte é usada: certificados antigos não mudam.
+// A linha "inmetro=" entra só quando a fonte é usada: comprovantes antigos não mudam.
 const seedV3 = (C, values) => sha256hex([V3, "seed", C].concat(SOURCE_ORDER.map((k) => k + "=" + (values[k] || "-")), values.inmetro ? ["inmetro=" + values.inmetro] : []).join("\n"));
 const pickHash = (seed, j) => sha256hex(V3 + "\npick\n" + seed + "\n" + j);
 // Escolha (SPEC-v3 3). Devolve os índices e, para cada escolha, r, x, W e o índice (para a barra de intervalos).
@@ -1249,7 +1249,7 @@ async function selectPicks(seed, task) {
   }
   return { picks, steps, ints };
 }
-// Modo rápido (SPEC-v3 5.2): semente local de 32 bytes, mesma regra, nenhum certificado.
+// Modo rápido (SPEC-v3 5.2): semente local de 32 bytes, mesma regra, nenhum comprovante.
 async function quickDraw(task, getRandomValues = (b) => crypto.getRandomValues(b)) {
   const seed = bytesToHex(getRandomValues(new Uint8Array(32)));
   const { picks, steps, ints } = await selectPicks(seed, task);
@@ -1714,7 +1714,7 @@ function anchorsFromRelay(resp, C) {
 }
 const tsaName = (url) => { try { return new URL(url).host; } catch { return String(url); } };
 
-// ---- certificado e ata (SPEC 3.3, 7.3)
+// ---- comprovante e ata (SPEC 3.3, 7.3)
 function certificateOf(state) {
   const c = { spec: state.spec, commitment: state.commitment, sealedAt: state.sealedAt, anchors: state.anchors || [], randomness: state.randomness || {} };
   if (state.spec && state.spec.v === V3) { if (state.seed && state.result && state.picks) { c.seed = state.seed; c.result = state.result; c.picks = state.picks; } }
@@ -1730,7 +1730,7 @@ function taskSummary(task) {
   if (task.preset === "cards") return n === 52 ? T.sumShuffle : T.sumCards(n);
   return T.sumList(task.options.length, n, rep);
 }
-const certFileName = (id) => "draw-certificate-" + String(id).replace(/[^\p{L}\p{N}._-]+/gu, "_") + ".json";
+const certFileName = (id) => "draw-proof-" + String(id).replace(/[^\p{L}\p{N}._-]+/gu, "_") + ".json";
 const links = {
   eth: (n) => "https://etherscan.io/block/" + n,
   inmetro: (c, i) => INMETRO.base + "/chain/" + c + "/pulse/" + i,
@@ -1810,7 +1810,7 @@ async function verifyCertificate(cert, deps = {}, opts = {}) {
   let C;
   try { C = await commitmentOf(spec); } catch (e) { add("commitment", STATUS.FAIL, K.commitErr, e.message); return done(); }
   if (C === cert.commitment) add("commitment", STATUS.PASS, K.commitOk, C);
-  else add("commitment", STATUS.FAIL, K.commitBad, "computed " + C + ", certificate " + cert.commitment);
+  else add("commitment", STATUS.FAIL, K.commitBad, "computed " + C + ", proof " + cert.commitment);
 
   const sources = spec.sources && typeof spec.sources === "object" && !Array.isArray(spec.sources) ? spec.sources : {};
   const rand = cert.randomness && typeof cert.randomness === "object" ? cert.randomness : {};
@@ -1848,7 +1848,7 @@ async function verifyCertificate(cert, deps = {}, opts = {}) {
         const conf = (isInt(f.head) ? f.head : b.number) - b.number;
         const det = "notBefore " + fmtUnix(nb || 0) + " · block " + fmtUnix(b.timestamp) + " · previous " + fmtUnix(p.timestamp) + " · " + conf + " confirmations now";
         if (!isFirst) add("eth", STATUS.FAIL, K.ethNotFirst(b.number), det);
-        else if (bh !== claimed.eth) { indep.eth = bh; add("eth", STATUS.FAIL, K.ethReorg(b.number), "canonical " + bh + " · certificate " + claimed.eth + " · " + det); }
+        else if (bh !== claimed.eth) { indep.eth = bh; add("eth", STATUS.FAIL, K.ethReorg(b.number), "canonical " + bh + " · proof " + claimed.eth + " · " + det); }
         else if ((ev.timestamp != null && ev.timestamp !== b.timestamp) || (ev.parentTimestamp != null && ev.parentTimestamp !== p.timestamp)) { indep.eth = bh; add("eth", STATUS.FAIL, K.ethTimes, det); }
         else if (conf < (s.confirmations || 1)) { indep.eth = bh; add("eth", STATUS.WARN, K.ethFewConf(b.number, conf), det); }
         else { indep.eth = bh; add("eth", STATUS.PASS, K.ethOk(b.number), bh + " · " + det); }
@@ -1871,7 +1871,7 @@ async function verifyCertificate(cert, deps = {}, opts = {}) {
         const rv = normHex(f.randomness);
         if (f.round !== rnd) add("drand", STATUS.FAIL, K.drandRound(f.round, rnd));
         else if (!shaOk) add("drand", STATUS.FAIL, K.drandSha);
-        else if (rv !== claimed.drand) { indep.drand = rv; add("drand", STATUS.FAIL, K.drandOtherValue(rnd), "beacon " + rv + " · certificate " + claimed.drand); }
+        else if (rv !== claimed.drand) { indep.drand = rv; add("drand", STATUS.FAIL, K.drandOtherValue(rnd), "beacon " + rv + " · proof " + claimed.drand); }
         else { indep.drand = rv; add("drand", STATUS.PASS, K.drandOk(rnd), rv); }
       }
     }
@@ -1906,7 +1906,7 @@ async function verifyCertificate(cert, deps = {}, opts = {}) {
     const manual = ev && ev.source === "manual" ? K.lotManual : "";
     if (!okEv) { add(game, missing, isSeal ? K.sealPending(label + ", draw no. " + contest) : K.lotMissing(label, contest)); continue; }
     claimed[game] = lotteryValue(game, contest, ev, v);
-    if (drawDayStart(ev.drawDate)) drawDates[game] = [ev.drawDate, "the certificate"];
+    if (drawDayStart(ev.drawDate)) drawDates[game] = [ev.drawDate, "the proof"];
     let f = null, err = null;
     try { if (!deps.lottery) throw new Error("not looked up"); f = await deps.lottery(game, contest); } catch (e) { err = e; }
     if (f && !err) {
@@ -1914,7 +1914,7 @@ async function verifyCertificate(cert, deps = {}, opts = {}) {
       indep[game] = off;
       if (drawDayStart(f.drawDate)) drawDates[game] = [f.drawDate, "the official page"];
       if (off === claimed[game]) add(game, STATUS.PASS, K.lotOk(label, contest, manual), off + " · " + link);
-      else add(game, STATUS.FAIL, K.lotBad(label, contest, manual), "official " + off + " · certificate " + claimed[game] + " · " + link);
+      else add(game, STATUS.FAIL, K.lotBad(label, contest, manual), "official " + off + " · proof " + claimed[game] + " · " + link);
     } else {
       add(game, STATUS.UNVERIFIED, K.lotUnverified(label, contest, manual), "numbers used: " + claimed[game] + " · " + link + " · (" + (err ? err.message : K.lotNoResult) + ")");
     }
@@ -1936,8 +1936,8 @@ async function verifyCertificate(cert, deps = {}, opts = {}) {
       Object.assign(v3info, { seed, steps, picks, result });
       const same = (a, b) => Array.isArray(a) && a.length === b.length && b.every((x, i) => x === a[i]);
       const preview = result.slice(0, 5).map((n, i) => (i + 1) + ". " + n).join(" · ") + (result.length > 5 ? " …" : "");
-      if (cert.seed !== seed) add("result", STATUS.FAIL, K.seedBad, "recomputed " + seed + " · certificate " + cert.seed);
-      else if (!same(cert.picks, picks)) add("result", STATUS.FAIL, K.picksBad, "correct: " + picks.join(", ") + " · certificate: " + JSON.stringify(cert.picks));
+      if (cert.seed !== seed) add("result", STATUS.FAIL, K.seedBad, "recomputed " + seed + " · proof " + cert.seed);
+      else if (!same(cert.picks, picks)) add("result", STATUS.FAIL, K.picksBad, "correct: " + picks.join(", ") + " · proof: " + JSON.stringify(cert.picks));
       else if (!same(cert.result, result)) add("result", STATUS.FAIL, K.resultBad, "correto: " + preview);
       else if (!allIndep) add("result", STATUS.UNVERIFIED, K.resultPartial, preview);
       else add("result", STATUS.PASS, K.resultOk, "seed " + seed + " · " + preview);
@@ -1949,7 +1949,7 @@ async function verifyCertificate(cert, deps = {}, opts = {}) {
     computed = rows.map((x) => x.name);
     const sameOrder = Array.isArray(cert.order) && cert.order.length === computed.length && computed.every((n, i) => n === cert.order[i]);
     const preview = computed.slice(0, 3).map((n, i) => (i + 1) + ". " + n).join(" · ") + (computed.length > 3 ? " …" : "");
-    if (cert.seed !== seed) add("order", STATUS.FAIL, K.seedBad, "recomputed " + seed + " · certificate " + cert.seed);
+    if (cert.seed !== seed) add("order", STATUS.FAIL, K.seedBad, "recomputed " + seed + " · proof " + cert.seed);
     else if (!sameOrder) add("order", STATUS.FAIL, K.orderBad, "correta: " + preview);
     else if (!allIndep) add("order", STATUS.UNVERIFIED, K.orderPartial, preview);
     else add("order", STATUS.PASS, K.orderOk, "seed " + seed + " · " + preview);
@@ -2057,7 +2057,7 @@ $("ruleCode").textContent = [
   "from fractions import Fraction",
   "from math import lcm",
   "H = lambda s: hashlib.sha256(s.encode()).hexdigest()",
-  "cert = json.load(open(\"draw-certificate-ID.json\"))",
+  "cert = json.load(open(\"draw-proof-ID.json\"))",
   "spec, t = cert[\"spec\"], cert[\"spec\"][\"task\"]",
   "C = H(json.dumps(spec, sort_keys=True, separators=(\",\", \":\"), ensure_ascii=False))",
   "vals = {...}  # eth: block hash; drand: randomness; federal: \"6120:17469-81210-7767-41317-79412\"",
@@ -3002,7 +3002,7 @@ $("toggleAta").addEventListener("click", () => {
   const open = $("ataBox").hidden;
   $("ataBox").hidden = !open; $("toggleAta").textContent = open ? STR.ataHide : STR.ataShow; $("toggleAta").setAttribute("aria-expanded", String(open));
 });
-// Conferir este sorteio: abre a aba Conferir com o certificado já colado e confere na hora.
+// Conferir este sorteio: abre a aba Conferir com o comprovante já colado e confere na hora.
 $("verifyMine").addEventListener("click", () => {
   if (!current) return;
   $("certIn").value = JSON.stringify(certificateOf(current), null, 2);

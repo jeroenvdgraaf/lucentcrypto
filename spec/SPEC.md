@@ -4,7 +4,7 @@
 
 Protocol: **LucentDraw/2**. Product: **Lucent Sorteios** (Brazilian Portuguese UI), part of the LucentCrypto family. The English prototype `LucentDraw.html` (protocol LucentDraw/1) exists and is the starting point.
 
-This document is written as input for an implementer, human or AI. Where it says MUST, the behavior is part of the protocol and affects verification; everything else is product guidance. When in doubt, ask instead of guessing: a different hash input means certificates that no longer verify.
+This document is written as input for an implementer, human or AI. Where it says MUST, the behavior is part of the protocol and affects verification; everything else is product guidance. When in doubt, ask instead of guessing: a different hash input means proofs that no longer verify.
 
 ---
 
@@ -15,8 +15,8 @@ Lucent Sorteios runs random draws that anyone can check afterwards without trust
 1. **Prepare:** the operator enters a title, a draw ID and a list of participants, and picks a randomness source.
 2. **Seal:** the app freezes everything into a JSON object (`spec`), hashes it into the **commitment**, and timestamps that commitment with independent services. The form locks.
 3. **Draw:** the app waits for the randomness the seal points to (a future Ethereum block, a drand round, or a Mega-Sena / Loteria Federal contest), then computes the order deterministically from the commitment and that randomness.
-4. **Certificate:** the app outputs a **draw certificate** (JSON) and a human-readable **ata do sorteio**.
-5. **Verify:** any person can load a certificate and recompute everything.
+4. **Proof:** the app outputs a **draw proof** (JSON) and a human-readable **ata do sorteio**.
+5. **Verify:** any person can load a proof and recompute everything.
 
 The security argument: the participant list is fixed before the randomness exists, the randomness cannot be chosen by the operator, and the order follows from a published rule. The one thing software cannot prove is that the seal was shared before the randomness appeared; the timestamps in section 6 provide that evidence.
 
@@ -72,7 +72,7 @@ Libraries in the HTML: only `drand-client` (for BLS verification), loaded from j
 | `contribution` | Optional free text from the operator or people present (dice, a phrase). May be `""`. |
 | `sources` | Non-empty object; keys from section 4. |
 
-### 3.3 Draw certificate (output)
+### 3.3 Draw proof (output)
 
 ```json
 {
@@ -88,13 +88,13 @@ Libraries in the HTML: only `drand-client` (for BLS verification), loaded from j
 
 - `sealedAt` is the operator's claim; the `anchors` are the evidence (section 6).
 - `randomness` holds one entry per source, with the fields defined in section 4.
-- A certificate whose randomness has not arrived yet has an empty `randomness`, no `seed` and no `order`. The UI calls it a *seal*, not a certificate.
+- A proof whose randomness has not arrived yet has an empty `randomness`, no `seed` and no `order`. The UI calls it a *seal*, not a proof.
 
 ---
 
 ## 4. Randomness sources (MUST)
 
-Each source has (a) parameters fixed in `spec.sources.<name>`, (b) a **value string** used in the seed, and (c) evidence stored in `certificate.randomness.<name>`.
+Each source has (a) parameters fixed in `spec.sources.<name>`, (b) a **value string** used in the seed, and (c) evidence stored in `proof.randomness.<name>`.
 
 ### 4.1 `eth`: next Ethereum block (live)
 
@@ -138,7 +138,7 @@ Each source has (a) parameters fixed in `spec.sources.<name>`, (b) a **value str
 - Caixa publishes results on its lottery portal (`https://loterias.caixa.gov.br`). There is an unofficial JSON endpoint behind it (`https://servicebus2.caixa.gov.br/portaldeloterias/api/<megasena|federal>/<contest>`). **Verify it before relying on it**: it is undocumented, may refuse browser requests (CORS) or non-Brazilian IPs, and may change.
 - The app tries the endpoint (directly, or through the relay if configured). If that fails, it asks the operator to type the result, with a link to the official page, and records `"source": "manual"`.
 - **The verifier always shows the numbers it used and links to the official page**, so the person verifying can compare by eye.
-- **Postponed draws:** the contest number defines the value; the certificate stays pending until that contest has a result.
+- **Postponed draws:** the contest number defines the value; the proof stays pending until that contest has a result.
 - **Choosing the contest at seal time:** the app suggests the first contest whose scheduled draw is at least 2 hours after the seal (the operator can choose a later one). The app must know the draw calendar; keep it as a small editable table (weekdays and time), and show the operator the date it assumes. **Check the current Caixa schedule when implementing.**
 
 ### 4.6 Allowed combinations (UI presets)
@@ -174,7 +174,7 @@ order = candidates sorted by key ascending (compare the hex strings); ties broke
 - Ties have probability ~2⁻²⁵⁶; the tie-break exists only so the rule is total.
 - Equal chances for every candidate. Weighted draws are a later feature (section 12) and will use a different, explicitly named rule.
 
-### Legacy LucentDraw/1 (prototype certificates)
+### Legacy LucentDraw/1 (prototype proofs)
 The verifier MUST also accept `v: "LucentDraw/1"`: seed = `SHA-256("LucentDraw/1\nseed\n" + C + "\n" + (eth block hash or "-") + "\n" + (drand randomness or "-"))`, key = `SHA-256("LucentDraw/1\nkey\n" + seed + "\n" + name)`, ascending, no tie-break; its `eth` source uses `notBefore` and `confirmations` as in 4.1 and stores `randomness.eth.hash`.
 
 ---
@@ -203,7 +203,7 @@ GET  /v1/lottery/<megasena|federal>/<contest>  →  normalized result or 404
 
 The relay only forwards; it never sees the participant list. Its URL is a setting in the HTML. Without it, the seal step says: "Sem carimbo de tempo: compartilhe o lacre agora para ter prova de que ele veio antes do sorteio."
 
-### 6.3 In the certificate
+### 6.3 In the proof
 `anchors`: `[ { "type": "rfc3161", "tsa": "...", "token": "...", "time": "<genTime from the token>" }, { "type": "ots", "proof": "...", "complete": false } ]`.
 
 ### 6.4 Verification of anchors
@@ -226,13 +226,13 @@ The relay only forwards; it never sees the participant list. Its URL is a settin
 - After sealing, the commitment is shown large, with **Copiar lacre** and a hint to share it now (group chat, projector, minutes).
 - **Resume:** a sealed draw survives a reload (localStorage, wrapped in try/catch) and continues waiting for the same targets. Scheduled draws can be closed and reopened days later; reopening fetches the result if available.
 - **Result:** ordered table (position, participant, short key with full key on hover), the source values with links (Etherscan block page, drand round JSON, Caixa results page), and the seed.
-- **Outputs:** download the certificate as `certificado-sorteio-<id>.json`; copy it; show the **ata do sorteio** (section 7.3) as text with a copy button.
+- **Outputs:** download the proof as `certificado-sorteio-<id>.json`; copy it; show the **ata do sorteio** (section 7.3) as text with a copy button.
 
 ### 7.3 Ata do sorteio
-Plain text in Portuguese, generated from the certificate: title, draw ID, date and time of sealing, number of participants, sources and their values with official links, the commitment, the anchors (provider and time), the resulting order, and a closing paragraph: how anyone can verify (open Lucent Sorteios, tab Conferir, load the certificate; or run `verify_draw.py`). No claim the software has not checked.
+Plain text in Portuguese, generated from the proof: title, draw ID, date and time of sealing, number of participants, sources and their values with official links, the commitment, the anchors (provider and time), the resulting order, and a closing paragraph: how anyone can verify (open Lucent Sorteios, tab Conferir, load the proof; or run `verify_draw.py`). No claim the software has not checked.
 
 ### 7.4 Conferir (verify) tab
-Load a certificate (paste or file). Show a list of checks, each **passou / falhou / não verificado / atenção**, then a one-line verdict. Checks are listed in section 9.
+Load a proof (paste or file). Show a list of checks, each **passou / falhou / não verificado / atenção**, then a one-line verdict. Checks are listed in section 9.
 
 ### 7.5 Language and copy
 - All UI strings in Brazilian Portuguese, kept in one strings table so an English version can be added later.
@@ -249,20 +249,20 @@ Load a certificate (paste or file). Show a list of checks, each **passou / falho
 - **drand:** never accept a beacon without the BLS check; the library is pinned by version and integrity hash.
 - **No secrets** in the file; no analytics; network requests only to the sources, the configured endpoints and the relay. State this in the footer.
 - **Clock independence:** the app's own clock is used only for UX (countdowns) and for `notBefore`/round selection at seal time. Verification never depends on the verifier's clock.
-- **Manual lottery entry** is marked as such in the certificate and in the ata.
+- **Manual lottery entry** is marked as such in the proof and in the ata.
 
 ---
 
 ## 9. Verification algorithm (MUST, in both HTML and Python)
 
-1. **Parse** the certificate; reject unknown `v`.
+1. **Parse** the proof; reject unknown `v`.
 2. **Spec well-formed:** names are NFC, trimmed, non-empty, distinct; at least 2; sources known.
 3. **Commitment:** recompute C; must equal `commitment`.
-4. **Each source**, fetched independently (never trusting values in the certificate):
+4. **Each source**, fetched independently (never trusting values in the proof):
    - `eth`: read block `number` and `number − 1`; pass if `block.timestamp > notBefore ≥ parent.timestamp`, and the canonical hash equals `randomness.eth.hash`; report current confirmations.
-   - `drand`: fetch the round, check BLS and `randomness = SHA-256(signature)`; must equal the certificate's value.
-   - `megasena` / `federal`: fetch the official result if reachable and compare; otherwise show the certificate's numbers with the official link and mark **não verificado automaticamente**.
-5. **Seed and order:** recompute; `order` must equal the certificate's `order`.
+   - `drand`: fetch the round, check BLS and `randomness = SHA-256(signature)`; must equal the proof's value.
+   - `megasena` / `federal`: fetch the official result if reachable and compare; otherwise show the proof's numbers with the official link and mark **não verificado automaticamente**.
+5. **Seed and order:** recompute; `order` must equal the proof's `order`.
 6. **Timing:** if anchors exist, compare the earliest anchor time with the randomness time of each source (6.4). If none exist, show **atenção: sem carimbo de tempo** and the deadline the seal must have been shared before.
 7. **Verdict:** "Este sorteio confere." only if every check is *passou* (with lottery checks allowed to be *não verificado* when the verifier confirmed by eye). Otherwise "Este sorteio não confere" listing failures.
 
@@ -275,7 +275,7 @@ Load a certificate (paste or file). Show a list of checks, each **passou / falho
 - Reloading during the wait resumes and produces the same result.
 - A seal made mid-slot targets the next slot's block, never a block whose timestamp precedes the seal (unit test with a simulated chain: missed slots, lagging head, seal at the start, middle and end of a slot).
 - Duplicate names, an empty list, or one name cannot be sealed.
-- A certificate edited in any field (one name, one hex digit of a value, the order) fails verification with the right check named.
+- A proof edited in any field (one name, one hex digit of a value, the order) fails verification with the right check named.
 - A scheduled Loteria Federal draw sealed today, reopened after the contest, completes and verifies; with the Caixa endpoint blocked, manual entry works and is marked as manual.
 - With the relay unavailable, sealing still works and the warning in 6.2 is shown.
 - No `innerHTML` with user data (grep check); the drand library loads only with its integrity hash.

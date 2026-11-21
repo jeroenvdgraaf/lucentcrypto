@@ -5,7 +5,7 @@ Sorteios que qualquer pessoa pode conferir sem confiar em quem os organiza (prot
 **verificável**, as opções e os pesos são lacrados (hash SHA-256) antes de existir o valor aleatório;
 o valor vem de uma fonte pública que ninguém controla (bloco Ethereum, farol drand, Mega-Sena ou
 Loteria Federal); cada escolha sai de uma regra publicada, só com aritmética inteira. No modo
-**rápido**, o resultado sai na hora, com a mesma regra, mas sem certificado.
+**rápido**, o resultado sai na hora, com a mesma regra, mas sem comprovante.
 Especificação: [`spec/SPEC.md`](spec/SPEC.md) (LucentDraw/2) e [`spec/SPEC-v3.md`](spec/SPEC-v3.md);
 decisões de implementação: [`DECISIONS.md`](DECISIONS.md).
 
@@ -28,11 +28,11 @@ estático. Não há instalação nem cadastro.
 - **Lista**: uma opção e um peso por linha (1 = chance normal, 0 = fora; aceita `3`, `0,35`, `1/7`); a
   chance de cada uma aparece em porcentagem. *Ordenar todos* ou *Escolher N*, com ou sem reposição.
 - **Moeda**, **Dado** (4 a 20 faces, dado viciado em Detalhes) e **Cartas** (1 a 52; 52 embaralha).
-- **Verificável**: lacre, divulgação do lacre, espera pela fonte, resultado, certificado (`.json`) e ata.
+- **Verificável**: lacre, divulgação do lacre, espera pela fonte, resultado, comprovante (`.json`) e ata.
   Para loterias, digite o número do **próximo** concurso como aparece no site da Caixa; um concurso já
   sorteado é recusado quando a consulta funciona. Sorteios agendados podem ser fechados e reabertos;
   se a Caixa recusar a consulta, a página pede o resultado e a data oficiais digitados (entrada manual).
-- **Rápido**: resultado instantâneo neste aparelho, sem lacre e sem certificado. Padrão quando a página
+- **Rápido**: resultado instantâneo neste aparelho, sem lacre e sem comprovante. Padrão quando a página
   é aberta de um arquivo local.
 
 Para carimbo de tempo, configure a URL do relay em **Detalhes técnicos**. Sem relay a página funciona,
@@ -40,15 +40,15 @@ mas avisa que não há carimbo de tempo, e a conferência não consegue provar q
 
 ## Conferir com Python
 
-Aceita certificados LucentDraw/3, /2 e /1 e mostra os pesos digitados, os pesos inteiros e W.
+Aceita comprovantes LucentDraw/3, /2 e /1 e mostra os pesos digitados, os pesos inteiros e W.
 Requer Python 3.9+ e, para buscar os valores nas fontes, o pacote `requests`.
 
 ```sh
 pip install requests
-python3 verifier/verify_draw.py certificado-sorteio-<id>.json
-python3 verifier/verify_draw.py certificado.json --rpc https://meu-no.exemplo   # seu próprio nó Ethereum
-python3 verifier/verify_draw.py certificado.json --confirm-lottery              # conferi os números a olho
-python3 verifier/verify_draw.py certificado.json --tsa-ca freetsa-cacert.pem    # valida a cadeia da TSA
+python3 verifier/verify_draw.py comprovante-sorteio-<id>.json
+python3 verifier/verify_draw.py comprovante.json --rpc https://meu-no.exemplo   # seu próprio nó Ethereum
+python3 verifier/verify_draw.py comprovante.json --confirm-lottery              # conferi os números a olho
+python3 verifier/verify_draw.py comprovante.json --tsa-ca freetsa-cacert.pem    # valida a cadeia da TSA
 ```
 
 Saída: 0 = confere, 1 = não confere, 2 = conferência incompleta. A assinatura BLS do drand é
@@ -73,9 +73,9 @@ e cole a URL obtida nas configurações da página.
 
 Requer Node.js 18+ e Python 3.9+; `openssl` para os testes de carimbo de tempo. Os testes rodam o
 núcleo do protocolo extraído do próprio HTML (marcadores `CORE-BEGIN`/`CORE-END`) e o
-`verify_draw.py` sobre os mesmos vetores (SPEC 11 e SPEC-v3 8), certificados e adulterações, além de
+`verify_draw.py` sobre os mesmos vetores (SPEC 11 e SPEC-v3 8), comprovantes e adulterações, além de
 um teste estatístico da regra de escolha e da montagem do site. O teste de interface com jsdom é
-opcional (`JSDOM_DIR=<node_modules com jsdom> ./run_tests.sh`). Certificados de teste:
+opcional (`JSDOM_DIR=<node_modules com jsdom> ./run_tests.sh`). Comprovantes de teste:
 `make fixtures` (ou só os de v3: `node tests/tools/gen_fixtures_v3.mjs`).
 
 ## Limitações atuais

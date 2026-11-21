@@ -10,11 +10,11 @@ resultados da Caixa). A verificação BLS do drand é feita aqui mesmo, em Pytho
 puro (BLS12-381, RFC 9380), sem bibliotecas externas.
 
 Uso:
-    python3 verify_draw.py certificado-sorteio-<id>.json
-    python3 verify_draw.py certificado.json --rpc https://meu-no-ethereum.example
-    python3 verify_draw.py certificado.json --confirm-lottery   # conferi os números a olho
-    python3 verify_draw.py certificado.json --values valores.json  # sem rede (valores já obtidos)
-    python3 verify_draw.py certificado.json --tsa-ca cadeia-tsa.pem # valida assinaturas RFC 3161
+    python3 verify_draw.py comprovante-sorteio-<id>.json
+    python3 verify_draw.py comprovante.json --rpc https://meu-no-ethereum.example
+    python3 verify_draw.py comprovante.json --confirm-lottery   # conferi os números a olho
+    python3 verify_draw.py comprovante.json --values valores.json  # sem rede (valores já obtidos)
+    python3 verify_draw.py comprovante.json --tsa-ca cadeia-tsa.pem # valida assinaturas RFC 3161
 
 Função pura para testes e uso programático:
     verify_certificate(cert, fetched, ...) -> dict
@@ -235,7 +235,7 @@ def share_text(w: int, W: int) -> str:
 
 
 def seed_v3(C: str, values: dict) -> str:
-    # A linha "inmetro=" entra só quando a fonte é usada (SPEC-v3 5.4): certificados antigos não mudam.
+    # A linha "inmetro=" entra só quando a fonte é usada (SPEC-v3 5.4): comprovantes antigos não mudam.
     extra = [f"inmetro={values['inmetro']}"] if values.get("inmetro") else []
     return H("\n".join([V3, "seed", C] + [f"{k}={values.get(k) or '-'}" for k in SOURCE_ORDER] + extra))
 
@@ -1358,7 +1358,7 @@ def _fmt_unix(s):
 
 def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKEY,
                        lottery_confirmed: bool = False, tsa_validator=None) -> dict:
-    """Confere um certificado com valores das fontes já obtidos de forma independente.
+    """Confere um comprovante com valores das fontes já obtidos de forma independente.
 
     `fetched` (todas as chaves opcionais; ausência ou {"error": ...} = não consultado):
       "eth":   {"block": {"number","hash","timestamp"} | None,
@@ -1387,7 +1387,7 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
 
     # 1. Formato
     if not isinstance(cert, dict) or not isinstance(cert.get("spec"), dict):
-        add("parse", FAIL, "O certificado não tem o objeto spec.")
+        add("parse", FAIL, "O comprovante não tem o objeto spec.")
         return result()
     spec = cert["spec"]
     v = spec.get("v")
@@ -1395,9 +1395,9 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         add("parse", FAIL, f"Versão de protocolo desconhecida: {v!r}.")
         return result()
     if not isinstance(cert.get("commitment"), str):
-        add("parse", FAIL, "O certificado não tem o compromisso (commitment).")
+        add("parse", FAIL, "O comprovante não tem o compromisso (commitment).")
         return result()
-    add("parse", PASS, f"Certificado lido (protocolo {v}).")
+    add("parse", PASS, f"Comprovante lido (protocolo {v}).")
 
     # 2. Spec bem formado
     problems = validate_spec(spec)
@@ -1428,7 +1428,7 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         add("commitment", PASS, "O compromisso confere com o registro lacrado.", C)
     else:
         add("commitment", FAIL, "O compromisso não confere com o registro lacrado.",
-            f"calculado {C}, certificado {cert['commitment']}")
+            f"calculado {C}, comprovante {cert['commitment']}")
 
     sources = spec.get("sources") if isinstance(spec.get("sources"), dict) else {}
     rand = cert.get("randomness") if isinstance(cert.get("randomness"), dict) else {}
@@ -1436,9 +1436,9 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
     is_seal = not rand and not any(k in cert for k in ("seed", "order", "result", "picks"))
     missing = UNVERIFIED if is_seal else FAIL
     indep = {}   # valores obtidos de forma independente
-    claimed = {}  # valores segundo o certificado
+    claimed = {}  # valores segundo o comprovante
     rtimes = {}  # momento em que cada aleatoriedade passou a existir (unix s), só eth e drand
-    draw_dates = {}  # loteria -> (data do sorteio, "oficial" | "certificado")
+    draw_dates = {}  # loteria -> (data do sorteio, "oficial" | "comprovante")
 
     # 4. semente própria: a forma canônica e o formato se conferem; a origem, não (fica "não verificado")
     if "own" in sources:
@@ -1446,7 +1446,7 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         ev = rand.get("own") if isinstance(rand.get("own"), dict) else None
         if not ev or not isinstance(ev.get("value"), str):
             add("own", missing, "Lacre: a semente própria ainda não foi registrada." if is_seal
-                else "A semente própria não está no certificado.")
+                else "A semente própria não está no comprovante.")
         else:
             c = canon_own_seed(ev["value"])
             if "error" in c or c["value"] != ev["value"] or c["reading"] != ev.get("reading"):
@@ -1471,7 +1471,7 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
             rtimes["eth"] = nb + 1
         if not ev or not _is_int(ev.get("number")):
             add("eth", missing, "Lacre: o bloco Ethereum ainda não foi registrado." if is_seal
-                else "O certificado não indica o bloco Ethereum usado.")
+                else "O comprovante não indica o bloco Ethereum usado.")
         elif "error" in f or "block" not in f:
             add("eth", UNVERIFIED, f"Bloco Ethereum #{ev['number']} não pôde ser consultado.",
                 f.get("error", "não consultado"))
@@ -1493,11 +1493,11 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
                     indep["eth"] = bh
                     add("eth", FAIL, f"O hash do bloco #{b['number']} difere da cadeia canônica "
                         "(reorganização da cadeia ou valor adulterado). Pela regra, vale o bloco canônico.",
-                        f"canônico {bh} · certificado {claimed.get('eth')} · {det}")
+                        f"canônico {bh} · comprovante {claimed.get('eth')} · {det}")
                 elif ev.get("timestamp") not in (None, b["timestamp"]) or (
                         ev.get("parentTimestamp") not in (None, p["timestamp"])):
                     indep["eth"] = bh
-                    add("eth", FAIL, "Os horários do bloco no certificado não conferem com a cadeia.", det)
+                    add("eth", FAIL, "Os horários do bloco no comprovante não conferem com a cadeia.", det)
                 elif conf < s.get("confirmations", 1):
                     indep["eth"] = bh
                     add("eth", WARN, f"Bloco #{b['number']} confere, mas ainda tem só {conf} confirmações.", det)
@@ -1518,7 +1518,7 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         f = fetched.get("drand") or {}
         if not ev:
             add("drand", missing, f"Lacre: a rodada drand #{rnd} ainda não foi registrada." if is_seal
-                else f"O certificado não traz a rodada drand #{rnd}.")
+                else f"O comprovante não traz a rodada drand #{rnd}.")
         elif "error" in f or "signature" not in f:
             add("drand", UNVERIFIED, f"Rodada drand #{rnd} não pôde ser consultada.", f.get("error", "não consultada"))
         else:
@@ -1536,8 +1536,8 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
                 add("drand", FAIL, f"A assinatura BLS da rodada drand #{rnd} é inválida.")
             elif r_hex != claimed.get("drand"):
                 indep["drand"] = r_hex
-                add("drand", FAIL, f"Rodada drand #{rnd} verificada, mas o certificado traz outro valor.",
-                    f"farol {r_hex} · certificado {claimed.get('drand')}")
+                add("drand", FAIL, f"Rodada drand #{rnd} verificada, mas o comprovante traz outro valor.",
+                    f"farol {r_hex} · comprovante {claimed.get('drand')}")
             else:
                 indep["drand"] = r_hex
                 add("drand", PASS, f"Rodada drand #{rnd}: assinatura BLS verificada, valor confere.", r_hex)
@@ -1553,12 +1553,12 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         if ok_ev:
             claimed[game] = lottery_value(game, contest, ev, v)
             if draw_day_start(ev.get("drawDate")) is not None:
-                draw_dates[game] = (ev["drawDate"], "certificado")
+                draw_dates[game] = (ev["drawDate"], "comprovante")
         manual = " (resultado inserido manualmente)" if ev and ev.get("source") == "manual" else ""
         f = fetched.get(game, {"error": "não consultado"})
         if not ok_ev:
             add(game, missing, f"Lacre: o resultado do concurso {contest} ({label}) ainda não foi registrado." if is_seal
-                else f"{label}: o certificado não traz um resultado válido do concurso {contest}.")
+                else f"{label}: o comprovante não traz um resultado válido do concurso {contest}.")
             continue
         if isinstance(f, dict) and "error" not in f:
             off = lottery_value(game, contest, f, v)
@@ -1569,8 +1569,8 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
                 add(game, PASS, f"{label}, concurso {contest}: confere com o resultado oficial{manual}.",
                     f"{off} · {link}")
             else:
-                add(game, FAIL, f"{label}, concurso {contest}: o certificado difere do resultado oficial{manual}.",
-                    f"oficial {off} · certificado {claimed[game]} · {link}")
+                add(game, FAIL, f"{label}, concurso {contest}: o comprovante difere do resultado oficial{manual}.",
+                    f"oficial {off} · comprovante {claimed[game]} · {link}")
         else:
             why = "sem resultado publicado" if f is None else f.get("error", "")
             add(game, UNVERIFIED, f"{label}, concurso {contest}: não verificado automaticamente{manual}. "
@@ -1586,7 +1586,7 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
             rtimes["inmetro"] = T / 1000
         if not p:
             add("inmetro", missing, "Lacre: o pulso do Inmetro ainda não foi registrado." if is_seal
-                else "O pulso do Inmetro não está no certificado.")
+                else "O pulso do Inmetro não está no comprovante.")
         else:
             ts = iso_to_ms(p.get("timeStamp")) if isinstance(p.get("timeStamp"), str) else None
             det = f"notBefore {ms_to_iso(s.get('notBefore') or 0)} · pulso {p.get('timeStamp')} · nº {p.get('pulseIndex')}"
@@ -1617,14 +1617,14 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
     # 5. Semente e ordem
     names = spec.get("candidates") if isinstance(spec.get("candidates"), list) else []
     used = {k: indep.get(k, claimed.get(k)) for k in sources}
-    # Loterias podem vir do certificado (a checagem delas fica "não verificado", conferível a olho).
+    # Loterias podem vir do comprovante (a checagem delas fica "não verificado", conferível a olho).
     all_indep = all(k in indep for k in sources if k not in ("megasena", "federal", "own"))
     computed_order = None
     if v == V3:
         claims = cert.get("result") is not None or cert.get("picks") is not None
         if not all(used.get(k) for k in sources):
             add("result", FAIL if claims else UNVERIFIED, "Faltam valores de aleatoriedade para recalcular o resultado.",
-                "um certificado sem aleatoriedade é apenas um lacre")
+                "um comprovante sem aleatoriedade é apenas um lacre")
         elif not task_ok:
             add("result", FAIL, "O resultado não pode ser recalculado: a tarefa lacrada (task) é inválida.")
         else:
@@ -1634,22 +1634,22 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
             v3info.update({"seed": seed, "picks": picks, "result": res, "steps": steps})
             preview = " · ".join(f"{i + 1}. {n}" for i, n in enumerate(res[:5])) + (" …" if len(res) > 5 else "")
             if cert.get("seed") != seed:
-                add("result", FAIL, "A semente recalculada difere da semente do certificado.",
-                    f"recalculada {seed} · certificado {cert.get('seed')}")
+                add("result", FAIL, "A semente recalculada difere da semente do comprovante.",
+                    f"recalculada {seed} · comprovante {cert.get('seed')}")
             elif not _same_list(cert.get("picks"), picks):
                 add("result", FAIL, "Os índices escolhidos (picks) diferem dos recalculados.",
-                    "corretos: " + ", ".join(map(str, picks)) + f" · certificado: {json.dumps(cert.get('picks'))}")
+                    "corretos: " + ", ".join(map(str, picks)) + f" · comprovante: {json.dumps(cert.get('picks'))}")
             elif not _same_list(cert.get("result"), res):
-                add("result", FAIL, "O resultado recalculado difere do resultado do certificado.", "correto: " + preview)
+                add("result", FAIL, "O resultado recalculado difere do resultado do comprovante.", "correto: " + preview)
             elif not all_indep:
-                add("result", UNVERIFIED, "Resultado consistente com os valores do certificado, "
+                add("result", UNVERIFIED, "Resultado consistente com os valores do comprovante, "
                     "mas nem todas as fontes foram consultadas.", preview)
             else:
-                add("result", PASS, "Resultado recalculado, idêntico ao do certificado.", f"semente {seed} · {preview}")
+                add("result", PASS, "Resultado recalculado, idêntico ao do comprovante.", f"semente {seed} · {preview}")
     elif not all(used.get(k) for k in sources):
         add("order", FAIL if cert.get("order") else UNVERIFIED,
             "Faltam valores de aleatoriedade para recalcular a ordem.",
-            "um certificado sem aleatoriedade é apenas um lacre")
+            "um comprovante sem aleatoriedade é apenas um lacre")
     else:
         if v == V2:
             seed = seed_v2(C, used)
@@ -1662,15 +1662,15 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         preview = " · ".join(f"{i + 1}. {n}" for i, n in enumerate(computed_order[:3])) + (
             " …" if len(computed_order) > 3 else "")
         if not same_seed:
-            add("order", FAIL, "A semente recalculada difere da semente do certificado.",
-                f"recalculada {seed} · certificado {cert.get('seed')}")
+            add("order", FAIL, "A semente recalculada difere da semente do comprovante.",
+                f"recalculada {seed} · comprovante {cert.get('seed')}")
         elif not same_order:
-            add("order", FAIL, "A ordem recalculada difere da ordem do certificado.", "correta: " + preview)
+            add("order", FAIL, "A ordem recalculada difere da ordem do comprovante.", "correta: " + preview)
         elif not all_indep:
-            add("order", UNVERIFIED, "Ordem consistente com os valores do certificado, "
+            add("order", UNVERIFIED, "Ordem consistente com os valores do comprovante, "
                 "mas nem todas as fontes foram consultadas.", preview)
         else:
-            add("order", PASS, "Ordem recalculada, idêntica à do certificado.", f"semente {seed} · {preview}")
+            add("order", PASS, "Ordem recalculada, idêntica à do comprovante.", f"semente {seed} · {preview}")
 
     # 6. Carimbos de tempo e horário
     anchors = cert.get("anchors") if isinstance(cert.get("anchors"), list) else []
@@ -1692,7 +1692,7 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
                 anchor_bad.append(f"{tsa}: o token não carimba este compromisso")
                 continue
             if a.get("time") is not None and iso_to_ms(a.get("time")) != tok["genTimeMs"]:
-                anchor_bad.append(f"{tsa}: o horário no certificado difere do token ({tok['genTime']})")
+                anchor_bad.append(f"{tsa}: o horário no comprovante difere do token ({tok['genTime']})")
                 continue
             note = ""
             if tsa_validator:
@@ -1752,7 +1752,7 @@ def verify_certificate(cert, fetched=None, *, drand_pubkey: str = QUICKNET_PUBKE
         cid = game + "Timing"
         if game not in draw_dates:
             add(cid, UNVERIFIED, f"{label}, concurso {contest}: data do sorteio desconhecida; horário não comparado.",
-                "o resultado ainda não foi registrado" if is_seal else "o certificado não traz uma data de sorteio válida")
+                "o resultado ainda não foi registrado" if is_seal else "o comprovante não traz uma data de sorteio válida")
             continue
         date, origin = draw_dates[game]
         day0 = draw_day_start(date)
@@ -1804,7 +1804,7 @@ def _verdict(cert, checks, lottery_confirmed, order):
 
 
 # =============================================================================
-# Rede (requests). Cada valor é buscado de forma independente do certificado.
+# Rede (requests). Cada valor é buscado de forma independente do comprovante.
 # =============================================================================
 
 def _requests():
@@ -1963,8 +1963,8 @@ def format_report(rep: dict) -> str:
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="Confere um certificado do Lucent Sorteios (LucentDraw/3, /2 ou /1).")
-    ap.add_argument("certificate", help="arquivo JSON do certificado (ou - para entrada padrão)")
+    ap = argparse.ArgumentParser(description="Confere um comprovante do Lucent Sorteios (LucentDraw/3, /2 ou /1).")
+    ap.add_argument("certificate", help="arquivo JSON do comprovante (ou - para entrada padrão)")
     ap.add_argument("--rpc", action="append", help="endpoint JSON-RPC Ethereum (pode repetir)")
     ap.add_argument("--relay", help="URL do relay (para resultados de loteria)")
     ap.add_argument("--values", help="JSON com os valores das fontes já obtidos (modo sem rede)")
@@ -1982,7 +1982,7 @@ def main(argv=None):
                 raw = f.read()
         cert = json.loads(raw)
     except (OSError, ValueError) as e:
-        print(f"Não foi possível ler o certificado: {e}", file=sys.stderr)
+        print(f"Não foi possível ler o comprovante: {e}", file=sys.stderr)
         return 3
     if a.values:
         with open(a.values, encoding="utf-8") as f:

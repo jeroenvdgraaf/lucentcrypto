@@ -1,4 +1,4 @@
-// Gera tests/fixtures/v3_own.json: certificados com semente própria, feitos pelo código da página.
+// Gera tests/fixtures/v3_own.json: comprovantes com semente própria, feitos pelo código da página.
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadCore, ROOT } from "../core_loader.mjs";

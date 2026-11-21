@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2026 Jeroen van de Graaf
-// Certificados LucentDraw/3 de teste e o arquivo de comparação entre implementações.
-// Os certificados são feitos pelo núcleo do próprio LucentSorteios.html; tokens RFC 3161 da TSA de TESTE;
+// Comprovantes LucentDraw/3 de teste e o arquivo de comparação entre implementações.
+// Os comprovantes são feitos pelo núcleo do próprio LucentSorteios.html; tokens RFC 3161 da TSA de TESTE;
 // rodadas drand de drand_test_beacons.json (chave de TESTE). Todos os valores são FALSOS.
 //   node tests/tools/gen_fixtures_v3.mjs          (acrescenta ao world.json existente)
 // Também é chamado por gen_fixtures.mjs, que regera tudo.

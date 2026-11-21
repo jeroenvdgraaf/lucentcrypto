@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2026 Jeroen van de Graaf
 // LucentDraw/3 no núcleo do HTML: vetores da SPEC-v3 8, pesos, regra de escolha, modo rápido,
-// codificação das loterias, conferência e adulterações de certificados v3.
+// codificação das loterias, conferência e adulterações de comprovantes v3.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -220,9 +220,9 @@ test("lottery timing: seal stamped on or after the draw day fails", async () => 
   }
   // um dia depois do carimbo: passa
   assert.equal(statusOf(await verify(c, {}, withDrawDate("federal/6120", dayAfter))).federalTiming, "passou");
-  // a data oficial vale; sem a Caixa, usa a data do certificado
+  // a data oficial vale; sem a Caixa, usa a data do comprovante
   const off = await verify(c, {}, depsFor(WORLD, { unreachable: ["federal"] }));
-  assert.match(off.checks.find((x) => x.id === "federalTiming").detail, /data certificado/);
+  assert.match(off.checks.find((x) => x.id === "federalTiming").detail, /data comprovante/);
 });
 test("lottery timing: no anchors gives 'não verificado' with the sealedAt claim next to the draw date", async () => {
   const c = cert("v3-scheduled-megasena-dice-manual");
@@ -234,7 +234,7 @@ test("lottery timing: no anchors gives 'não verificado' with the sealedAt claim
   assert.equal(statusOf(seal).timing, "atencao");
 });
 
-// ---- conferência de certificados v3
+// ---- conferência de comprovantes v3
 test("v3 cards via drand with RFC 3161 anchor: confere, with W and result reported", async () => {
   const c = cert("v3-live-drand-cards");
   const rep = await verify(c);
@@ -361,7 +361,7 @@ test("Inmetro · outputValue = SHA-512 da serialização NIST (pulso real nº 10
   assert.equal(C.inmetroMinuteAfter(Date.parse("2026-11-20T18:32:30Z")), Date.parse("2026-11-20T18:33:00Z"));
   assert.equal(C.inmetroMinuteAfter(Date.parse("2026-11-20T18:33:00Z")), Date.parse("2026-11-20T18:34:00Z"), "estritamente depois");
 });
-test("Inmetro · certificado: confere com o arquivo, fica aberto sem rede, falha se alterado", async () => {
+test("Inmetro · comprovante: confere com o arquivo, fica aberto sem rede, falha se alterado", async () => {
   const { cert } = JSON.parse(readFileSync(join(ROOT, "tests", "fixtures", "v3_inmetro.json"), "utf8"));
   const pulse = cert.randomness.inmetro;
   const online = { inmetro: async () => ({ pulse, atT: false }) };
