@@ -15,6 +15,7 @@ export const PAGES = [
   // Sorteios: a tabela de textos inteira (const STR = {…};) vem de sorteios/strings.en.js.
   { src: "LucentSorteios.html", out: "en/sorteios/index.html", tables: ["tools/i18n/frame-sol.en.json", "sorteios/en.json"],
     blocks: [{ start: "const STR = {\n", end: "\n};\n", file: "sorteios/strings.en.js" }] },
+  { src: "embaralhamento/index.html", out: "en/embaralhamento/index.html", tables: ["tools/i18n/frame-sol.en.json", "embaralhamento/en.json"] },
 ];
 const KEEP = /\/\/ I18N-KEEP-BEGIN[\s\S]*?\/\/ I18N-KEEP-END|<script>\n\/\/ qrcode-generator[\s\S]*?<\/script>/g;
 

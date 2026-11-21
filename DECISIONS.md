@@ -127,4 +127,4 @@ como MUST.
 - Sorteios: a tabela de textos inteira (const STR) vem de `sorteios/strings.en.js`; o teste confere que tem as mesmas
   chaves e os mesmos argumentos que a portuguesa. A ata sai na língua da página onde o sorteio é feito; o certificado
   (JSON) é o mesmo nas duas línguas, e um certificado feito numa confere na outra.
-- Feito: Votação (/en/votacao/), Sorteios (/en/sorteios/). Próximo: Embaralhamento; depois Amigo Oculto, Encrypt, Segredo.
+- Feito: Votação (/en/votacao/), Sorteios (/en/sorteios/), Embaralhamento (/en/embaralhamento/). Próximos: Amigo Oculto, Encrypt, Segredo.

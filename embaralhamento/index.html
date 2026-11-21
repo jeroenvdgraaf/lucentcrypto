@@ -8,6 +8,8 @@
 <title>Embaralhamento verificável · LucentCrypto</title>
 <meta name="description" content="Prove que uma lista publicada sem nomes (salários, lances de licitação) corresponde exatamente aos valores lacrados, sem revelar quem tem qual valor. Demonstração interativa de prova de conhecimento zero, no navegador.">
 <link rel="canonical" href="https://lucentcrypto.org/embaralhamento/">
+<link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/embaralhamento/">
+<link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/embaralhamento/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23a85d08'/%3E%3Cpath d='M22 14h8v28h16v8H22z' fill='%23fff'/%3E%3C/svg%3E">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
@@ -56,7 +58,7 @@ h3 { margin: 0; }
 p { margin: 0; max-width: 72ch; }
 .muted { color: var(--muted); }
 .intro p { color: var(--muted); }
-button.theme { font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+.theme { text-decoration: none; font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
 .n { display: inline-grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: 50%; border: 2px solid var(--accent); color: var(--accent); font: 700 14px var(--display); }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
 .btn { font: 600 14px var(--body); border-radius: 10px; padding: 8px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
@@ -191,7 +193,7 @@ footer a { color: inherit; }
     <div class="kicker">Conformidade sem exposição · demonstração</div>
     <h1>Embaralhamento <span>verificável</span></h1>
   </div>
-  <button class="theme" id="themeBtn" type="button"></button>
+  <div class="row"><a class="theme" id="langBtn" href="/en/embaralhamento/" hreflang="en" lang="en">English</a><button class="theme" id="themeBtn" type="button"></button></div>
 </header>
 <section class="intro">
   <p>Quem publica uma lista sem nomes, como os salários de uma empresa ou os lances de uma licitação, lacra também, para cada participante, um envelope com o valor dele. Depois prova que os envelopes contêm exatamente a lista publicada, em outra ordem, sem revelar quem tem qual valor.</p>
@@ -543,15 +545,16 @@ footer a { color: inherit; }
   }
 
   // ---------- colar dados ----------
-  // O último número da linha é o valor (formato brasileiro: ponto de milhar, vírgula decimal; centavos descartados).
+  // O último número da linha é o valor. Milhar com ponto ou vírgula (7.400 ou 7,400); decimais com 1 ou 2 algarismos
+  // depois do último separador (12.300,00 ou 12,300.00) são centavos, descartados.
   function parsePaste(text) {
     const rows = [], errors = [];
     const lines = String(text).split(/\r?\n/);
     lines.forEach((raw, idx) => {
       const line = raw.trim(); if (!line) return;
-      const m = line.match(/^(.*?)(?:R\$\s*)?(?<![\d.,])(\d{1,3}(?:\.\d{3})+|\d+)(?:,\d*|\.\d{1,2})?\s*$/);
+      const m = line.match(/^(.*?)(?:(?:R\$|US\$|\$|€)\s*)?(?<![\d.,])(\d{1,3}([.,])\d{3}(?:\3\d{3})*|\d+)(?:[.,]\d{1,2})?\s*$/);
       if (!m) { if (!rows.length && !errors.length) errors.push({ line: idx + 1, msg: "sem valor (cabeçalho? ignorada)", skip: true }); else errors.push({ line: idx + 1, msg: "sem valor no fim da linha" }); return; }
-      const value = parseInt(m[2].replace(/\./g, ""), 10);
+      const value = parseInt(m[2].replace(/[.,]/g, ""), 10);
       const name = m[1].replace(/[\s;:,\t|-]+$/, "").trim().normalize("NFC").slice(0, 40);
       if (!Number.isSafeInteger(value) || value > 1e12) { errors.push({ line: idx + 1, msg: "valor grande demais" }); return; }
       rows.push({ name, value });
@@ -753,6 +756,7 @@ footer a { color: inherit; }
   const THEMES = ["auto", "light", "dark"], THEME_LABEL = { auto: "Tema: automático", light: "Tema: claro", dark: "Tema: escuro" };
   let theme = LS.get("theme", "auto"); if (!THEMES.includes(theme)) theme = "auto";
   function applyTheme(t) { if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = t; $("themeBtn").textContent = THEME_LABEL[t]; requestAnimationFrame(drawLinks); }
+  $("langBtn").addEventListener("click", (e) => { e.preventDefault(); location.href = $("langBtn").getAttribute("href") + location.hash; });
   $("themeBtn").addEventListener("click", () => { theme = THEMES[(THEMES.indexOf(theme) + 1) % 3]; LS.set("theme", theme); applyTheme(theme); });
 
   // ---------- ligações ----------
