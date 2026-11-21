@@ -1,7 +1,7 @@
 {
  "<html lang=\"pt-BR\">": "<html lang=\"en\">",
  "Lucent Votação · voto secreto em reuniões": "Lucent Vote · secret ballots in meetings",
- "content=\"Votações secretas durante uma reunião: os participantes votam pelo celular em cada questão que a mesa abrir; as cédulas ficam cifradas num quadro público e só os totais são abertos. Demonstração.\"": "content=\"Secret votes during a meeting: participants vote on their phones on each question the chair opens; the ballots stay encrypted on a public board and only the totals are opened. Demo.\"",
+ "content=\"Votações secretas durante uma reunião: os participantes votam pelo celular em cada questão que a mesa abrir; as cédulas ficam cifradas num quadro público e só os totais são abertos. Demonstração.\"": "content=\"Secret votes during a meeting: participants vote on their phones on each question the organizer opens; the ballots stay encrypted on a public board and only the totals are opened. Demo.\"",
  "<link rel=\"canonical\" href=\"https://lucentcrypto.org/votacao/\">": "<link rel=\"canonical\" href=\"https://lucentcrypto.org/en/votacao/\">",
  "<meta property=\"og:url\" content=\"https://lucentcrypto.org/votacao/\">": "<meta property=\"og:url\" content=\"https://lucentcrypto.org/en/votacao/\">",
  "<meta property=\"og:locale\" content=\"pt_BR\">": "<meta property=\"og:locale\" content=\"en_US\">",
