@@ -201,7 +201,7 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
   <div>
     <div class="kicker">Secure voting · trial version</div>
     <h1>Lucent <span>Vote</span></h1>
-    <p class="lead" id="lead">Secret votes during a meeting, in person or online, with up to 20 people (for more, <a href="mailto:info@lucentcrypto.org?subject=Lucent%20Vote">contact us</a>). The same participants vote on several questions, one at a time, as the chair opens them, including any that come up on the spot. Everyone votes on their phone, with a personal link that is valid for the whole meeting. The encrypted ballots are published on a public page that anyone can check. They are added up while still encrypted, and only the total of each vote is decrypted: no ballot is ever opened.</p>
+    <p class="lead" id="lead">Secret votes during a meeting, in person or online, with up to 20 people (for more, <a href="mailto:info@lucentcrypto.org?subject=Lucent%20Vote">contact us</a>). The same participants vote on several questions, one at a time, as the organizer opens them, including any that come up on the spot. Everyone votes on their phone, with a personal link that is valid for the whole meeting. The encrypted ballots are published on a public page that anyone can check. They are added up while still encrypted, and only the total of each vote is decrypted: no ballot is ever opened.</p>
   </div>
   <div class="row"><a class="theme" id="langBtn" href="/votacao/" hreflang="pt" lang="pt-BR">Português</a><button class="theme" id="themeBtn" type="button"></button></div>
 </header>
@@ -222,7 +222,7 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
   <h2>Set up the vote</h2>
   <div class="grid2">
     <label class="f"><span>Meeting name <small>for example “Annual general meeting”</small></span><input type="text" id="cTitle" maxlength="128" autocomplete="off"></label>
-    <label class="f"><span>Your name <small>who chairs; shown on the board</small></span><input type="text" id="cBy" maxlength="128" autocomplete="off"></label>
+    <label class="f"><span>Your name <small>the organizer; shown on the board</small></span><input type="text" id="cBy" maxlength="128" autocomplete="off"></label>
   </div>
   <label class="f"><span>Your phone or e-mail <small>optional: only to send yourself the organizer link</small></span><input type="text" id="cMe" maxlength="80" autocomplete="off" placeholder="+1 555 010 0000 or name@example.com"></label>
   <h3>Participants</h3>
@@ -610,7 +610,7 @@ function checkHead() {
 function checkText() {
   const st = board.st;
   if (st.session) $("scopeKey").textContent = st.session.keyMode === "dividida" ? "The key of this meeting is split between the organizer and LucentCrypto: neither alone can read a ballot." : "LucentCrypto holds the key of this meeting and opens only the totals.";
-  if (board.changed) return ["bad", "The board’s history has changed since your last visit to this page. This should not happen: tell the chair."];
+  if (board.changed) return ["bad", "The board’s history has changed since your last visit to this page. This should not happen: tell the organizer."];
   if (!st.ok) return ["bad", "The board does not verify: " + st.problems.join(" ")];
   return ["ok", "Board verified on this device: " + board.events.length + " entries, proofs of all ballots and counts, chain " + st.head.slice(0, 12) + "…"];
 }
@@ -685,7 +685,7 @@ function viewCreate() {
     const title = $("cTitle").value.trim(), by = $("cBy").value.trim();
     rows = rows.filter((r) => r.name.trim() || r.contact.trim()); render();
     if (!title) return need("cTitle", "Give the meeting a name.");
-    if (!by) return need("cBy", "Type your name: it appears on the board as the person running the meeting.");
+    if (!by) return need("cBy", "Type your name: it appears on the board as the organizer.");
     LSwrite((d) => { d.by = by; });
     if ([title, by].some((x) => utf8Len(x) > V.MAX_TEXT)) return err("Name too long (at most " + V.MAX_TEXT + " bytes).");
     const names = rows.map((r) => r.name.trim());
@@ -836,7 +836,7 @@ async function viewAdmin() {
     const box = $("aVoters"); box.innerHTML = "";
     roll.forEach((v, k) => {
       const p = privs[k], name = p?.name || v.name || "participant " + v.i, link = voterLink(sid, adm.voterSecret(v.i));
-      const msg = "Hello " + name + ", this is your personal link to vote in the meeting “" + S.title + "”, chaired by " + S.by + ". It is valid for all votes in the meeting. Do not forward it to anyone:\n" + link;
+      const msg = "Hello " + name + ", this is your personal link to vote in the meeting “" + S.title + "”, organized by " + S.by + ". It is valid for all votes in the meeting. Do not forward it to anyone:\n" + link;
       const el = document.createElement("div"); el.className = "voter" + (sent.has(v.f) ? " sent" : "");
       el.innerHTML = `<span class="pill">${v.i}</span><span class="who">${esc(name)} ${p?.contact ? `<small>· ${esc(p.contact)}</small>` : ""} ${S.display === "digitais" ? `<small class="mono">· ${V.voterCode(v.f)}</small>` : ""}</span><div class="row"></div>`;
       const row = el.querySelector(".row"), mark = () => { sent.add(v.f); el.classList.add("sent"); };
@@ -869,7 +869,7 @@ function viewVoter() {
   $("vBoard").href = BASE + "#s=" + sid;
   async function render() {
     const st = board.st;
-    if (!f) { $("fatal").hidden = false; $("fatal").textContent = "This voting link is incomplete. Ask the chair for a new one."; return; }
+    if (!f) { $("fatal").hidden = false; $("fatal").textContent = "This voting link is incomplete. Ask the organizer for a new one."; return; }
     if (board.missing) { $("fatal").hidden = false; $("fatal").textContent = "Meeting not found: the link is wrong or the board has already been deleted."; return; }
     if (!st?.session) return;
     const S = st.session, meNow = st.roll.get(f);
@@ -892,7 +892,7 @@ function viewVoter() {
         const wasMe = mine()[open.n] === b.fp;
         cur.innerHTML = `<h2>Vote ${open.n}</h2><p class="question">${esc(open.spec.q)}</p>` + (wasMe
           ? `<div class="msg ok"><b>Your ballot is on the board</b> (at ${fmtHM(b.t)}). Ballot tracking number: <span class="mono">${b.fp}</span>. Wait for the vote to close.</div><div class="row"><a class="btn small" target="_blank" rel="noopener" href="${BASE}#s=${sid}&c=${b.fp}">See my ballot on the board</a></div>`
-          : `<div class="msg warn">There is already a ballot from your link in this vote, at ${fmtHM(b.t)}, number <span class="mono">${b.fp}</span>. If that was you, on another device, all is well. If not, tell the chair.</div>`) + `<p class="small muted">${open.ballots.length} of ${open.roll.size} voted.</p>`;
+          : `<div class="msg warn">There is already a ballot from your link in this vote, at ${fmtHM(b.t)}, number <span class="mono">${b.fp}</span>. If that was you, on another device, all is well. If not, tell the organizer.</div>`) + `<p class="small muted">${open.ballots.length} of ${open.roll.size} voted.</p>`;
       } else {
         const opts = open.options.map((l, j) => [j + 1, optL(l)]).concat([[0, "Abstention"]]);
         cur.innerHTML = `<h2>Vote ${open.n}</h2><p class="question">${esc(open.spec.q)}</p><div class="choices">` +
