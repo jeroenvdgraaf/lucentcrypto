@@ -9,8 +9,8 @@
 <title>LucentCrypto · bewijzen, geen beloften</title>
 <meta name="description" content="Lotingen, gegevenspublicaties en verkiezingen waarvan iedereen de uitslag kan controleren, zonder iemand bloot te stellen. Verifieerbare cryptografie en gegevensbescherming.">
 <link rel="canonical" href="https://lucentcrypto.org/nl/">
-<link rel="alternate" hreflang="pt-BR" href="https://lucentcrypto.org/">
-<link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/">
+<link rel="alternate" hreflang="pt-BR" href="https://lucentcrypto.org/pt/">
+<link rel="alternate" hreflang="en" href="https://lucentcrypto.org/">
 <link rel="alternate" hreflang="es" href="https://lucentcrypto.org/es/">
 <link rel="alternate" hreflang="nl" href="https://lucentcrypto.org/nl/">
 <link rel="alternate" hreflang="x-default" href="https://lucentcrypto.org/">
@@ -149,7 +149,7 @@ footer a { color: var(--muted); }
       <a class="lab" href="#laboratorio">Lab</a>
     </nav>
     <div class="right">
-      <nav class="langs" aria-label="Taal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><a href="/" hreflang="pt-BR" lang="pt-BR" title="Português">PT</a><a href="/en/" hreflang="en" lang="en" title="English">EN</a><a href="/es/" hreflang="es" lang="es" title="Español">ES</a><a href="/nl/" hreflang="nl" lang="nl" title="Nederlands" aria-current="page">NL</a></nav>
+      <nav class="langs" aria-label="Taal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><a href="/pt/" data-lang="pt" hreflang="pt-BR" lang="pt-BR" title="Português">PT</a><a href="/" data-lang="en" hreflang="en" lang="en" title="English">EN</a><a href="/es/" data-lang="es" hreflang="es" lang="es" title="Español">ES</a><a href="/nl/" data-lang="nl" hreflang="nl" lang="nl" title="Nederlands" aria-current="page">NL</a></nav>
       <a class="btn primary" href="#contato">Neem contact op</a>
     </div>
   </div>
@@ -176,7 +176,7 @@ footer a { color: var(--muted); }
         <ul>
           <li>Openbare selectie: woningen, schoolplaatsen</li>
           <li>Steekproeven voor audits en inspecties</li>
-          <li>Juridisch bindend in Brazilië: ICP-Brasil-tijdstempel en proces-verbaal</li>
+          <li>Publiek toeval van drand (League of Entropy); gekwalificeerde eIDAS-tijdstempels op aanvraag</li>
         </ul>
         <p class="links"><a href="/sorteios/">Probeer het</a><a href="mailto:info@lucentcrypto.org?subject=Offerte%3A%20verifieerbare%20loting">Offerte aanvragen →</a></p>
       </article>
@@ -251,7 +251,7 @@ footer a { color: var(--muted); }
   <section class="in contact" id="contato">
     <div class="who">
       <h2 class="sec">Wie zijn wij</h2>
-      <p>Een team onder coördinatie van Jeroen van de Graaf, hoogleraar aan de faculteit Informatica van de Federale Universiteit van Minas Gerais (UFMG), Brazilië, en al ruim veertig jaar onderzoeker in de cryptografie.</p>
+      <p>Een team onder coördinatie van Jeroen van de Graaf, docent aan de faculteit Informatica van de Federale Universiteit van Minas Gerais (UFMG), Brazilië, en al ruim veertig jaar onderzoeker in de cryptografie.</p>
       <p class="links"><a href="http://lattes.cnpq.br/0069989873499216">Lattes-cv</a><a href="https://scholar.google.com.br/citations?user=-w8olWwAAAAJ">Google Scholar</a></p>
     </div>
     <div class="card-contact">
@@ -273,5 +273,11 @@ footer a { color: var(--muted); }
     </span>
   </div>
 </footer>
+<script>
+// A escolha de idioma vale daqui em diante: lucentcrypto.org/ abre nesta língua (ver worker/index.js).
+document.querySelectorAll(".langs a[data-lang]").forEach((a) => a.addEventListener("click", () => {
+  document.cookie = "lang=" + a.dataset.lang + "; path=/; max-age=31536000; SameSite=Lax";
+}));
+</script>
 </body>
 </html>

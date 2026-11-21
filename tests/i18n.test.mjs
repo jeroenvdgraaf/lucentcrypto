@@ -28,6 +28,18 @@ test("cada página: língua certa, seletor com as quatro, a atual marcada, hrefl
     assert.ok(h.includes(`<link rel="canonical" href="https://lucentcrypto.org${d.path}">`));
     for (const o of LANGS) assert.ok(h.includes(`hreflang="${dict(o).htmlLang}" href="https://lucentcrypto.org${dict(o).path}"`), l + "→" + o);
     assert.equal((h.match(/ aria-current="page">/g) || []).length, 1);
-    assert.ok(h.includes(`href="${d.path}" hreflang="${d.htmlLang}" lang="${d.htmlLang}" title="${d.langName}" aria-current="page"`));
+    assert.ok(h.includes(`href="${d.path}" data-lang="${l}" hreflang="${d.htmlLang}" lang="${d.htmlLang}" title="${d.langName}" aria-current="page"`));
   }
+});
+test("raiz: cookie do seletor vence; senão Accept-Language pela ordem de preferência; senão inglês", async () => {
+  const { homeLanguage } = await import("../worker/index.js");
+  assert.equal(homeLanguage("", "pt-BR,pt;q=0.9,en;q=0.8"), "pt");
+  assert.equal(homeLanguage("", "en-US,en;q=0.9,pt;q=0.5"), "en");
+  assert.equal(homeLanguage("", "de-DE,nl;q=0.8,en;q=0.5"), "nl");
+  assert.equal(homeLanguage("", "es-CL"), "es");
+  assert.equal(homeLanguage("", "fr-FR,de;q=0.9"), "en");
+  assert.equal(homeLanguage("", ""), "en");
+  assert.equal(homeLanguage("lang=en", "pt-BR"), "en", "escolheu inglês num navegador em português");
+  assert.equal(homeLanguage("x=1; lang=nl; y=2", "pt-BR"), "nl");
+  assert.equal(homeLanguage("lang=xx", "es"), "es");
 });

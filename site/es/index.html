@@ -9,8 +9,8 @@
 <title>LucentCrypto · pruebas, no promesas</title>
 <meta name="description" content="Sorteos, publicaciones de datos y votaciones cuyo resultado cualquier persona puede verificar, sin exponer a nadie. Criptografía verificable y protección de datos.">
 <link rel="canonical" href="https://lucentcrypto.org/es/">
-<link rel="alternate" hreflang="pt-BR" href="https://lucentcrypto.org/">
-<link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/">
+<link rel="alternate" hreflang="pt-BR" href="https://lucentcrypto.org/pt/">
+<link rel="alternate" hreflang="en" href="https://lucentcrypto.org/">
 <link rel="alternate" hreflang="es" href="https://lucentcrypto.org/es/">
 <link rel="alternate" hreflang="nl" href="https://lucentcrypto.org/nl/">
 <link rel="alternate" hreflang="x-default" href="https://lucentcrypto.org/">
@@ -149,7 +149,7 @@ footer a { color: var(--muted); }
       <a class="lab" href="#laboratorio">Laboratorio</a>
     </nav>
     <div class="right">
-      <nav class="langs" aria-label="Idioma"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><a href="/" hreflang="pt-BR" lang="pt-BR" title="Português">PT</a><a href="/en/" hreflang="en" lang="en" title="English">EN</a><a href="/es/" hreflang="es" lang="es" title="Español" aria-current="page">ES</a><a href="/nl/" hreflang="nl" lang="nl" title="Nederlands">NL</a></nav>
+      <nav class="langs" aria-label="Idioma"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><a href="/pt/" data-lang="pt" hreflang="pt-BR" lang="pt-BR" title="Português">PT</a><a href="/" data-lang="en" hreflang="en" lang="en" title="English">EN</a><a href="/es/" data-lang="es" hreflang="es" lang="es" title="Español" aria-current="page">ES</a><a href="/nl/" data-lang="nl" hreflang="nl" lang="nl" title="Nederlands">NL</a></nav>
       <a class="btn primary" href="#contato">Contáctenos</a>
     </div>
   </div>
@@ -176,7 +176,7 @@ footer a { color: var(--muted); }
         <ul>
           <li>Selecciones públicas: viviendas, cupos escolares</li>
           <li>Muestras para auditoría y fiscalización</li>
-          <li>Con validez jurídica en Brasil: sello de tiempo ICP-Brasil y acta</li>
+          <li>A pedido: azar público del faro de Chile (CLCERT) y sellos de tiempo con validez legal</li>
         </ul>
         <p class="links"><a href="/sorteios/">Probar</a><a href="mailto:info@lucentcrypto.org?subject=Presupuesto%3A%20sorteo%20verificable">Pedir presupuesto →</a></p>
       </article>
@@ -273,5 +273,11 @@ footer a { color: var(--muted); }
     </span>
   </div>
 </footer>
+<script>
+// A escolha de idioma vale daqui em diante: lucentcrypto.org/ abre nesta língua (ver worker/index.js).
+document.querySelectorAll(".langs a[data-lang]").forEach((a) => a.addEventListener("click", () => {
+  document.cookie = "lang=" + a.dataset.lang + "; path=/; max-age=31536000; SameSite=Lax";
+}));
+</script>
 </body>
 </html>

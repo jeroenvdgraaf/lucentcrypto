@@ -269,5 +269,11 @@ footer a { color: var(--muted); }
     </span>
   </div>
 </footer>
+<script>
+// A escolha de idioma vale daqui em diante: lucentcrypto.org/ abre nesta língua (ver worker/index.js).
+document.querySelectorAll(".langs a[data-lang]").forEach((a) => a.addEventListener("click", () => {
+  document.cookie = "lang=" + a.dataset.lang + "; path=/; max-age=31536000; SameSite=Lax";
+}));
+</script>
 </body>
 </html>
