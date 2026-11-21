@@ -108,3 +108,9 @@ como MUST.
 
 ## Pendente: Embaralhamento, símbolos que assustam
 - O Δ (e σ, ρ, h^Δ) aparece na seção técnica (linha "Resposta ao 0…") e na mensagem de erro "Número errado de valores Δ." Assusta o leitor comum. Rever: esconder a notação na parte técnica recolhida, ou trocar por palavras ("diferença de sorteio"), e tirar o Δ das mensagens de erro.
+
+## Faróis (21/11/2026)
+- Inmetro: só a cadeia de produção (cipherSuite 0, SHA-512). Sem Sloth com o Inmetro (a cadeia Sloth deles é protótipo).
+- Chile (CLCERT, random.uchile.cl, 2.1-beta): cipherSuite 1 usa Sloth (SHA3-512 + raízes quadradas encadeadas, com
+  iterations e witness), e a mensagem assinada começa em cipherSuite (sem uri e version). Implementar só quando houver
+  demanda no mercado de língua espanhola; até lá, a página em espanhol diz «a pedido».
