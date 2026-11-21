@@ -47,6 +47,7 @@
   "s3.li3": "Preconfigured voting device (Raspberry Pi) and encrypted ballots by mail",
   "s3.more": "Tell me more →",
   "s3.try": "Try it in a meeting (up to 20 people)",
+  "href.votacao": "/en/votacao/",
   "s3.subject": "Secure elections",
   "how.h2": "How it works",
   "how1.h": "Seal",

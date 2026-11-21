@@ -114,3 +114,13 @@ como MUST.
 - Chile (CLCERT, random.uchile.cl, 2.1-beta): cipherSuite 1 usa Sloth (SHA3-512 + raízes quadradas encadeadas, com
   iterations e witness), e a mensagem assinada começa em cipherSuite (sem uri e version). Implementar só quando houver
   demanda no mercado de língua espanhola; até lá, a página em espanhol diz «a pedido».
+
+## Versões em inglês das ferramentas (nov/2026)
+- Cada ferramenta tem PT e EN; o PT também atende quem lê espanhol, o EN quem lê holandês.
+- A página em português é a fonte. `tools/translate-pages.mjs` gera `en/<ferramenta>/index.html` com uma
+  tabela de substituições exatas (`<ferramenta>/en.json`, mais `tools/i18n/frame-sol.en.json` para a moldura).
+  Se o português mudar e uma chave sumir, a geração falha; o teste `tests/translate.test.mjs` confere que o
+  arquivo gerado está atualizado e que não sobrou português.
+- Os valores do protocolo não mudam com a língua (por exemplo, as opções continuam "Sim", "Candidato"…;
+  a página em inglês só mostra traduzido).
+- Feito: Votação (/en/votacao/). Próximos: Sorteios, Embaralhamento; depois Amigo Oculto, Encrypt, Segredo.

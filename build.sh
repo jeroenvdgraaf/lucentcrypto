@@ -19,6 +19,7 @@ mkdir -p "$OUT/embaralhamento" && cp embaralhamento/index.html "$OUT/embaralhame
 mkdir -p "$OUT/segredo" && cp segredo/index.html "$OUT/segredo/index.html"
 mkdir -p "$OUT/encrypt" && cp encrypt/index.html "$OUT/encrypt/index.html"
 mkdir -p "$OUT/votacao/vendor" && cp votacao/index.html votacao/core.mjs votacao/verifica.mjs "$OUT/votacao/" && cp votacao/vendor/noble.mjs "$OUT/votacao/vendor/"
+mkdir -p "$OUT/en/votacao" && cp en/votacao/index.html "$OUT/en/votacao/index.html"
 mkdir -p "$OUT/og" && cp site/og/*.png "$OUT/og/"
 cp LucentSorteios.html "$OUT/sorteios/index.html"
 cp amigo-oculto/index.html "$OUT/amigo-oculto/index.html"

@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<!-- Gerado por tools/translate-pages.mjs a partir de votacao/index.html; não edite à mão. -->
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<!-- Copyright (C) 2026 Jeroen van de Graaf -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lucent Vote · secret ballots in meetings</title>
+<meta name="description" content="Secret votes during a meeting: participants vote on their phones on each question the chair opens; the ballots stay encrypted on a public board and only the totals are opened. Demo.">
+<link rel="canonical" href="https://lucentcrypto.org/en/votacao/">
+<link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/votacao/">
+<link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/votacao/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="LucentCrypto">
+<meta property="og:title" content="Lucent Vote · secret ballots in meetings">
+<meta property="og:description" content="Everyone votes on their phone; the ballots stay encrypted on a public board and only the totals are opened. Demo.">
+<meta property="og:url" content="https://lucentcrypto.org/en/votacao/">
+<meta property="og:image" content="https://lucentcrypto.org/og/votacao.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231f5a44'/%3E%3Cpath d='M16 30l11 12 21-24' fill='none' stroke='%23fff' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #eef2f3; --surface: #ffffff; --sunk: #e3e9eb; --ink: #13232b; --muted: #50646d; --line: #cdd8dc;
+  --accent: #1f5a44; --accent-ink: #ffffff; --accent-soft: #e2f0ea; --amber: #a85d08;
+  --band-a: #e6f0f7; --band-b: #f6efe1;
+  --ok: #1d7a4e; --ok-soft: #dff2e8; --warn: #8a5100; --warn-soft: #fdf0d6; --bad: #b3261e; --bad-soft: #fbe3e1;
+  --display: "Avenir Next", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1417; --surface: #141f24; --sunk: #0f181c; --ink: #e2ebee; --muted: #98abb2; --line: #26363d;
+    --accent: #4fb487; --accent-ink: #0b1712; --accent-soft: #12291f; --amber: #f0a443;
+    --band-a: #142530; --band-b: #2a2416;
+    --band-a: #142530; --band-b: #2a2416;
+  --ok: #5cc995; --ok-soft: #12291f; --warn: #f0b85a; --warn-soft: #2c2312; --bad: #f08a80; --bad-soft: #2e1715; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1417; --surface: #141f24; --sunk: #0f181c; --ink: #e2ebee; --muted: #98abb2; --line: #26363d;
+  --accent: #4fb487; --accent-ink: #0b1712; --accent-soft: #12291f; --amber: #f0a443;
+  --ok: #5cc995; --ok-soft: #12291f; --warn: #f0b85a; --warn-soft: #2c2312; --bad: #f08a80; --bad-soft: #2e1715; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding: 24px max(16px, env(safe-area-inset-left, 0px)) 48px; }
+[hidden] { display: none !important; }
+.wrap { max-width: 860px; margin: 0 auto; display: grid; gap: 18px; }
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
+.kicker { font: 500 12px var(--mono); letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+.kicker a { color: inherit; text-decoration: none; }
+h1 { font: 800 clamp(30px, 6vw, 44px)/1.05 var(--display); letter-spacing: -.02em; margin: 4px 0 8px; }
+h1 span { color: var(--accent); }
+h2 { font: 700 20px var(--display); margin: 0; }
+h3 { font: 700 16px var(--display); margin: 0; }
+p { margin: 0; }
+.lead { color: var(--muted); max-width: 64ch; }
+.muted { color: var(--muted); }
+.small { font-size: 13.5px; }
+.mono { font-family: var(--mono); }
+.theme { text-decoration: none; font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+.danger { display: grid; grid-template-columns: auto 1fr; gap: 12px 16px; align-items: start; background: var(--warn-soft); border: 2px solid var(--warn); border-radius: 14px; padding: 14px 18px; }
+.danger svg { width: 40px; height: 40px; color: var(--warn); flex: none; }
+.danger b { font: 700 17px var(--display); color: var(--warn); display: block; margin-bottom: 2px; }
+.danger p { font-size: 14.5px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.panel.strong { border: 2px solid var(--accent); }
+.f { display: grid; gap: 6px; }
+.f > span { font-weight: 600; font-size: 14px; }
+.f small { font-weight: 400; color: var(--muted); }
+input[type=text], textarea, select { font: inherit; width: 100%; padding: 9px 11px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+textarea { resize: vertical; min-height: 70px; }
+.btn { font: 600 14px var(--body); border-radius: 10px; padding: 8px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.danger-btn { border-color: var(--bad); color: var(--bad); }
+.btn.small { padding: 5px 10px; font-size: 13px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; }
+.missing { border-color: var(--bad) !important; box-shadow: 0 0 0 3px var(--bad-soft); }
+@media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
+table.g { width: 100%; border-collapse: collapse; }
+table.g th { text-align: left; font-size: 12.5px; color: var(--muted); font-weight: 600; padding: 0 6px 6px; }
+table.g td { padding: 4px 6px; vertical-align: middle; }
+table.g td.num { width: 28px; color: var(--muted); font: 13px var(--mono); }
+table.g td.del { width: 40px; }
+.x { border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 8px; width: 34px; height: 34px; cursor: pointer; }
+label.check { display: flex; gap: 8px; align-items: baseline; font-size: 14.5px; }
+label.check input { width: auto; flex: none; }
+label.check small { color: var(--muted); }
+.radios { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.radios label { display: flex; gap: 6px; align-items: center; font-size: 14.5px; }
+.msg { border-radius: 10px; padding: 10px 12px; font-size: 14px; border: 1px solid var(--line); background: var(--bg); }
+.msg.ok { border-color: var(--ok); background: var(--ok-soft); }
+.msg.warn { border-color: var(--warn); background: var(--warn-soft); }
+.msg.bad { border-color: var(--bad); background: var(--bad-soft); }
+.import { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--bg); display: grid; gap: 8px; }
+.pill { font: 600 11.5px var(--mono); border-radius: 99px; padding: 2px 8px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.pill.on { border-color: var(--accent); color: var(--accent); }
+.linkbox { font: 12.5px/1.45 var(--mono); overflow-wrap: anywhere; background: var(--sunk); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+.voters { display: grid; gap: 6px; }
+.voter { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; background: var(--bg); }
+.voter .who { font-weight: 700; }
+.voter .who small { font-weight: 400; color: var(--muted); }
+.voter .row { grid-column: 1 / -1; }
+.voter.sent { border-color: var(--ok); }
+.question { font: 700 22px/1.3 var(--display); }
+.choices { display: grid; gap: 8px; }
+.choice { font: 700 18px var(--display); padding: 14px 16px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); text-align: left; cursor: pointer; }
+.choice[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.choice.abst { font-weight: 600; font-size: 16px; color: var(--muted); }
+.result { display: grid; gap: 6px; }
+.bar { display: grid; grid-template-columns: minmax(110px, auto) 1fr 3ch; gap: 10px; align-items: center; font-size: 14.5px; }
+.bar .track { height: 12px; border-radius: 99px; background: var(--sunk); overflow: hidden; }
+.bar .fill { height: 100%; background: var(--accent); border-radius: 99px; }
+.bar b { text-align: right; font-family: var(--mono); }
+.items { display: grid; gap: 10px; }
+.item { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 8px; background: var(--bg); }
+.item .head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.events { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13.5px; }
+.events li { display: grid; grid-template-columns: 7ch 1fr; gap: 8px; border-bottom: 1px solid var(--line); padding: 4px 0; }
+.events li span:first-child { font-family: var(--mono); color: var(--muted); }
+.scope { border-left: 4px solid var(--accent); }
+.scope ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+details.scope { display: block; }
+details.scope > * + * { margin-top: 14px; }
+details.scope summary { cursor: pointer; list-style: none; display: flex; gap: 10px; align-items: baseline; }
+details.scope summary::-webkit-details-marker { display: none; }
+details.scope summary::before { content: "▸"; color: var(--accent); font-size: 18px; }
+details.scope[open] summary::before { content: "▾"; }
+.events li { padding-left: 8px; padding-right: 8px; }
+.events li.v-odd { background: var(--band-a); }
+.events li.v-even { background: var(--band-b); }
+.events li.vstart { border-top: 2px solid var(--muted); }
+.events li.mine { box-shadow: inset 4px 0 0 var(--ok); }
+.events li.target { outline: 2px solid var(--accent); border-radius: 6px; }
+.disclaimer { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 8px; font-size: 14px; }
+.disclaimer h3 { color: var(--warn); }
+dialog { border: 0; border-radius: 16px; padding: 0; max-width: min(92vw, 460px); width: 100%; background: var(--surface); color: var(--ink); box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+dialog::backdrop { background: rgba(10, 20, 25, .6); }
+.qrwrap { padding: 18px; display: grid; gap: 12px; justify-items: center; text-align: center; }
+.qrbox { background: #fff; padding: 12px; border-radius: 12px; width: 100%; max-width: 360px; }
+.qrbox svg { width: 100%; height: auto; display: block; }
+footer { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
+/* telão */
+body.tela { padding: 32px; }
+body.tela .wrap { max-width: 1200px; }
+body.tela .question { font-size: clamp(28px, 4.2vw, 56px); }
+body.tela .bar { font-size: clamp(18px, 2.4vw, 32px); grid-template-columns: minmax(200px, auto) 1fr 4ch; }
+body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
+.big { font: 800 clamp(36px, 7vw, 96px)/1 var(--display); }
+/* FRAME-BEGIN (moldura do site: Laboratório ou Soluções; mesma em todas as páginas) */
+.lcf-bar { margin: calc(-1 * 24px) calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 24px; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.lcf-in { max-width: 1120px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; }
+.lcf-logo { font: 800 20px "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; text-decoration: none; white-space: nowrap; }
+.lcf-logo span { color: #a85d08; }
+.lcf-nav { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 14.5px; font-weight: 500; }
+.lcf-nav a { text-decoration: none; padding-bottom: 2px; border-bottom: 2px solid transparent; }
+.lcf-tag { font: 600 11.5px ui-monospace, Menlo, monospace; letter-spacing: .1em; text-transform: uppercase; }
+.lcf-lab { background: #13232b; border-bottom: 1px solid #26363d; }
+.lcf-lab .lcf-logo { color: #ffffff; } .lcf-lab .lcf-logo span { color: #f0a443; }
+.lcf-lab .lcf-logo i { font: normal 600 12px ui-monospace, Menlo, monospace; letter-spacing: .14em; color: #f0a443; margin-left: 10px; }
+.lcf-lab .lcf-nav a { color: #98abb2; } .lcf-lab .lcf-nav a[aria-current="page"] { color: #ffffff; border-color: #f0a443; }
+.lcf-lab .lcf-tag { color: #f0a443; border: 1px solid #f0a443; border-radius: 99px; padding: 3px 10px; }
+.lcf-sol { background: var(--surface, #ffffff); border-bottom: 1px solid var(--line, #cdd8dc); }
+.lcf-sol .lcf-logo { color: var(--ink, #13232b); }
+.lcf-sol .lcf-nav a { color: var(--ink, #13232b); } .lcf-sol .lcf-nav a.lcf-muted { color: var(--muted, #50646d); }
+.lcf-sol .lcf-nav a[aria-current="page"] { border-color: currentColor; }
+.lcf-btn { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 16px; border-radius: 10px; font-weight: 600; font-size: 14.5px; text-decoration: none; background: #1f5a44; color: #ffffff; }
+.lcf-end { border-radius: 16px; padding: 26px; display: grid; gap: 16px; }
+.lcf-end h2 { margin: 0; font: 800 24px "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; }
+.lcf-end .lcf-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.lcf-labend { background: #13232b; color: #e2ebee; }
+.lcf-labend .lcf-kick { font: 600 12px ui-monospace, Menlo, monospace; letter-spacing: .14em; text-transform: uppercase; color: #f0a443; margin: 0; }
+.lcf-labend a.lcf-card { background: #1b2f38; border: 1px solid #26363d; border-radius: 14px; padding: 16px; text-decoration: none; color: #e2ebee; display: grid; gap: 4px; }
+.lcf-labend a.lcf-card:hover { border-color: #f0a443; }
+.lcf-labend a.lcf-card b { color: #ffffff; } .lcf-labend a.lcf-card span { color: #98abb2; font-size: 14px; }
+.lcf-labend p { margin: 0; color: #98abb2; font-size: 14px; } .lcf-labend p a { color: #f0a443; }
+.lcf-solend { background: var(--surface, #ffffff); border: 1px solid var(--line, #cdd8dc); grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: center; gap: 24px; }
+.lcf-solend ul { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
+.lcf-solend .lcf-box { background: var(--bg, #eef2f3); border: 1px solid var(--line, #cdd8dc); border-radius: 14px; padding: 20px; display: grid; gap: 12px; justify-items: start; }
+.lcf-solend .lcf-box p { margin: 0; }
+/* FRAME-END */
+</style>
+</head>
+<body>
+<!-- FRAME-BAR -->
+<div class="lcf-bar lcf-sol" id="lcfBar"><div class="lcf-in">
+  <a class="lcf-logo" href="/">Lucent<span>Crypto</span></a>
+  <nav class="lcf-nav" aria-label="Main"><a href="/#sorteios">Draws</a><a href="/#conformidade">Compliance</a><a href="/#votacao" aria-current="page">Voting</a><a href="/#servicos">Services</a><a class="lcf-muted" href="/#laboratorio">Lab</a></nav>
+  <a class="lcf-btn" href="/#contato">Contact us</a>
+</div></div>
+<!-- /FRAME-BAR -->
+<div class="wrap">
+<header class="top" id="topHeader">
+  <div>
+    <div class="kicker">Secure voting · trial version</div>
+    <h1>Lucent <span>Vote</span></h1>
+    <p class="lead" id="lead">Secret votes during a meeting, in person or online, with up to 20 people (for more, <a href="mailto:info@lucentcrypto.org?subject=Lucent%20Vote">contact us</a>). The same participants vote on several questions, one at a time, as the chair opens them, including any that come up on the spot. Everyone votes on their phone, with a personal link that is valid for the whole meeting. The encrypted ballots are published on a public page that anyone can check. They are added up while still encrypted, and only the total of each vote is decrypted: no ballot is ever opened.</p>
+  </div>
+  <div class="row"><a class="theme" id="langBtn" href="/votacao/" hreflang="pt" lang="pt-BR">Português</a><button class="theme" id="themeBtn" type="button"></button></div>
+</header>
+
+<div class="danger" role="note" id="demoNote">
+  <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 2 44h44L24 4z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M24 18v12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="36.5" r="2.6" fill="currentColor"/></svg>
+  <div>
+    <b>Trial version</b>
+    <p>It really works, and anyone can check the result, but it comes without guarantees. <b style="display:inline;font:inherit;font-weight:700;color:inherit">No legal value can be attributed to these votes.</b> For official use, contact us.</p>
+  </div>
+</div>
+
+<div class="msg bad" id="fatal" hidden role="alert"></div>
+<p class="small muted" id="verifyProgress" hidden role="status"></p>
+
+<!-- ===== Criar ===== -->
+<section id="viewCreate" class="panel" hidden>
+  <h2>Set up the vote</h2>
+  <div class="grid2">
+    <label class="f"><span>Meeting name <small>for example “Annual general meeting”</small></span><input type="text" id="cTitle" maxlength="128" autocomplete="off"></label>
+    <label class="f"><span>Your name <small>who chairs; shown on the board</small></span><input type="text" id="cBy" maxlength="128" autocomplete="off"></label>
+  </div>
+  <label class="f"><span>Your phone or e-mail <small>optional: only to send yourself the organizer link</small></span><input type="text" id="cMe" maxlength="80" autocomplete="off" placeholder="+1 555 010 0000 or name@example.com"></label>
+  <h3>Participants</h3>
+  <p class="small muted">Up to 20 in the demo (up to 100 with a release code). Each one gets a personal link to vote throughout the meeting. You can add and remove people later, also during the meeting.</p>
+  <table class="g"><thead><tr><th></th><th>Name</th><th>Phone or e-mail <small>(optional, for sending)</small></th><th></th></tr></thead><tbody id="cRows"></tbody></table>
+  <div class="row"><button class="btn small" id="cAdd" type="button">+ Participant</button><button class="btn small" id="cImportOpen" type="button">Paste a list</button><button class="btn small" id="cFileBtn" type="button">Import file (.csv)</button><input type="file" id="cFile" accept=".csv,.txt,.tsv,text/csv,text/plain" hidden></div>
+  <div class="msg warn" id="cLimit" hidden>
+    <p>The demo allows up to 20 participants. For more (up to 100), enter a release code, which you can request from <a href="mailto:info@lucentcrypto.org?subject=Release%20code%3A%20Lucent%20Vote&amp;body=I%20would%20like%20a%20code%20for%20a%20meeting%20with%20___%20participants%2C%20on%20___.">info@lucentcrypto.org</a>.</p>
+    <label class="f" style="margin-top:8px"><span>Release code</span><input type="text" id="cCode" maxlength="40" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XX" class="mono"></label>
+  </div>
+  <div class="import" id="cImport" hidden>
+    <label class="f"><span>One person per line <small>name and, optionally, phone (with country code) or e-mail; for example “Bruno; +1 555 010 7777”. You can paste two columns from a spreadsheet.</small></span><textarea id="cImportText" rows="5" spellcheck="false"></textarea></label>
+    <p class="small muted">It also reads spreadsheets saved as CSV, separated by commas, semicolons or tabs, with or without quotes, including the spreadsheet exported from another meeting.</p>
+    <p class="small muted" id="cImportPreview" aria-live="polite"></p>
+    <div class="row"><button class="btn small primary" id="cImportUse" type="button" disabled>Use this list</button><button class="btn small" id="cImportCancel" type="button">Cancel</button></div>
+  </div>
+  <div class="f"><span>On the public board, show</span>
+    <div class="radios"><label><input type="radio" name="cDisplay" value="nomes" checked> the names of those who voted</label><label><input type="radio" name="cDisplay" value="digitais"> codes only (no names)</label></div>
+    <small class="muted">With names, everyone can check that nobody unexpected is on the list. How each person voted never appears.</small>
+  </div>
+  <label class="check"><input type="checkbox" id="cSplit" checked><span>Keep half of the key myself (recommended) <small>— the key is split between you and LucentCrypto; neither of you alone can read a ballot.</small></span></label>
+  <div class="row"><button class="btn primary" id="cGo" type="button">Confirm the participant list</button></div>
+  <p class="small muted">You can add and remove people later, also during the meeting.</p>
+  <div class="msg bad" id="cErr" hidden role="alert"></div>
+  <div id="mySessions" hidden>
+    <h3>Meetings on this device</h3>
+    <div class="items" id="mySessionsList"></div>
+  </div>
+</section>
+
+<!-- ===== Organizador ===== -->
+<section id="viewAdmin" hidden>
+  <div class="wrap" style="max-width:none">
+    <section class="panel strong" id="aBackup" hidden>
+      <h2>First: save the organizer link</h2>
+      <p>Keep a copy of this link. <b id="aBackupWhat">It runs the meeting and holds half of the key: without it, the results cannot be counted; with it, anyone can run the meeting.</b></p>
+      <div class="linkbox" id="aLink"></div>
+      <div class="row" id="aBackupBtns"></div>
+      <p class="small muted">This device also remembers the meeting: open this page here again and it comes back. The copy is for when you switch devices.</p>
+      <span class="small muted" id="aBackupNote" role="status"></span>
+    </section>
+    <div id="aMain" hidden style="display:grid;gap:18px">
+      <section class="panel">
+        <div class="row" style="justify-content:space-between"><h2 id="aTitle"></h2><span class="pill" id="aState"></span></div>
+        <p class="small muted" id="aSecrecy"></p>
+        <div class="row">
+          <a class="btn small" id="aBoard" target="_blank" rel="noopener">Open the board <small>(to project it: Full screen)</small></a>
+          <button class="btn small" id="aShowLink" type="button">My organizer link</button>
+        </div>
+        <div class="msg" id="aCheck"></div>
+      </section>
+      <section class="panel strong" id="aCurrent" hidden></section>
+      <section class="panel" id="aNew">
+        <h2>New vote</h2>
+        <label class="f"><span>Question <small>up to 300 characters; for a choice, say what each number or letter stands for</small></span><textarea id="nQ" maxlength="300" rows="2"></textarea></label>
+        <div class="f"><span>Type</span>
+          <div class="radios"><label><input type="radio" name="nType" value="simnao" checked> Yes / No</label><label><input type="radio" name="nType" value="escolha"> Choice</label></div>
+        </div>
+        <div class="grid2" id="nEscolha" hidden>
+          <label class="f"><span>Call them</span><select id="nLabel"><option value="Candidato">Candidate</option><option value="Proposta">Proposal</option><option value="Opção">Option</option><option value="Alternativa">Alternative</option></select></label>
+          <div class="grid2">
+            <label class="f"><span>Numbering</span><select id="nNum"><option value="123">1, 2, 3</option><option value="ABC">A, B, C</option></select></label>
+            <label class="f"><span>How many</span><select id="nM"><option value="2">2</option><option value="3">3</option></select></label>
+          </div>
+        </div>
+        <p class="small muted" id="nPreview"></p>
+        <div class="row"><button class="btn primary" id="nGo" type="button">Open the vote</button><span class="small muted" id="nNote"></span></div>
+      </section>
+      <section class="panel">
+        <div class="row" style="justify-content:space-between"><h2>Participants</h2><span class="pill" id="aCount"></span></div>
+        <p class="small muted" id="aSendIntro"></p>
+        <div class="voters" id="aVoters"></div>
+        <div class="grid2">
+          <label class="f"><span>Add a participant <small>votes from the next vote opened</small></span><input type="text" id="aNewName" maxlength="128" placeholder="Name"></label>
+          <label class="f"><span>&nbsp;</span><input type="text" id="aNewContact" maxlength="80" placeholder="Phone or e-mail (optional)"></label>
+        </div>
+        <div class="row"><button class="btn small" id="aAddVoter" type="button">Add</button><span class="small muted" id="aVoterNote"></span></div>
+        <div class="row"><button class="btn small" id="aExport" type="button">Export spreadsheet (CSV)</button><span class="small muted">no., name, contact, code and link of each participant: for a mail merge in Gmail or Outlook, or for an assistant to send the links. Keep it as safe as the links.</span></div>
+      </section>
+      <section class="panel" id="aResults" hidden><h2>Results</h2><div class="items" id="aResultsList"></div></section>
+      <section class="panel">
+        <h2>End</h2>
+        <div class="row"><button class="btn danger-btn" id="aEnd" type="button">End the meeting</button><button class="btn" id="aForget" type="button">Forget this meeting on this device</button></div>
+        <p class="small muted" id="aDelete"></p>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Eleitor ===== -->
+<section id="viewVoter" hidden>
+  <div class="wrap" style="max-width:none">
+    <section class="panel">
+      <div class="row" style="justify-content:space-between"><h2 id="vTitle"></h2><a class="btn small" id="vBoard" target="_blank" rel="noopener">View the board</a></div>
+      <p id="vHello"></p>
+      <p class="small muted" id="vSecrecy"></p>
+    </section>
+    <section class="panel strong" id="vCurrent"></section>
+    <section class="panel" id="vResults" hidden><h2>Results</h2><div class="items" id="vResultsList"></div></section>
+    <p class="small muted" id="vCheck"></p>
+  </div>
+</section>
+
+<!-- ===== Quadro ===== -->
+<section id="viewBoard" hidden>
+  <div class="wrap" style="max-width:none">
+    <section class="panel strong" id="bNow"></section>
+    <section class="panel" id="bInfo">
+      <div class="row" style="justify-content:space-between"><h2 id="bTitle"></h2><button class="btn small" id="bFull" type="button">Full screen</button></div>
+      <p class="small muted" id="bSecrecy"></p>
+      <div class="msg" id="bCheck"></div>
+      <div class="row"><button class="btn small" id="bAta" type="button">Download the record (JSON)</button><span class="small muted" id="bDelete"></span></div>
+    </section>
+    <section class="panel" id="bResults" hidden data-notela><h2>Results</h2><div class="items" id="bResultsList"></div></section>
+    <section class="panel" data-notela><h2>Board, most recent first</h2><ul class="events" id="bEvents"></ul></section>
+  </div>
+</section>
+
+<details class="panel scope" id="scope">
+  <summary><h2>What this demo guarantees, and what it does not</h2></summary>
+  <ul>
+    <li><b>Secret ballot:</b> each ballot is encrypted on the voter’s phone. Only the totals of each vote are opened. <span id="scopeKey">With the split key, neither the organizer nor LucentCrypto alone can read a ballot.</span></li>
+    <li><b>Counted as cast:</b> everyone sees their own ballot on the board, and anyone can check that the result is exactly the sum of the accepted ballots. The board has a hash chain: its history cannot be rewritten without the pages noticing.</li>
+    <li><b>Who voted is shown</b> (by name or by a code, with the time); how they voted is not.</li>
+    <li><b>The organizer controls the list.</b> Every addition and removal appears on the board. With names shown, everyone can spot an unexpected name.</li>
+    <li><b>Small groups:</b> when there are few participants, or when everyone votes the same way, the result can reveal how each person voted.</li>
+    <li><b>Does not protect against:</b> someone voting while another person watches, or passing on their link; malware on the phone; losing the organizer link.</li>
+    <li><b>Everything is deleted</b> 24 hours after the first midnight (Brasília time) following the end of the meeting. A downloaded record can still be checked.</li>
+  </ul>
+  <div class="disclaimer">
+    <h3>Notice: demo, no guarantees</h3>
+    <p>This page is a demo, made in good faith and with care. It is offered “as is”, <b>without warranty of any kind</b>, including of operation, security or fitness for a particular purpose. <b>No legal value can be attributed to these votes.</b> The authors and LucentCrypto accept no liability for any damage arising from its use. The code has not yet been independently audited.</p>
+  </div>
+</details>
+<!-- FRAME-END -->
+<section class="lcf-end lcf-solend" id="lcfEnd" aria-label="For use in your organization">
+  <div><h2>For use in your organization</h2><ul><li>Elections with up to 10,000 voters</li><li>Authentication as your bylaws require</li><li>Election record</li></ul></div>
+  <div class="lcf-box"><p>Tell us about your election. We will reply with a proposal.</p><a class="lcf-btn" href="mailto:info@lucentcrypto.org?subject=Secure%20elections">info@lucentcrypto.org</a></div>
+</section>
+<!-- /FRAME-END -->
+
+<footer>
+  <p>Format LucentVote/1 · ristretto255; one ElGamal ciphertext per option, with disjunctive Chaum–Pedersen proofs that each ballot marks at most one option; only the totals are decrypted, with proof. Specification (in Portuguese): <a href="https://github.com/jeroenvdgraaf/lucentcrypto/blob/main/spec/VOTACAO.md" target="_blank" rel="noopener">spec/VOTACAO.md</a>. Libraries: noble-curves and noble-hashes, by Paul Miller; qrcode-generator, by Kazuhiko Arase (MIT license).</p>
+  <p><a href="/">LucentCrypto</a></p>
+</footer>
+</div>
+
+<dialog id="qrDlg" aria-labelledby="qrTitle">
+  <div class="qrwrap">
+    <h2 id="qrTitle"></h2>
+    <div class="qrbox" id="qrBox"></div>
+    <p class="small muted" id="qrNote"></p>
+    <button class="btn primary" id="qrClose" type="button">Close</button>
+  </div>
+</dialog>
+
+<script>
+// qrcode-generator 1.4.4 · Copyright (c) 2009 Kazuhiko Arase · licença MIT · https://github.com/kazuhikoarase/qrcode-generator
+// Copyright (c) 2009 Kazuhiko Arase
+// Licensed under the MIT license:
+var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,(function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1}))},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(n*r,o*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(t,r){var e=n("友");if(2!=e.length||38726!=(e[0]<<8|e[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}((function(){return qrcode}));
+</script>
+<script type="module">
+import * as V from "/votacao/core.mjs";
+// Língua da página: a mesma fonte serve /votacao/ (português) e /en/votacao/ (inglês, gerada por
+// tools/translate-pages.mjs a partir de votacao/en.json). Os valores do protocolo não mudam com a língua.
+const EN = document.documentElement.lang === "en";
+const LOC = EN ? "en-GB" : "pt-BR";
+// I18N-KEEP-BEGIN (tools/translate-pages.mjs não traduz este trecho: as chaves são o texto do protocolo e do servidor)
+// Nomes das opções (o protocolo guarda Sim/Não/Candidato…; a página em inglês só mostra traduzido).
+const OPT_EN = { Sim: "Yes", "Não": "No", Candidato: "Candidate", Proposta: "Proposal", "Opção": "Option", Alternativa: "Alternative" };
+const optL = (l) => !EN ? l : String(l).replace(/^(Sim|Não|Candidato|Proposta|Opção|Alternativa)\b/, (w) => OPT_EN[w]);
+// Mensagens do servidor (worker/votacao.js) em inglês.
+const ERR_EN = {
+  "Reunião não encontrada (ou já apagada).": "Meeting not found (or already deleted).",
+  "Esta reunião já existe.": "This meeting already exists.",
+  "Título ou nome inválido.": "Invalid title or name.",
+  "Token inválido.": "Invalid token.",
+  "Código de liberação inválido ou vencido.": "Invalid or expired release code.",
+  "Lista de participantes inválida.": "Invalid participant list.",
+  "Nome longo demais.": "Name too long.",
+  "Dados do eleitor inválidos.": "Invalid participant data.",
+  "Link do organizador inválido.": "Invalid organizer link.",
+  "Limite de itens atingido.": "Maximum number of votes reached.",
+  "Não há eleitores.": "There are no participants.",
+  "Este item não está aberto.": "This vote is not open.",
+  "Este item não está aguardando apuração.": "This vote is not waiting to be counted.",
+  "A decifração do organizador não confere.": "The organizer's decryption does not verify.",
+  "Ação desconhecida.": "Unknown action.",
+  "Link de eleitor inválido.": "Invalid voting link.",
+  "Esta votação não está aberta.": "This vote is not open.",
+  "Seu link não está na lista desta votação.": "Your link is not on the list for this vote.",
+  "Já há uma cédula com o seu link neste item.": "There is already a ballot from your link in this vote.",
+  "Pedido grande demais.": "Request too large.", "JSON inválido.": "Invalid JSON.",
+  "Votação indisponível neste servidor.": "Voting is not available on this server.",
+};
+const srvErr = (m) => (EN ? ERR_EN[m] || (/^A demonstração vai até (\d+) participantes/.exec(m) ? "The demo allows up to " + /\d+/.exec(m)[0] + " participants. For more, ask for a release code." : m) : m);
+// I18N-KEEP-END
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const LSKEY = "lucent-votacao";
+const LSread = () => { try { return JSON.parse(localStorage.getItem(LSKEY)) || {}; } catch { return {}; } };
+const LSwrite = (f) => { try { const d = LSread(); f(d); localStorage.setItem(LSKEY, JSON.stringify(d)); } catch {} };
+const b64u = (b) => { let s = ""; for (const x of b) s += String.fromCharCode(x); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+const unb64u = (s) => { const t = s.replace(/-/g, "+").replace(/_/g, "/"); return Uint8Array.from(atob(t + "===".slice((t.length + 3) % 4)), (c) => c.charCodeAt(0)); };
+const utf8Len = (s) => new TextEncoder().encode(String(s)).length;
+const API = location.origin + "/api/votacao/", BASE = location.origin + (EN ? "/en/votacao/" : "/votacao/");
+const fmtTime = (t) => new Date(t).toLocaleTimeString(LOC, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+const fmtHM = (t) => new Date(t).toLocaleTimeString(LOC, { hour: "2-digit", minute: "2-digit" });
+const fmtDT = (t) => new Date(t).toLocaleString(LOC, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+async function copyText(text, note) {
+  try { await navigator.clipboard.writeText(text); note.textContent = "Copied."; }
+  catch { note.textContent = "Could not copy automatically; select and copy by hand."; }
+  setTimeout(() => { note.textContent = ""; }, 4000);
+}
+const listPt = (a, conj = EN ? "and" : "e") => a.length <= 1 ? (a[0] || "") : a.slice(0, -1).join(", ") + " " + conj + " " + a[a.length - 1];
+
+// ---- língua: o botão leva à outra versão com a mesma reunião (a parte depois do #)
+$("langBtn").addEventListener("click", (e) => { e.preventDefault(); location.href = $("langBtn").getAttribute("href") + location.hash; });
+// ---- tema
+const THEMES = ["auto", "light", "dark"], THEME_LABEL = { auto: "Theme: auto", light: "Theme: light", dark: "Theme: dark" };
+let theme = LSread().theme || "auto"; if (!THEMES.includes(theme)) theme = "auto";
+function applyTheme(t) { if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = t; $("themeBtn").textContent = THEME_LABEL[t]; }
+$("themeBtn").addEventListener("click", () => { theme = THEMES[(THEMES.indexOf(theme) + 1) % 3]; LSwrite((d) => { d.theme = theme; }); applyTheme(theme); });
+applyTheme(theme);
+
+// ---- contatos e envio (como no Segredo)
+const contactOf = (c) => {
+  c = String(c || "").trim(); const isMail = /@/.test(c), digits = c.replace(/\D/g, "");
+  return { mail: isMail ? c : "", phone: !isMail && digits.length >= 10 ? (c.startsWith("+") || digits.length > 11 ? digits : "55" + digits) : "" };
+};
+function sendButtons(contact, subject, msg, onSend) {
+  const c = contactOf(contact), wrap = document.createDocumentFragment();
+  if (c.phone) { const a = document.createElement("a"); a.className = "btn small primary"; a.target = "_blank"; a.rel = "noopener"; a.href = "https://wa.me/" + c.phone + "?text=" + encodeURIComponent(msg); a.textContent = "Send via WhatsApp"; a.addEventListener("click", onSend); wrap.append(a); }
+  if (c.mail) { const a = document.createElement("a"); a.className = "btn small" + (c.phone ? "" : " primary"); a.href = "mailto:" + encodeURIComponent(c.mail) + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(msg); a.textContent = "Send by e-mail"; a.addEventListener("click", onSend); wrap.append(a); }
+  return wrap;
+}
+function showQr(text, title, note) {
+  $("qrTitle").textContent = title;
+  try { const q = qrcode(0, text.length > 1200 ? "L" : "M"); q.addData(text, "Byte"); q.make(); $("qrBox").innerHTML = q.createSvgTag({ cellSize: 4, margin: 4, scalable: true }); $("qrNote").textContent = note; }
+  catch { $("qrBox").innerHTML = ""; $("qrNote").textContent = "Could not generate the QR code. Use the link."; }
+  $("qrDlg").showModal();
+}
+$("qrClose").addEventListener("click", () => { $("qrDlg").close(); $("qrBox").innerHTML = ""; });
+
+// ---- lista colada (como no Segredo)
+// Planilha (CSV): separador vírgula, ponto e vírgula ou tabulação, campos com ou sem aspas; cabeçalho opcional.
+// Sem separador consistente, cai no leitor de linhas livres (parsePeople).
+const fold = (x) => String(x).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+function splitRow(line, sep) {
+  const out = []; let cur = "", q = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (q) { if (ch === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+    else if (ch === '"' && !cur.trim()) { q = true; cur = ""; }
+    else if (ch === sep) { out.push(cur.trim()); cur = ""; }
+    else cur += ch;
+  }
+  out.push(cur.trim()); return out;
+}
+const looksContact = (c) => /@/.test(c) || String(c).replace(/\D/g, "").length >= 8 && /^[\d\s()+.\-]+$/.test(c);
+function parseList(text) {
+  const lines = String(text).split(/\r?\n/).filter((l) => l.trim());
+  if (!lines.length) return [];
+  const sample = lines.slice(0, 10);
+  const score = (sep) => sample.filter((l) => splitRow(l, sep).length >= 2).length;
+  const sep = ["\t", ";", ","].map((x) => [x, score(x)]).sort((a, b) => b[1] - a[1])[0];
+  if (sep[1] < Math.ceil(sample.length / 2)) return parsePeople(text);
+  let rows = lines.map((l) => splitRow(l, sep[0])), nameCol = -1, contactCols = [];
+  const head = rows[0].map(fold);
+  const hn = head.findIndex((h) => /^(nome|name|participante|eleitor|pessoa)/.test(h));
+  if (hn >= 0) {
+    nameCol = hn; contactCols = head.map((h, i) => (/(contato|contact|celular|phone|telefone|fone|whats|e-?mail|email)/.test(h) ? i : -1)).filter((i) => i >= 0);
+    rows = rows.slice(1);
+  } else {
+    const first = rows[0];
+    nameCol = first.findIndex((c) => c && !/^\d+$/.test(c) && !looksContact(c));
+    contactCols = first.map((c, i) => (looksContact(c) ? i : -1)).filter((i) => i >= 0);
+  }
+  if (nameCol < 0) return parsePeople(text);
+  return rows.map((r) => ({ name: (r[nameCol] || "").replace(/\s+/g, " ").trim(), contact: (contactCols.map((i) => r[i]).find((c) => c && looksContact(c)) || "").trim() })).filter((p) => p.name);
+}
+function parsePeople(text) {
+  const out = [];
+  for (const raw of String(text).split(/\r?\n/)) {
+    const line = raw.trim(); if (!line) continue;
+    if (!out.length && /^(nome|name|eleitor|participante|pessoa)\b/i.test(line) && !/\d|@/.test(line)) continue;
+    let name = line, contact = "";
+    const mail = line.match(/[^\s;,\t<>()]+@[^\s;,\t<>()]+\.[^\s;,\t<>()]+/);
+    if (mail) { contact = mail[0]; name = line.replace(mail[0], ""); }
+    else { const ph = line.match(/(\+?\(?\d[\d\s().-]{7,}\d)\s*$/); if (ph && ph[1].replace(/\D/g, "").length >= 8) { contact = ph[1].trim(); name = line.slice(0, ph.index); } }
+    name = name.replace(/[<>()]/g, " ").replace(/[\s;,:\t|-]+$/, "").replace(/^[\s;,:\t|-]+/, "").replace(/\s+/g, " ").trim();
+    if (name) out.push({ name, contact });
+  }
+  return out;
+}
+
+// ---- dados privados do rol: AES-GCM sob kr (seção 5)
+async function aesKey(kr) { return crypto.subtle.importKey("raw", kr, "AES-GCM", false, ["encrypt", "decrypt"]); }
+async function sealPriv(key, obj) { const iv = V.randBytes(12), ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(JSON.stringify(obj)))); const o = new Uint8Array(12 + ct.length); o.set(iv); o.set(ct, 12); return b64u(o); }
+async function openPriv(key, s) { try { const b = unb64u(s); return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b.subarray(0, 12) }, key, b.subarray(12)))); } catch { return null; } }
+
+// ---- textos
+const secrecyText = (S) => S.keyMode === "dividida"
+  ? "Secrecy: the key is split between the organizer and LucentCrypto; neither alone can read a ballot. Only the totals are opened."
+  : "Secrecy: LucentCrypto holds the key and opens only the totals. Everything is deleted a day after the meeting.";
+const deleteText = (t) => "The board will be deleted on " + fmtDT(t) + ".";
+function resultHtml(it) {
+  const r = it.result, labels = it.options, max = Math.max(1, r.ballots);
+  const rows = labels.map((l, j) => [optL(l), r.counts[j]]).concat([["Abstention", r.abst]]);
+  let h = `<div class="result">` + rows.map(([l, n]) => `<div class="bar"><span>${esc(l)}</span><div class="track"><div class="fill" style="width:${(100 * n / max).toFixed(1)}%"></div></div><b>${n}</b></div>`).join("") + `</div>`;
+  h += `<p class="small muted">${r.ballots} of ${r.eligible} voted · did not vote: ${r.notVoted}</p>`;
+  const same = r.ballots > 1 && (r.counts.includes(r.ballots) || r.abst === r.ballots);
+  if (r.eligible < 10 || same) h += `<p class="small" style="color:var(--warn)">In small groups, or when everyone votes the same way, the result can reveal how each person voted.</p>`;
+  return h;
+}
+function itemsHtml(st, { skipOpen = false } = {}) {
+  const list = [...st.order].reverse().map((n) => st.items.get(n)).filter((it) => !(skipOpen && it.state === "aberto"));
+  return list.map((it) => `<div class="item"><div class="head"><b>Results of vote ${it.n}</b><span class="pill">${{ aberto: "open", encerrado: "counting", apurado: "counted", cancelado: "canceled" }[it.state]}</span></div><p>${esc(it.spec.q)}</p>` +
+    (it.state === "apurado" ? resultHtml(it) : it.state === "cancelado" ? `<p class="small muted">Vote canceled; the ballots were not opened.</p>` : it.state === "encerrado" ? `<p class="small muted">Closed, waiting to be counted.</p>` : "") + `</div>`).join("");
+}
+
+// ---- parâmetros do link
+const H = new URLSearchParams(location.hash.slice(1));
+const sid = H.get("s"), adminM = H.get("a"), voterS = H.get("v"), isTela = H.has("tela");
+const adminLink = (s, m) => BASE + "#s=" + s + "&a=" + m;
+const voterLink = (s, v) => BASE + "#s=" + s + "&v=" + v;
+
+// ---- quadro ao vivo
+const board = { events: [], st: null, cache: new Map(), deleteAt: null, ws: null, changed: null, missing: false };
+async function fetchEvents() {
+  const r = await fetch(API + sid + "/eventos?desde=" + board.events.length, { cache: "no-store" });
+  if (r.status === 404 && !board.events.length) { board.missing = true; return; }
+  const j = await r.json(); if (j.error) throw new Error(j.error);
+  board.deleteAt = j.deleteAt; await addEvents(j.events);
+}
+// Novos eventos: entram na lista na hora; a conferência é incremental (só os novos), em fila,
+// e as provas das cédulas vão para um Web Worker, com uma linha de progresso quando são muitas.
+board.queue = Promise.resolve();
+function addEvents(evs) {
+  const fresh = [];
+  for (const e of evs || []) if (e.n === board.events.length + 1) { board.events.push(e); fresh.push(e); }
+  if (!fresh.length) return board.queue.then(() => false);
+  board.queue = board.queue.then(() => processEvents(fresh)).then(() => true, (e) => { console.warn(e); return true; });
+  return board.queue;
+}
+async function processEvents(evs) {
+  if (!board.st) board.st = V.newBoardState();
+  const st = board.st, safe = (e) => { try { V.applyEvent(st, e, board.cache, false); } catch (err) { st.ok = false; st.problems.push(err.message); } };
+  let i = 0;
+  if (!st.session && evs[0]?.n === 1) { safe(evs[0]); i = 1; }
+  const rest = evs.slice(i);
+  if (st.session) await runChecks(V.pendingBallotChecks(rest, board.cache, st.session.K, sid, (n) => st.items.get(n)?.spec.m));
+  rest.forEach(safe);
+  checkHead();
+}
+let checker = null, checkId = 0;
+function showProgress(done, total) {
+  const el = $("verifyProgress");
+  el.hidden = done >= total; el.textContent = "Checking the ballot proofs on this device: " + done + " of " + total + "…";
+}
+async function runChecks(tasks) {
+  if (!tasks.length) return;
+  if (tasks.length > 3 && !checker) { try { checker = new Worker("/votacao/verifica.mjs", { type: "module" }); } catch { checker = false; } }
+  if (tasks.length > 3 && checker) {
+    const id = ++checkId; showProgress(0, tasks.length);
+    const done = await new Promise((resolve) => {
+      const on = (e) => { if (e.data.id !== id) return; if (e.data.progress) showProgress(e.data.progress, e.data.total); if (e.data.done) { checker.removeEventListener("message", on); resolve(e.data.done); } };
+      checker.addEventListener("message", on); checker.postMessage({ id, tasks });
+    });
+    for (const [k, ok] of done) board.cache.set(k, ok);
+    showProgress(tasks.length, tasks.length); return;
+  }
+  // poucas (ou sem Web Worker): aqui mesmo, cedendo a vez à página entre uma e outra
+  for (let i = 0; i < tasks.length; i++) {
+    board.cache.set(tasks[i].key, V.verifyBallot(...tasks[i].args));
+    if (tasks.length > 3) { showProgress(i + 1, tasks.length); await new Promise((r) => setTimeout(r, 0)); }
+  }
+}
+function checkHead() {
+  const st = board.st, key = "head:" + sid, seen = LSread()[key];
+  if (seen && seen.n <= board.events.length && board.events[seen.n - 1].h !== seen.h) board.changed = true;
+  if (st.ok) LSwrite((d) => { d[key] = { n: board.events.length, h: st.head }; });
+}
+function checkText() {
+  const st = board.st;
+  if (st.session) $("scopeKey").textContent = st.session.keyMode === "dividida" ? "The key of this meeting is split between the organizer and LucentCrypto: neither alone can read a ballot." : "LucentCrypto holds the key of this meeting and opens only the totals.";
+  if (board.changed) return ["bad", "The board’s history has changed since your last visit to this page. This should not happen: tell the chair."];
+  if (!st.ok) return ["bad", "The board does not verify: " + st.problems.join(" ")];
+  return ["ok", "Board verified on this device: " + board.events.length + " entries, proofs of all ballots and counts, chain " + st.head.slice(0, 12) + "…"];
+}
+function live(render) {
+  const go = async () => { try { const before = board.events.length; await fetchEvents(); if (board.events.length !== before || !board.rendered) { board.rendered = true; render(); } } catch (e) { console.warn(e); } };
+  const connect = () => {
+    try {
+      const ws = new WebSocket(API.replace(/^http/, "ws") + sid + "/ao-vivo"); board.ws = ws;
+      ws.onmessage = async (m) => { try { const d = JSON.parse(m.data); if (await addEvents(d.events)) render(); else go(); } catch {} };
+      ws.onopen = () => go();
+      ws.onclose = () => { board.ws = null; setTimeout(connect, 3000); };
+    } catch {}
+  };
+  go(); connect();
+  setInterval(() => { if (!board.ws || board.ws.readyState !== 1) go(); }, 5000);
+}
+async function post(path, body) {
+  const r = await fetch(API + sid + "/" + path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({ error: "Invalid response from the server." }));
+  if (j.events) await addEvents(j.events);
+  return { ok: r.ok, ...j, error: j.error && srvErr(j.error) };
+}
+
+// ================= Criar =================
+function viewCreate() {
+  $("viewCreate").hidden = false;
+  let rows = [{ name: "", contact: "" }, { name: "", contact: "" }, { name: "", contact: "" }];
+  const render = () => {
+    const tb = $("cRows"); tb.innerHTML = "";
+    rows.forEach((r, i) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td class="num">${i + 1}</td><td><input type="text" maxlength="128" aria-label="Name of participant ${i + 1}" value="${esc(r.name)}"></td><td><input type="text" maxlength="80" aria-label="Contact of participant ${i + 1}" value="${esc(r.contact)}" placeholder="+1 555 010 0000 or name@example.com"></td><td class="del"><button class="x" type="button" aria-label="Remove participant ${i + 1}">✕</button></td>`;
+      const [n, c] = tr.querySelectorAll("input"), d = tr.querySelector("button");
+      n.addEventListener("input", () => { r.name = n.value; }); c.addEventListener("input", () => { r.contact = c.value; });
+      d.disabled = rows.length <= 1; d.addEventListener("click", () => { rows.splice(i, 1); render(); });
+      tb.append(tr);
+    });
+    $("cAdd").disabled = rows.length >= V.MAX_LIMIT;
+    $("cLimit").hidden = rows.filter((r) => r.name.trim() || r.contact.trim()).length <= V.FREE_LIMIT;
+  };
+  $("cAdd").addEventListener("click", () => { rows.push({ name: "", contact: "" }); render(); });
+  const known = () => new Set(rows.filter((r) => r.name.trim()).map((r) => r.name.trim().toLowerCase()));
+  const preview = () => {
+    const l = parseList($("cImportText").value), k = known(), fresh = l.filter((g) => !k.has(g.name.toLowerCase())), dup = l.length - fresh.length;
+    const total = rows.filter((r) => r.name.trim() || r.contact.trim()).length + fresh.length;
+    $("cImportPreview").textContent = l.length ? l.length + (l.length === 1 ? " person read" : " people read") + ": " + l.slice(0, 4).map((g) => g.name + (g.contact ? " (" + g.contact + ")" : "")).join(" · ") + (l.length > 4 ? " · …" : "") +
+      (dup ? ". " + dup + (dup === 1 ? " was" : " were") + " already on the list and will not be added again." : "") + (total > V.MAX_LIMIT ? " At most " + V.MAX_LIMIT + " participants." : "") : "";
+    $("cImportUse").disabled = !fresh.length || total > V.MAX_LIMIT; return fresh;
+  };
+  $("cImportOpen").addEventListener("click", () => { $("cImport").hidden = false; $("cImportText").focus(); });
+  $("cImportCancel").addEventListener("click", () => { $("cImport").hidden = true; });
+  $("cImportText").addEventListener("input", preview);
+  $("cImportUse").addEventListener("click", () => {
+    const fresh = preview(); if (!fresh.length) return;
+    rows = rows.filter((r) => r.name.trim() || r.contact.trim()).concat(fresh);
+    $("cImport").hidden = true; $("cImportText").value = ""; render();
+  });
+  $("cFileBtn").addEventListener("click", () => $("cFile").click());
+  $("cFile").addEventListener("change", async () => {
+    const f = $("cFile").files[0]; if (!f) return;
+    let text = await f.text(); if (text.includes("\uFFFD")) text = new TextDecoder("windows-1252").decode(await f.arrayBuffer());
+    $("cImport").hidden = false; $("cImportText").value = text.replace(/^\uFEFF/, ""); preview(); $("cFile").value = "";
+  });
+  render();
+  const err = (t) => { $("cErr").hidden = !t; $("cErr").textContent = t || ""; };
+  // Nome da reunião já preenchido com a data; o seu nome, lembrado neste aparelho.
+  $("cTitle").value = "Meeting on " + new Date().toLocaleDateString("en-GB");
+  $("cBy").value = LSread().by || "";
+  const need = (id, msg) => { const el = $(id); el.classList.add("missing"); el.scrollIntoView({ block: "center", behavior: "smooth" }); el.focus(); el.addEventListener("input", () => el.classList.remove("missing"), { once: true }); return err(msg); };
+  $("cGo").addEventListener("click", async () => {
+    err("");
+    const title = $("cTitle").value.trim(), by = $("cBy").value.trim();
+    rows = rows.filter((r) => r.name.trim() || r.contact.trim()); render();
+    if (!title) return need("cTitle", "Give the meeting a name.");
+    if (!by) return need("cBy", "Type your name: it appears on the board as the person running the meeting.");
+    LSwrite((d) => { d.by = by; });
+    if ([title, by].some((x) => utf8Len(x) > V.MAX_TEXT)) return err("Name too long (at most " + V.MAX_TEXT + " bytes).");
+    const names = rows.map((r) => r.name.trim());
+    if (!names.length) return err("Add at least one participant.");
+    const code = $("cCode").value.trim();
+    if (names.length > V.FREE_LIMIT && !code) return err("The demo allows up to " + V.FREE_LIMIT + " participants. For more, enter a release code.");
+    if (names.some((x) => !x)) return err("Give each participant a name (or remove the empty rows).");
+    if (names.some((x) => utf8Len(x) > V.MAX_TEXT)) return err("A name is too long (at most " + V.MAX_TEXT + " bytes).");
+    if (new Set(names.map((x) => x.toLowerCase())).size !== names.length) return err("Two participants have the same name; tell them apart.");
+    $("cGo").disabled = true;
+    try {
+      const s = b64u(V.randBytes(16)), m = V.hex(V.randBytes(32)), adm = V.deriveAdmin(m), key = await aesKey(adm.kr);
+      const display = document.querySelector('input[name="cDisplay"]:checked').value, split = $("cSplit").checked;
+      const A = V.mulBase(adm.a);
+      const voters = [];
+      for (let i = 0; i < rows.length; i++) voters.push({ i: i + 1, f: V.fingerprint(adm.voterSecret(i + 1)), name: names[i], priv: await sealPriv(key, { name: names[i], contact: rows[i].contact.trim() }) });
+      const body = { title, by, display, keyMode: split ? "dividida" : "lucent", th: adm.th, voters, liberacao: names.length > V.FREE_LIMIT ? code : undefined, A: split ? V.pHex(A) : undefined, pokA: split ? V.provePok(s, adm.a, A) : undefined };
+      const r = await fetch(API + s + "/criar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error ? srvErr(j.error) : "The server refused to create the meeting.");
+      LSwrite((d) => { d.sessions = d.sessions || {}; d.sessions[s] = { title, link: adminLink(s, m), backedUp: false, me: $("cMe").value.trim(), created: Date.now() }; });
+      location.hash = "s=" + s + "&a=" + m;
+    } catch (e) { err(e.message); $("cGo").disabled = false; }
+  });
+  // reuniões lembradas neste aparelho
+  const ss = Object.entries(LSread().sessions || {}).sort((a, b) => b[1].created - a[1].created);
+  if (ss.length) {
+    $("mySessions").hidden = false;
+    $("mySessionsList").innerHTML = ss.map(([s, x]) => `<div class="item"><div class="head"><b>${esc(x.title)}</b><span class="small muted">${fmtDT(x.created)}</span></div><div class="row"><a class="btn small primary" href="${esc(x.link)}" data-go>Open as organizer</a></div></div>`).join("");
+  }
+}
+
+// ================= Organizador =================
+async function viewAdmin() {
+  const adm = V.deriveAdmin(adminM), key = await aesKey(adm.kr), myLink = adminLink(sid, adminM);
+  let local = (LSread().sessions || {})[sid];
+  if (!local) { LSwrite((d) => { d.sessions = d.sessions || {}; d.sessions[sid] = { title: "", link: myLink, backedUp: true, me: "", created: Date.now() }; }); local = (LSread().sessions || {})[sid]; }
+  $("viewAdmin").hidden = false;
+  const privCache = new Map(), sent = new Set(), pending = new Set();
+  let confirmEnd = false, confirmCancel = null, confirmDel = null;
+  $("aLink").textContent = myLink;
+  const backupDone = () => { LSwrite((d) => { d.sessions[sid].backedUp = true; }); local.backedUp = true; render(); };
+  const me = local.me, msgMe = "Organizer link for the meeting “" + (local.title || "") + "” (Lucent Vote). Keep it and do not pass it on:\n" + myLink;
+  const bb = $("aBackupBtns"); bb.innerHTML = "";
+  const cp = document.createElement("button"); cp.className = "btn primary"; cp.type = "button"; cp.textContent = "Copy link";
+  cp.addEventListener("click", async () => { await copyText(myLink, $("aBackupNote")); backupDone(); });
+  const qr = document.createElement("button"); qr.className = "btn"; qr.type = "button"; qr.textContent = "Show QR";
+  qr.addEventListener("click", () => { showQr(myLink, "Organizer link", "Photograph or scan it with another device and keep it."); backupDone(); });
+  bb.append(sendButtons(me, "Organizer link: " + (local.title || "meeting"), msgMe, () => setTimeout(backupDone, 300)), cp, qr);
+  $("aShowLink").addEventListener("click", () => { $("aBackup").dataset.forced = $("aBackup").dataset.forced === "1" ? "" : "1"; render(); });
+  $("aBackupWhat").textContent = "It runs the meeting and holds half of the key: without it, the results cannot be counted; with it, anyone can run the meeting.";
+
+  // nova votação
+  const spec = () => {
+    const type = document.querySelector('input[name="nType"]:checked').value;
+    return type === "simnao" ? { type, q: $("nQ").value.trim(), m: 2 } : { type, q: $("nQ").value.trim(), label: $("nLabel").value, numbering: $("nNum").value, m: +$("nM").value };
+  };
+  const preview = () => { const sp = spec(); $("nEscolha").hidden = sp.type !== "escolha"; $("nPreview").textContent = "Options: " + V.optionLabels(sp).map(optL).concat("Abstention").join(" · "); };
+  document.querySelectorAll('input[name="nType"], #nLabel, #nNum, #nM').forEach((x) => x.addEventListener("change", preview)); preview();
+  $("nGo").addEventListener("click", async () => {
+    const sp = spec(); if (!sp.q) { $("nNote").textContent = "Write the question."; return; }
+    $("nGo").disabled = true; $("nNote").textContent = "";
+    const r = await post("admin", { t: adm.t, acao: "abrir", spec: sp });
+    if (!r.ok) $("nNote").textContent = r.error; else { $("nQ").value = ""; }
+    render();
+  });
+  $("aAddVoter").addEventListener("click", async () => {
+    const name = $("aNewName").value.trim(), contact = $("aNewContact").value.trim(), st = board.st;
+    if (!name) { $("aVoterNote").textContent = "Type the name."; return; }
+    if (utf8Len(name) > V.MAX_TEXT) { $("aVoterNote").textContent = "Name too long."; return; }
+    if (st.roll.size >= st.session.limit) { $("aVoterNote").textContent = "This meeting allows up to " + st.session.limit + " participants" + (st.session.limit === V.FREE_LIMIT ? ". For more, create the meeting with a release code." : "."); return; }
+    const i = board.events.filter((e) => e.type === "eleitor-incluido").reduce((mx, e) => Math.max(mx, e.i), 0) + 1;
+    const r = await post("admin", { t: adm.t, acao: "incluir", voter: { i, f: V.fingerprint(adm.voterSecret(i)), name, priv: await sealPriv(key, { name, contact }) } });
+    $("aVoterNote").textContent = r.ok ? "Added: votes from the next vote opened." : r.error;
+    if (r.ok) { $("aNewName").value = ""; $("aNewContact").value = ""; }
+    render();
+  });
+  $("aExport").addEventListener("click", async () => {
+    const st = board.st; if (!st?.session) return;
+    const q = (x) => /[;"\r\n]/.test(String(x)) ? '"' + String(x).replace(/"/g, '""') + '"' : String(x);
+    const lines = [["no", "name", "contact", "code", "link"].join(";")];
+    for (const v of [...st.roll.values()].sort((a, b) => a.i - b.i)) {
+      const p = await privOf(v.f, v.priv);
+      lines.push([v.i, p?.name || v.name || "", p?.contact || "", V.voterCode(v.f), voterLink(sid, adm.voterSecret(v.i))].map(q).join(";"));
+    }
+    const blob = new Blob(["\uFEFF" + lines.join("\r\n") + "\r\n"], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = "participants-" + (st.session.title.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase() || "meeting") + ".csv";
+    a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  });
+  $("aEnd").addEventListener("click", async () => {
+    if (!confirmEnd) { confirmEnd = true; $("aEnd").textContent = "Confirm: end the meeting"; return; }
+    const r = await post("admin", { t: adm.t, acao: "fim" }); if (!r.ok) alertMsg(r.error); render();
+  });
+  $("aForget").addEventListener("click", () => { LSwrite((d) => { if (d.sessions) delete d.sessions[sid]; delete d["head:" + sid]; }); location.href = BASE; });
+  $("aBoard").href = BASE + "#s=" + sid;
+  const alertMsg = (t) => { $("fatal").hidden = !t; $("fatal").textContent = t || ""; };
+
+  // apuração automática: se há item encerrado esperando a metade do organizador, este navegador a envia.
+  async function autoTally() {
+    const st = board.st; if (!st?.ok || st.session.keyMode !== "dividida") return;
+    for (const it of st.items.values()) {
+      if (it.state !== "encerrado" || pending.has(it.n)) continue;
+      pending.add(it.n);
+      const dA = V.partialDecrypt(sid, it.n, adm.a, st.session.A, it.T);
+      const r = await post("admin", { t: adm.t, acao: "apurar", item: it.n, dA });
+      if (!r.ok) alertMsg("Counting vote " + it.n + ": " + r.error);
+      pending.delete(it.n); render();
+    }
+  }
+  async function privOf(f, priv) { if (!privCache.has(f)) privCache.set(f, priv ? await openPriv(key, priv) : null); return privCache.get(f); }
+
+  async function render() {
+    const st = board.st;
+    if (board.missing) { alertMsg("Meeting not found: the link is wrong or the board has already been deleted."); return; }
+    if (!st) return;
+    const S = st.session;
+    if (!S) { alertMsg("The board does not verify: " + st.problems.join(" ")); return; }
+    if (!local.title) LSwrite((d) => { d.sessions[sid].title = S.title; });
+    $("aBackup").hidden = local.backedUp && $("aBackup").dataset.forced !== "1";
+    if (!local.backedUp) { $("aMain").hidden = true; $("aBackup").hidden = false; return; }
+    $("aMain").hidden = false;
+    if (S.keyMode === "lucent") $("aBackupWhat").textContent = "It runs the meeting: with it, anyone can run the meeting; without it, the meeting can no longer be run.";
+    $("aTitle").textContent = S.title; $("aState").textContent = st.ended ? "meeting ended" : "meeting in progress";
+    $("aSecrecy").textContent = secrecyText(S);
+    const [cls, txt] = checkText(); $("aCheck").className = "msg " + cls; $("aCheck").textContent = txt;
+    $("aDelete").textContent = board.deleteAt ? deleteText(board.deleteAt) : "";
+    // votação atual
+    const cur = $("aCurrent"), open = st.open ? st.items.get(st.open) : null;
+    const waiting = [...st.items.values()].find((it) => it.state === "encerrado");
+    cur.hidden = !open && !waiting;
+    if (open) {
+      cur.innerHTML = `<div class="row" style="justify-content:space-between"><h2>Vote ${open.n} open</h2><span class="pill on">${open.ballots.length} of ${open.roll.size} voted</span></div><p class="question">${esc(open.spec.q)}</p><p class="small muted">Options: ${esc(open.options.map(optL).concat("Abstention").join(" · "))}</p><div class="row"><button class="btn primary" id="aClose" type="button">Close the vote</button><button class="btn danger-btn" id="aCancel" type="button">${confirmCancel === open.n ? "Confirm: cancel and discard the ballots" : "Cancel the vote"}</button></div>`;
+      $("aClose").addEventListener("click", async (e) => { e.target.disabled = true; const r = await post("admin", { t: adm.t, acao: "encerrar", item: open.n }); if (!r.ok) alertMsg(r.error); render(); });
+      $("aCancel").addEventListener("click", async () => { if (confirmCancel !== open.n) { confirmCancel = open.n; render(); return; } confirmCancel = null; const r = await post("admin", { t: adm.t, acao: "cancelar", item: open.n }); if (!r.ok) alertMsg(r.error); render(); });
+    } else if (waiting) {
+      cur.innerHTML = `<h2>Vote ${waiting.n}: counting…</h2><p class="small muted">This browser is sending your half of the decryption of the totals.</p>`;
+    }
+    $("nGo").disabled = !!open || st.ended || !!waiting;
+    $("aNew").hidden = st.ended;
+    // eleitores
+    const roll = [...st.roll.values()].sort((a, b) => a.i - b.i);
+    $("aCount").textContent = roll.length + " on the list";
+    const privs = await Promise.all(roll.map((v) => privOf(v.f, v.priv)));
+    const anyPhone = privs.some((p) => contactOf(p?.contact).phone), anyMail = privs.some((p) => contactOf(p?.contact).mail);
+    const ways = [anyPhone && "via WhatsApp", anyMail && "by e-mail"].filter(Boolean);
+    $("aSendIntro").textContent = "Each participant gets a personal link, valid for the whole meeting. " + (ways.length ? "Send it " + ways.join(" or ") + ", or copy the link" : "Copy the link") + " (for Signal, say), or show the QR code on screen. Never forward one person’s link to another.";
+    const box = $("aVoters"); box.innerHTML = "";
+    roll.forEach((v, k) => {
+      const p = privs[k], name = p?.name || v.name || "participant " + v.i, link = voterLink(sid, adm.voterSecret(v.i));
+      const msg = "Hello " + name + ", this is your personal link to vote in the meeting “" + S.title + "”, chaired by " + S.by + ". It is valid for all votes in the meeting. Do not forward it to anyone:\n" + link;
+      const el = document.createElement("div"); el.className = "voter" + (sent.has(v.f) ? " sent" : "");
+      el.innerHTML = `<span class="pill">${v.i}</span><span class="who">${esc(name)} ${p?.contact ? `<small>· ${esc(p.contact)}</small>` : ""} ${S.display === "digitais" ? `<small class="mono">· ${V.voterCode(v.f)}</small>` : ""}</span><div class="row"></div>`;
+      const row = el.querySelector(".row"), mark = () => { sent.add(v.f); el.classList.add("sent"); };
+      row.append(sendButtons(p?.contact, "Your voting link: " + S.title, msg, mark));
+      const c = document.createElement("button"); c.className = "btn small"; c.type = "button"; c.textContent = "Copy link";
+      const note = document.createElement("span"); note.className = "small muted";
+      c.addEventListener("click", () => { copyText(link, note); mark(); });
+      const q = document.createElement("button"); q.className = "btn small"; q.type = "button"; q.textContent = "QR";
+      q.addEventListener("click", () => { showQr(link, "Link for " + name, "The person scans it with their phone camera and keeps the link that opens."); mark(); });
+      const d = document.createElement("button"); d.className = "btn small danger-btn"; d.type = "button"; d.textContent = confirmDel === v.i ? "Confirm removal" : "Remove";
+      d.disabled = st.ended;
+      d.addEventListener("click", async () => { if (confirmDel !== v.i) { confirmDel = v.i; render(); return; } confirmDel = null; const r = await post("admin", { t: adm.t, acao: "excluir", i: v.i }); if (!r.ok) alertMsg(r.error); render(); });
+      row.append(c, q, d, note); box.append(el);
+    });
+    $("aAddVoter").disabled = st.ended;
+    // resultados
+    const h = itemsHtml(st, { skipOpen: true }); $("aResults").hidden = !h; $("aResultsList").innerHTML = h;
+    $("aEnd").disabled = st.ended; if (st.ended) $("aEnd").textContent = "Meeting ended";
+    autoTally();
+  }
+  live(render);
+}
+
+// ================= Eleitor =================
+function viewVoter() {
+  $("viewVoter").hidden = false;
+  const f = /^[0-9a-f]{32}$/.test(voterS || "") ? V.fingerprint(voterS) : null;
+  let chosen = null, busy = false, lastOpen = null, voteErr = "";
+  const mine = () => (LSread()["mine:" + sid] || {})[f] || {};
+  $("vBoard").href = BASE + "#s=" + sid;
+  async function render() {
+    const st = board.st;
+    if (!f) { $("fatal").hidden = false; $("fatal").textContent = "This voting link is incomplete. Ask the chair for a new one."; return; }
+    if (board.missing) { $("fatal").hidden = false; $("fatal").textContent = "Meeting not found: the link is wrong or the board has already been deleted."; return; }
+    if (!st?.session) return;
+    const S = st.session, meNow = st.roll.get(f);
+    const everIn = board.events.find((e) => e.type === "eleitor-incluido" && e.f === f);
+    $("vTitle").textContent = S.title;
+    $("vHello").innerHTML = everIn ? (meNow ? "Hello" + (meNow.name ? ", <b>" + esc(meNow.name) + "</b>" : "") + ". This is your personal link; do not forward it." : "<b>Your link has been removed from the participant list.</b> You will not vote in the next votes.") + (S.display === "digitais" ? ` <span class="small muted">Your code on the board: <span class="mono">${V.voterCode(f)}</span></span>` : "") : "<b>This link is not on the participant list of this meeting.</b>";
+    $("vSecrecy").textContent = secrecyText(S);
+    const [cls, txt] = checkText(); $("vCheck").textContent = txt; $("vCheck").style.color = cls === "bad" ? "var(--bad)" : "";
+    const cur = $("vCurrent"), open = st.open ? st.items.get(st.open) : null;
+    if (open?.n !== lastOpen) { chosen = null; voteErr = ""; lastOpen = open?.n ?? null; }
+    if (st.ended) cur.innerHTML = `<h2>Meeting ended</h2><p class="muted">Thank you for taking part.</p>`;
+    else if (!open) {
+      const waiting = [...st.items.values()].find((it) => it.state === "encerrado");
+      cur.innerHTML = waiting ? `<h2>Counting vote ${waiting.n}…</h2>` : `<h2>Waiting for the next vote</h2><p class="muted small">This page updates by itself. Keep it open.</p>`;
+    } else if (!open.roll.has(f)) {
+      cur.innerHTML = `<h2>Vote ${open.n}</h2><p class="question">${esc(open.spec.q)}</p><div class="msg warn">${meNow ? "You were added after this vote opened: you vote from the next one." : "You are not on the list for this vote."}</div>`;
+    } else {
+      const b = open.ballots.find((x) => x.f === f);
+      if (b) {
+        const wasMe = mine()[open.n] === b.fp;
+        cur.innerHTML = `<h2>Vote ${open.n}</h2><p class="question">${esc(open.spec.q)}</p>` + (wasMe
+          ? `<div class="msg ok"><b>Your ballot is on the board</b> (at ${fmtHM(b.t)}). Ballot tracking number: <span class="mono">${b.fp}</span>. Wait for the vote to close.</div><div class="row"><a class="btn small" target="_blank" rel="noopener" href="${BASE}#s=${sid}&c=${b.fp}">See my ballot on the board</a></div>`
+          : `<div class="msg warn">There is already a ballot from your link in this vote, at ${fmtHM(b.t)}, number <span class="mono">${b.fp}</span>. If that was you, on another device, all is well. If not, tell the chair.</div>`) + `<p class="small muted">${open.ballots.length} of ${open.roll.size} voted.</p>`;
+      } else {
+        const opts = open.options.map((l, j) => [j + 1, optL(l)]).concat([[0, "Abstention"]]);
+        cur.innerHTML = `<h2>Vote ${open.n}</h2><p class="question">${esc(open.spec.q)}</p><div class="choices">` +
+          opts.map(([v, l]) => `<button class="choice${v === 0 ? " abst" : ""}" type="button" data-v="${v}" aria-pressed="${chosen === v}">${esc(l)}</button>`).join("") + `</div>` +
+          `<div class="row"><button class="btn primary" id="vGo" type="button" ${chosen === null || busy ? "disabled" : ""}>${chosen === null ? "Choose an option" : "Confirm: " + esc(opts.find((o) => o[0] === chosen)[1])}</button></div>` +
+          (voteErr ? `<div class="msg bad">${esc(voteErr)}</div>` : "") + `<p class="small muted">Once confirmed, the vote cannot be changed. ${open.ballots.length} of ${open.roll.size} have voted.</p>`;
+        cur.querySelectorAll(".choice").forEach((btn) => btn.addEventListener("click", () => { chosen = +btn.dataset.v; render(); }));
+        $("vGo")?.addEventListener("click", async () => {
+          busy = true; render();
+          const ballot = V.makeBallot(sid, S.K, open.n, open.spec.m, f, chosen), fp = V.ballotFingerprint(ballot);
+          LSwrite((d) => { const all = d["mine:" + sid] || {}; all[f] = { ...(all[f] || {}), [open.n]: fp }; d["mine:" + sid] = all; });
+          const r = await post("votar", { s: voterS, item: open.n, ballot });
+          busy = false; voteErr = r.ok ? "" : r.error || "Could not vote."; render();
+        });
+      }
+    }
+    const h = itemsHtml(st, { skipOpen: true }); $("vResults").hidden = !h; $("vResultsList").innerHTML = h;
+  }
+  live(render);
+}
+
+// ================= Quadro =================
+function viewBoard() {
+  $("viewBoard").hidden = false;
+  const describe = (e, st) => {
+    const who = (f) => { const ev = board.events.find((x) => x.type === "eleitor-incluido" && x.f === f); return ev?.name ? esc(ev.name) : `<span class="mono">${V.voterCode(f)}</span>`; };
+    switch (e.type) {
+      case "criada": return `Meeting created by ${esc(e.by)} · key ${e.keyMode === "dividida" ? "split between the organizer and LucentCrypto" : "held by LucentCrypto"}`;
+      case "eleitor-incluido": return `Participant ${e.i} added: ${who(e.f)}`;
+      case "eleitor-excluido": return `Participant ${e.i} removed`;
+      case "item-aberto": return `Vote ${e.item} opened: “${esc(e.spec.q)}” · ${e.roll.length} eligible`;
+      case "cedula": return `Ballot in vote ${e.item}: ${who(e.f)} · ballot <span class="mono">${V.ballotFingerprint(e.ballot)}</span>`;
+      case "item-encerrado": return `Vote ${e.item} closed; totals decrypted by LucentCrypto, with proof`;
+      case "item-apurado": return `Vote ${e.item} counted: organizer’s decryption, with proof`;
+      case "item-cancelado": return `Vote ${e.item} canceled; ballots not opened`;
+      case "reuniao-encerrada": return "Meeting ended";
+    }
+    return esc(e.type);
+  };
+  $("bAta").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify({ format: V.VERSION, session: sid, events: board.events }, null, 1)], { type: "application/json" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "vote-record-" + sid + ".json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  });
+  const target = V.readCode40(H.get("c"));
+  let scrolled = false;
+  // Tela cheia (para projetar): só o bloco da votação atual, em letras grandes.
+  const setFull = (on) => {
+    document.body.classList.toggle("tela", on);
+    ["lcfBar", "lcfEnd", "topHeader", "demoNote", "scope"].forEach((id) => { $(id).hidden = on; }); document.querySelector("footer").hidden = on;
+    document.querySelectorAll("[data-notela]").forEach((x) => { x.hidden = on || (x.id === "bResults" && !$("bResultsList").innerHTML); });
+    $("bFull").textContent = on ? "Exit full screen" : "Full screen";
+    if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+    if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  };
+  let full = isTela;
+  $("bFull").addEventListener("click", () => { full = !full; setFull(full); });
+  document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && full) { full = false; setFull(false); } });
+  function nowHtml(st) {
+    const open = st.open ? st.items.get(st.open) : null, last = [...st.order].reverse().map((n) => st.items.get(n)).find((it) => it.state !== "cancelado");
+    if (open) return `<p class="kicker">Vote ${open.n} · open</p><p class="question">${esc(open.spec.q)}</p><p class="muted">${esc(open.options.map(optL).concat("Abstention").join(" · "))}</p><p class="big">${open.ballots.length} <span class="muted" style="font-size:.5em">of ${open.roll.size} voted</span></p>`;
+    if (last?.state === "encerrado") return `<p class="kicker">Vote ${last.n}</p><p class="question">${esc(last.spec.q)}</p><p class="big">Counting…</p>`;
+    if (last?.state === "apurado") return `<p class="kicker">Vote ${last.n} · result</p><p class="question">${esc(last.spec.q)}</p>` + resultHtml(last);
+    return `<p class="question">${st.ended ? "Meeting ended." : "Waiting for the first vote."}</p>`;
+  }
+  function render() {
+    const st = board.st; if (board.missing) { $("fatal").hidden = false; $("fatal").textContent = "Meeting not found: the link is wrong or the board has already been deleted."; return; }
+    if (!st?.session) return;
+    $("bNow").innerHTML = `<p class="kicker">${esc(st.session.title)}</p>` + nowHtml(st);
+    const myFps = new Set(Object.values(LSread()["mine:" + sid] || {}).flatMap((x) => (x && typeof x === "object" ? Object.values(x) : [])));
+    $("bTitle").textContent = st.session.title; $("bSecrecy").textContent = secrecyText(st.session);
+    const [cls, txt] = checkText(); $("bCheck").className = "msg " + cls; $("bCheck").textContent = txt;
+    $("bDelete").textContent = board.deleteAt ? deleteText(board.deleteAt) : "";
+    const h = itemsHtml(st); $("bResults").hidden = !h; $("bResultsList").innerHTML = h;
+    const evs = [...board.events].reverse();
+    $("bEvents").innerHTML = evs.map((e, k) => {
+      const fp = e.type === "cedula" ? V.ballotFingerprint(e.ballot) : null;
+      const vn = e.item ?? null, prevVn = k ? evs[k - 1].item ?? null : null;
+      const cls = [vn ? (vn % 2 ? "v-odd" : "v-even") : "", k && vn !== prevVn ? "vstart" : "", fp && myFps.has(fp) ? "mine" : "", fp && fp === target ? "target" : ""].filter(Boolean).join(" ");
+      return `<li${cls ? ` class="${cls}"` : ""}${fp ? ` data-fp="${fp}"` : ""}><span>${fmtTime(e.t)}</span><span>${describe(e, st)}${fp && myFps.has(fp) ? ` · <b>cast on this device</b>` : ""}</span></li>`;
+    }).join("");
+    if (full) setFull(true);
+    if (target && !scrolled) { const li = document.querySelector(`#bEvents li[data-fp="${target}"]`); if (li) { li.scrollIntoView({ block: "center" }); scrolled = true; } }
+  }
+  live(render);
+}
+
+// ---- qual visão
+if (!sid) viewCreate();
+else if (!/^[A-Za-z0-9_-]{22}$/.test(sid)) { $("fatal").hidden = false; $("fatal").textContent = "Invalid link."; }
+else if (adminM && /^[0-9a-f]{64}$/.test(adminM)) { viewAdmin().catch((e) => { $("fatal").hidden = false; $("fatal").textContent = e.message; }); }
+else if (voterS !== null) viewVoter();
+else viewBoard();
+window.addEventListener("hashchange", () => location.reload());
+</script>
+</body>
+</html>
