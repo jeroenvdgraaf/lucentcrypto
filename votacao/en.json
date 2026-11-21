@@ -200,5 +200,6 @@
  "<b>votada neste aparelho</b>": "<b>cast on this device</b>",
  "\"Link inválido.\"": "\"Invalid link.\"",
  "\"ata-votacao-\"": "\"vote-record-\"",
- "<a class=\"theme\" id=\"langBtn\" href=\"/en/votacao/\" hreflang=\"en\" lang=\"en\">English</a>": "<a class=\"theme\" id=\"langBtn\" href=\"/votacao/\" hreflang=\"pt\" lang=\"pt-BR\">Português</a>"
+ "<a class=\"theme\" id=\"langBtn\" href=\"/en/votacao/\" hreflang=\"en\" lang=\"en\">English</a>": "<a class=\"theme\" id=\"langBtn\" href=\"/votacao/\" hreflang=\"pt\" lang=\"pt-BR\">Português</a>",
+ "content=\"https://lucentcrypto.org/og/votacao.png\"": "content=\"https://lucentcrypto.org/og/en/votacao.png\""
 }

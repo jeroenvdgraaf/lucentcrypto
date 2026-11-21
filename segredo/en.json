@@ -120,5 +120,6 @@
  "(s.guardian ? s.guardian + \", você\" : \"Você\") + \" guarda uma parte do segredo «\" + s.title + \"»\"": "(s.guardian ? s.guardian + \", you\" : \"You\") + \" hold a share of the secret “\" + s.title + \"”\"",
  "s.by + \" dividiu este segredo em \" + fmtDate(s.date) + \" entre \" + s.n + \" pessoas de confiança. Os outros guardiões são \" + listPt(others) + \". \" +\n      \"Para recuperar, juntem \" + s.k + \" partes (os links) na aba “Recuperar um segredo”.\"": "s.by + \" split this secret on \" + fmtDate(s.date) + \" among \" + s.n + \" trusted people. The other guardians are \" + listPt(others) + \". \" +\n      \"To recover it, combine \" + s.k + \" shares (the links) in the “Recover a secret” tab.\"",
  "throw new Error(\"divisão por zero\")": "throw new Error(\"division by zero\")",
- "throw new Error(\"k e n inválidos\")": "throw new Error(\"invalid k and n\")"
+ "throw new Error(\"k e n inválidos\")": "throw new Error(\"invalid k and n\")",
+ "content=\"https://lucentcrypto.org/og/segredo.png\"": "content=\"https://lucentcrypto.org/og/en/segredo.png\""
 }

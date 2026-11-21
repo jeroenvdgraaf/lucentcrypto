@@ -99,5 +99,6 @@
  "\"Há palavras que não estão na lista (em vermelho acima).\" : \"A frase precisa de 7 palavras.\"": "\"Some words are not on the list (in red above).\" : \"The phrase needs 7 words.\"",
  "$(\"oHide\").textContent = \"Esconder\";": "$(\"oHide\").textContent = \"Hide\";",
  "e.message === \"frase\" ? \"Frase errada.\" : e.message === \"alterada\" ? \"A mensagem foi alterada ou está incompleta.\" : \"Não foi possível abrir: \" + e.message": "e.message === \"frase\" ? \"Wrong phrase.\" : e.message === \"alterada\" ? \"The message was altered or is incomplete.\" : \"Could not open: \" + (e.message === \"formato\" ? \"invalid message link\" : e.message)",
- "h ? \"Mostrar\" : \"Esconder\"": "h ? \"Show\" : \"Hide\""
+ "h ? \"Mostrar\" : \"Esconder\"": "h ? \"Show\" : \"Hide\"",
+ "content=\"https://lucentcrypto.org/og/encrypt.png\"": "content=\"https://lucentcrypto.org/og/en/encrypt.png\""
 }

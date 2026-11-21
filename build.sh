@@ -23,7 +23,7 @@ mkdir -p "$OUT/en/votacao" && cp en/votacao/index.html "$OUT/en/votacao/index.ht
 mkdir -p "$OUT/en/sorteios" && cp en/sorteios/index.html "$OUT/en/sorteios/index.html"
 mkdir -p "$OUT/en/embaralhamento" && cp en/embaralhamento/index.html "$OUT/en/embaralhamento/index.html"
 for t in amigo-oculto encrypt segredo; do mkdir -p "$OUT/en/$t" && cp "en/$t/index.html" "$OUT/en/$t/index.html"; done
-mkdir -p "$OUT/og" && cp site/og/*.png "$OUT/og/"
+mkdir -p "$OUT/og" && cp site/og/*.png "$OUT/og/" && for l in en es nl; do mkdir -p "$OUT/og/$l" && cp site/og/$l/*.png "$OUT/og/$l/"; done
 cp LucentSorteios.html "$OUT/sorteios/index.html"
 cp amigo-oculto/index.html "$OUT/amigo-oculto/index.html"
 cp spec/SPEC.md spec/SPEC-v3.md spec/lucentdraw3_ref.py spec/lucentdraw3_vectors.json spec/LICENSE "$OUT/spec/"

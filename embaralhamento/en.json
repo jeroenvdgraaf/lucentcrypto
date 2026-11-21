@@ -138,5 +138,6 @@
  "\"Os valores precisam ser inteiros não negativos.\"": "\"The values must be non-negative integers.\"",
  "\"O número de rodadas precisa estar entre 1 e 256.\"": "\"The number of rounds must be between 1 and 256.\"",
  "\"Precisa haver uma resposta por rodada.\"": "\"There must be one answer per round.\"",
- "\"Rodada \" + (t + 1) + \", caixa D\"": "\"Round \" + (t + 1) + \", box D\""
+ "\"Rodada \" + (t + 1) + \", caixa D\"": "\"Round \" + (t + 1) + \", box D\"",
+ "content=\"https://lucentcrypto.org/og/embaralhamento.png\"": "content=\"https://lucentcrypto.org/og/en/embaralhamento.png\""
 }

@@ -128,5 +128,6 @@
  "textContent: \"Copiar link\", title: \"Copia só o link, para colar em outro lugar (e-mail, SMS, outro app)\" }": "textContent: \"Copy link\", title: \"Copies just the link, to paste somewhere else (e-mail, SMS, another app)\" }",
  "copyTo(cp, base() + \"#\" + item.payload, \"Copiar link\")": "copyTo(cp, base() + \"#\" + item.payload, \"Copy link\")",
  "\"Link de recuperação do \" + (draw.g.g || \"amigo oculto\") + \" (só para mim, não encaminhe):\\n\\n\"": "\"Recovery link for \" + (draw.g.g || \"the Secret Santa\") + \" (for me only, do not forward):\\n\\n\"",
- "copyTo($(\"bkCopy\"), bk, \"Copiar link de recuperação\")": "copyTo($(\"bkCopy\"), bk, \"Copy recovery link\")"
+ "copyTo($(\"bkCopy\"), bk, \"Copiar link de recuperação\")": "copyTo($(\"bkCopy\"), bk, \"Copy recovery link\")",
+ "content=\"https://lucentcrypto.org/og/amigo-oculto.png\"": "content=\"https://lucentcrypto.org/og/en/amigo-oculto.png\""
 }

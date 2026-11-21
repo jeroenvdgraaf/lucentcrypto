@@ -56,5 +56,6 @@
  "if (w === W) return \"100 %\";": "if (w === W) return \"100%\";",
  "return \"< 0,1 %\";": "return \"< 0.1%\";",
  "return \"> 99,9 %\";": "return \"> 99.9%\";",
- "return (tenths / 10n) + \",\" + (tenths % 10n) + \" %\";": "return (tenths / 10n) + \".\" + (tenths % 10n) + \"%\";"
+ "return (tenths / 10n) + \",\" + (tenths % 10n) + \" %\";": "return (tenths / 10n) + \".\" + (tenths % 10n) + \"%\";",
+ "content=\"https://lucentcrypto.org/og/sorteios.png\"": "content=\"https://lucentcrypto.org/og/en/sorteios.png\""
 }
