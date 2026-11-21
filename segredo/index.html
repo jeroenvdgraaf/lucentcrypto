@@ -8,6 +8,8 @@
 <title>Lucent Segredo · dividir um segredo entre pessoas de confiança</title>
 <meta name="description" content="Divida um segredo entre pessoas de confiança: menos guardiões do que o combinado não descobrem nada; o número combinado, juntos, recupera. Funciona no navegador, também sem internet.">
 <link rel="canonical" href="https://lucentcrypto.org/segredo/">
+<link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/segredo/">
+<link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/segredo/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:site_name" content="LucentCrypto">
@@ -56,7 +58,7 @@ p { margin: 0; }
 .lead { color: var(--muted); max-width: 64ch; }
 .muted { color: var(--muted); }
 .small { font-size: 13.5px; }
-button.theme { font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+.theme { text-decoration: none; font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
 .partner { display: grid; grid-template-columns: auto 1fr auto; gap: 10px 16px; align-items: center; background: var(--pine-soft); border: 2px solid var(--pine); border-radius: 14px; padding: 14px 18px; color: var(--ink); text-decoration: none; }
 .partner .badge { font: 700 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--pine); border: 1px solid var(--pine); border-radius: 99px; padding: 3px 9px; white-space: nowrap; }
 .partner b { font: 700 17px var(--display); color: var(--pine); }
@@ -173,7 +175,7 @@ code { font-family: var(--mono); font-size: 12.5px; }
     <h1>Lucent <span>Segredo</span></h1>
     <p class="lead">Divida um segredo entre pessoas de confiança, os <b>guardiões</b>. Menos guardiões do que o combinado não descobrem nada; o número combinado, juntos, recupera. Tudo é calculado no seu navegador, e funciona também sem internet.</p>
   </div>
-  <button class="theme" id="themeBtn" type="button"></button>
+  <div class="row"><a class="theme" id="langBtn" href="/en/segredo/" hreflang="en" lang="en">English</a><button class="theme" id="themeBtn" type="button"></button></div>
 </header>
 
 <div class="danger" role="note" aria-labelledby="dangerTitle">
@@ -588,6 +590,8 @@ function lsDecodeShare(text) {
   function applyTheme(t) { if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = t; $("themeBtn").textContent = THEME_LABEL[t]; }
   $("themeBtn").addEventListener("click", () => { theme = THEMES[(THEMES.indexOf(theme) + 1) % 3]; LSset("theme", theme); applyTheme(theme); });
   applyTheme(theme);
+  // ---- língua: o botão leva à outra versão com o mesmo link (a parte depois do #)
+  $("langBtn").addEventListener("click", (e) => { e.preventDefault(); location.href = $("langBtn").getAttribute("href") + location.hash; });
 
   // ---- abas
   function selectTab(which) {
@@ -642,7 +646,7 @@ function lsDecodeShare(text) {
     const out = [];
     for (const raw of String(text).split(/\r?\n/)) {
       const line = raw.trim(); if (!line) continue;
-      if (!out.length && /^(nome|name|guardi[aã]o|pessoa)\b/i.test(line) && !/\d|@/.test(line)) continue; // cabeçalho de planilha
+      if (!out.length && /^(nome|name|guardi[aã]o|guardian|pessoa|person)\b/i.test(line) && !/\d|@/.test(line)) continue; // cabeçalho de planilha
       let name = line, contact = "";
       const mail = line.match(/[^\s;,\t<>()]+@[^\s;,\t<>()]+\.[^\s;,\t<>()]+/);
       if (mail) { contact = mail[0]; name = line.replace(mail[0], ""); }
@@ -697,7 +701,7 @@ function lsDecodeShare(text) {
   });
   const contactOf = (c) => {
     const isMail = /@/.test(c), digits = c.replace(/\D/g, "");
-    return { mail: isMail ? c : "", phone: !isMail && digits.length >= 10 ? (digits.length <= 11 ? "55" + digits : digits) : "" };
+    return { mail: isMail ? c : "", phone: !isMail && digits.length >= 10 ? (c.startsWith("+") || digits.length > 11 ? digits : "55" + digits) : "" };
   };
   function renderShares() {
     const box = $("shares"); box.innerHTML = "";

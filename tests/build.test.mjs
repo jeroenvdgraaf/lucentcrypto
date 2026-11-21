@@ -27,13 +27,14 @@ test("build.sh: home, /sorteios/, /amigo-oculto/, /embaralhamento/, /spec/, /ver
   same("en/votacao/index.html", "en/votacao/index.html");
   same("en/sorteios/index.html", "en/sorteios/index.html");
   same("en/embaralhamento/index.html", "en/embaralhamento/index.html");
+  for (const t of ["amigo-oculto", "encrypt", "segredo"]) same("en/" + t + "/index.html", "en/" + t + "/index.html");
   for (const f of ["robots.txt", "sitemap.xml", "og/sorteios.png", "og/embaralhamento.png", "og/segredo.png", "og/encrypt.png", "og/votacao.png"]) assert.ok(existsSync(join(out, f)), f);
   for (const f of ["spec/SPEC.md", "spec/lucentdraw3_vectors.json", "spec/LICENSE", "verifier/LICENSE"]) assert.ok(existsSync(join(out, f)), f);
   assert.ok(!readdirSync(join(out, "spec")).includes("__pycache__"));
   const home = readFileSync(join(out, "index.html"), "utf8");
   for (const l of ["pt", "es", "nl"]) assert.ok(existsSync(join(out, l, "index.html")), l);
   assert.ok(readFileSync(join(out, "pt/index.html"), "utf8").includes('lang="pt-BR"'));
-  assert.ok(home.includes('lang="en"') && home.includes('href="/en/sorteios/"') && home.includes('href="/amigo-oculto/"') && home.includes('href="/en/embaralhamento/"') && home.includes('href="/segredo/"') && home.includes('href="/en/votacao/"') && readFileSync(join(out, "pt/index.html"), "utf8").includes('href="/votacao/"') && home.includes('href="/encrypt/"'));
+  assert.ok(home.includes('lang="en"') && home.includes('href="/en/sorteios/"') && home.includes('href="/en/amigo-oculto/"') && home.includes('href="/en/embaralhamento/"') && home.includes('href="/en/segredo/"') && home.includes('href="/en/votacao/"') && readFileSync(join(out, "pt/index.html"), "utf8").includes('href="/votacao/"') && home.includes('href="/en/encrypt/"'));
   // só um script embutido (o destaque sazonal do Amigo Oculto); nenhum script externo
   assert.ok(home.includes("prefers-color-scheme: dark") && !/<script[^>]*\bsrc=/i.test(home));
   const amigo = readFileSync(join(out, "amigo-oculto/index.html"), "utf8");

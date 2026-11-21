@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<!-- Gerado por tools/translate-pages.mjs a partir de segredo/index.html; não edite à mão. -->
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<!-- Copyright (C) 2026 Jeroen van de Graaf -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lucent Secret · split a secret among people you trust</title>
+<meta name="description" content="Split a secret among people you trust: fewer guardians than agreed learn nothing; the agreed number, together, recover it. Works in the browser, also offline.">
+<link rel="canonical" href="https://lucentcrypto.org/en/segredo/">
+<link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/segredo/">
+<link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/segredo/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="LucentCrypto">
+<meta property="og:title" content="Lucent Secret · split a secret among people you trust">
+<meta property="og:description" content="Fewer guardians than agreed learn nothing; the agreed number, together, recover it. Demo, in the browser, also offline.">
+<meta property="og:url" content="https://lucentcrypto.org/en/segredo/">
+<meta property="og:image" content="https://lucentcrypto.org/og/segredo.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23a85d08'/%3E%3Cpath d='M22 14h8v28h16v8H22z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #eef2f3; --surface: #ffffff; --sunk: #e3e9eb; --ink: #13232b; --muted: #50646d; --line: #cdd8dc;
+  --accent: #a85d08; --accent-ink: #ffffff; --accent-soft: #fbeedd; --pine: #1f5a44; --pine-soft: #e2f0ea;
+  --ok: #1d7a4e; --ok-soft: #dff2e8; --warn: #8a5100; --warn-soft: #fdf0d6; --bad: #b3261e; --bad-soft: #fbe3e1;
+  --display: "Avenir Next", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1417; --surface: #141f24; --sunk: #0f181c; --ink: #e2ebee; --muted: #98abb2; --line: #26363d;
+    --accent: #f0a443; --accent-ink: #1a1206; --accent-soft: #2e2416; --pine: #4fb487; --pine-soft: #12291f;
+    --ok: #5cc995; --ok-soft: #12291f; --warn: #f0b85a; --warn-soft: #2c2312; --bad: #f08a80; --bad-soft: #2e1715; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1417; --surface: #141f24; --sunk: #0f181c; --ink: #e2ebee; --muted: #98abb2; --line: #26363d;
+  --accent: #f0a443; --accent-ink: #1a1206; --accent-soft: #2e2416; --pine: #4fb487; --pine-soft: #12291f;
+  --ok: #5cc995; --ok-soft: #12291f; --warn: #f0b85a; --warn-soft: #2c2312; --bad: #f08a80; --bad-soft: #2e1715; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding: 24px max(16px, env(safe-area-inset-left, 0px)) 48px; }
+[hidden] { display: none !important; }
+.wrap { max-width: 860px; margin: 0 auto; display: grid; gap: 18px; }
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
+.kicker { font: 500 12px var(--mono); letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+.kicker a { color: inherit; text-decoration: none; }
+h1 { font: 800 clamp(30px, 6vw, 44px)/1.05 var(--display); letter-spacing: -.02em; margin: 4px 0 8px; }
+h1 span { color: var(--accent); }
+h2 { font: 700 20px var(--display); margin: 0; }
+p { margin: 0; }
+.lead { color: var(--muted); max-width: 64ch; }
+.muted { color: var(--muted); }
+.small { font-size: 13.5px; }
+.theme { text-decoration: none; font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+.partner { display: grid; grid-template-columns: auto 1fr auto; gap: 10px 16px; align-items: center; background: var(--pine-soft); border: 2px solid var(--pine); border-radius: 14px; padding: 14px 18px; color: var(--ink); text-decoration: none; }
+.partner .badge { font: 700 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--pine); border: 1px solid var(--pine); border-radius: 99px; padding: 3px 9px; white-space: nowrap; }
+.partner b { font: 700 17px var(--display); color: var(--pine); }
+.partner .go { font-weight: 700; color: var(--pine); white-space: nowrap; }
+.partner:hover { filter: brightness(1.03); }
+@media (max-width: 620px) { .partner { grid-template-columns: 1fr; } }
+.danger { display: grid; grid-template-columns: auto 1fr; gap: 12px 16px; align-items: start; background: var(--warn-soft); border: 2px solid var(--warn); border-radius: 14px; padding: 14px 18px; }
+.danger svg { width: 40px; height: 40px; color: var(--warn); flex: none; }
+.danger b { font: 700 17px var(--display); color: var(--warn); display: block; margin-bottom: 2px; }
+.danger p { font-size: 14.5px; }
+.disclaimer { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 8px; font-size: 14px; }
+.disclaimer h3 { margin: 0; font: 700 16px var(--display); color: var(--warn); }
+.import { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--bg); display: grid; gap: 8px; }
+.tabs { display: inline-flex; gap: 4px; background: var(--sunk); border: 1px solid var(--line); border-radius: 999px; padding: 4px; justify-self: start; }
+.tabs button { font: 600 14px var(--body); border: 0; background: transparent; color: var(--muted); padding: 8px 16px; border-radius: 999px; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.f { display: grid; gap: 6px; }
+.f > span { font-weight: 600; font-size: 14px; }
+.f small { font-weight: 400; color: var(--muted); }
+input[type=text], input[type=tel], textarea, select { font: inherit; width: 100%; padding: 9px 11px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+textarea { resize: vertical; min-height: 90px; }
+textarea.mono { font: 12.5px/1.45 var(--mono); }
+.btn { font: 600 14px var(--body); border-radius: 10px; padding: 8px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.small { padding: 5px 10px; font-size: 13px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, .tabs button:focus-visible, .partner:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+table.g { width: 100%; border-collapse: collapse; }
+table.g th { text-align: left; font-size: 12.5px; color: var(--muted); font-weight: 600; padding: 0 6px 6px; }
+table.g td { padding: 4px 6px; vertical-align: middle; }
+table.g td.num { width: 28px; color: var(--muted); font: 13px var(--mono); }
+table.g td.del { width: 40px; }
+.x { border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 8px; width: 34px; height: 34px; cursor: pointer; }
+.k-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-weight: 600; }
+.k-line select { width: auto; }
+label.check { display: flex; gap: 8px; align-items: baseline; margin: 10px 0; font-size: 0.95rem; }
+label.check input { width: auto; flex: none; }
+label.check small { color: var(--muted); }
+.msg { border-radius: 10px; padding: 10px 12px; font-size: 14px; border: 1px solid var(--line); background: var(--bg); }
+.msg.ok { border-color: var(--ok); background: var(--ok-soft); }
+.msg.warn { border-color: var(--warn); background: var(--warn-soft); }
+.msg.bad { border-color: var(--bad); background: var(--bad-soft); }
+.shares { display: grid; gap: 8px; }
+.share { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--bg); }
+.share .who { font-weight: 700; }
+.share .who small { font-weight: 400; color: var(--muted); }
+.share .row { grid-column: 1 / -1; }
+.share.sent { border-color: var(--ok); }
+.pill { font: 600 11.5px var(--mono); border-radius: 99px; padding: 2px 8px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.secretOut { font: 15px/1.5 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; background: var(--sunk); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+ul.got { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+ul.got li { display: flex; justify-content: space-between; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; background: var(--bg); font-size: 14px; }
+ul.got li.bad { border-color: var(--bad); background: var(--bad-soft); }
+.progress { font: 700 15px var(--display); }
+.guardian { border: 2px solid var(--accent); }
+.scope { border-left: 4px solid var(--accent); }
+.scope ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+dialog { border: 0; border-radius: 16px; padding: 0; max-width: min(92vw, 460px); width: 100%; background: var(--surface); color: var(--ink); box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+dialog::backdrop { background: rgba(10, 20, 25, .6); }
+.qrwrap { padding: 18px; display: grid; gap: 12px; justify-items: center; text-align: center; }
+.qrbox { background: #fff; padding: 12px; border-radius: 12px; width: 100%; max-width: 360px; }
+.qrbox svg { width: 100%; height: auto; display: block; }
+footer { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
+footer a { color: inherit; }
+code { font-family: var(--mono); font-size: 12.5px; }
+/* FRAME-BEGIN (moldura do site: Laboratório ou Soluções; mesma em todas as páginas) */
+.lcf-bar { margin: calc(-1 * 24px) calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 24px; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.lcf-in { max-width: 1120px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; }
+.lcf-logo { font: 800 20px "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; text-decoration: none; white-space: nowrap; }
+.lcf-logo span { color: #a85d08; }
+.lcf-nav { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 14.5px; font-weight: 500; }
+.lcf-nav a { text-decoration: none; padding-bottom: 2px; border-bottom: 2px solid transparent; }
+.lcf-tag { font: 600 11.5px ui-monospace, Menlo, monospace; letter-spacing: .1em; text-transform: uppercase; }
+.lcf-lab { background: #13232b; border-bottom: 1px solid #26363d; }
+.lcf-lab .lcf-logo { color: #ffffff; } .lcf-lab .lcf-logo span { color: #f0a443; }
+.lcf-lab .lcf-logo i { font: normal 600 12px ui-monospace, Menlo, monospace; letter-spacing: .14em; color: #f0a443; margin-left: 10px; }
+.lcf-lab .lcf-nav a { color: #98abb2; } .lcf-lab .lcf-nav a[aria-current="page"] { color: #ffffff; border-color: #f0a443; }
+.lcf-lab .lcf-tag { color: #f0a443; border: 1px solid #f0a443; border-radius: 99px; padding: 3px 10px; }
+.lcf-sol { background: var(--surface, #ffffff); border-bottom: 1px solid var(--line, #cdd8dc); }
+.lcf-sol .lcf-logo { color: var(--ink, #13232b); }
+.lcf-sol .lcf-nav a { color: var(--ink, #13232b); } .lcf-sol .lcf-nav a.lcf-muted { color: var(--muted, #50646d); }
+.lcf-sol .lcf-nav a[aria-current="page"] { border-color: currentColor; }
+.lcf-btn { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 16px; border-radius: 10px; font-weight: 600; font-size: 14.5px; text-decoration: none; background: #1f5a44; color: #ffffff; }
+.lcf-end { border-radius: 16px; padding: 26px; display: grid; gap: 16px; }
+.lcf-end h2 { margin: 0; font: 800 24px "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; }
+.lcf-end .lcf-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.lcf-labend { background: #13232b; color: #e2ebee; }
+.lcf-labend .lcf-kick { font: 600 12px ui-monospace, Menlo, monospace; letter-spacing: .14em; text-transform: uppercase; color: #f0a443; margin: 0; }
+.lcf-labend a.lcf-card { background: #1b2f38; border: 1px solid #26363d; border-radius: 14px; padding: 16px; text-decoration: none; color: #e2ebee; display: grid; gap: 4px; }
+.lcf-labend a.lcf-card:hover { border-color: #f0a443; }
+.lcf-labend a.lcf-card b { color: #ffffff; } .lcf-labend a.lcf-card span { color: #98abb2; font-size: 14px; }
+.lcf-labend p { margin: 0; color: #98abb2; font-size: 14px; } .lcf-labend p a { color: #f0a443; }
+.lcf-solend { background: var(--surface, #ffffff); border: 1px solid var(--line, #cdd8dc); grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: center; gap: 24px; }
+.lcf-solend ul { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
+.lcf-solend .lcf-box { background: var(--bg, #eef2f3); border: 1px solid var(--line, #cdd8dc); border-radius: 14px; padding: 20px; display: grid; gap: 12px; justify-items: start; }
+.lcf-solend .lcf-box p { margin: 0; }
+/* FRAME-END */
+</style>
+</head>
+<body>
+<!-- FRAME-BAR -->
+<div class="lcf-bar lcf-lab" id="lcfBar"><div class="lcf-in">
+  <a class="lcf-logo" href="/#laboratorio">Lucent<span>Crypto</span><i>LAB</i></a>
+  <nav class="lcf-nav" aria-label="Lab"><a href="/en/encrypt/">Encrypt</a><a href="/en/segredo/" aria-current="page">Secret</a><a href="/en/amigo-oculto/">Secret Santa</a></nav>
+  <span class="lcf-tag">Demo</span>
+</div></div>
+<!-- /FRAME-BAR -->
+<div class="wrap">
+<header class="top">
+  <div>
+    <div class="kicker"><a href="/">LucentCrypto</a> · demo</div>
+    <h1>Lucent <span>Secret</span></h1>
+    <p class="lead">Split a secret among people you trust, the <b>guardians</b>. Fewer guardians than agreed learn nothing; the agreed number, together, recover it. Everything is computed in your browser, and it also works offline.</p>
+  </div>
+  <div class="row"><a class="theme" id="langBtn" href="/segredo/" hreflang="pt" lang="pt-BR">Português</a><button class="theme" id="themeBtn" type="button"></button></div>
+</header>
+
+<div class="danger" role="note" aria-labelledby="dangerTitle">
+  <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 2 44h44L24 4z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M24 18v12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="36.5" r="2.6" fill="currentColor"/></svg>
+  <div>
+    <b id="dangerTitle">Demo version</b>
+    <p>Made in good faith and with care, but <b style="display:inline;font:inherit;font-weight:700;color:inherit">without guarantees and without liability</b> for losses. Don’t use it to keep access to money, investments or other things of value. Read the full notice at the end of the page.</p>
+  </div>
+</div>
+
+<a class="partner" href="https://grifortis.com" target="_blank" rel="noopener">
+  <span class="badge">Partner company</span>
+  <span><b>To keep secrets for decades: DuraShare by Grifortis</b><br><span class="small">Secrets that must last for generations and can be recovered even without a computer, with just paper, a calculator and instructions.</span></span>
+  <span class="go">grifortis.com →</span>
+</a>
+
+<!-- Visão do guardião: aparece quando a página é aberta pelo link de uma parte -->
+<section class="panel guardian" id="guardianView" hidden aria-labelledby="gTitle">
+  <h2 id="gTitle"></h2>
+  <p id="gText"></p>
+  <div class="msg" id="gAdvice">Keep this link (in your bookmarks, a secure note or printed) and don’t forward it to anyone. On its own, this share reveals nothing.</div>
+  <div class="row">
+    <button class="btn primary" id="gCopy" type="button">Copy my share</button>
+    <button class="btn" id="gQr" type="button">Show QR</button>
+    <button class="btn" id="gOpen" type="button">Combine with other shares to recover</button>
+    <span class="small muted" id="gNote" role="status"></span>
+  </div>
+</section>
+
+<div class="tabs" role="tablist" aria-label="Mode">
+  <button role="tab" id="tabSplit" aria-selected="true" aria-controls="viewSplit" type="button">Split a secret</button>
+  <button role="tab" id="tabOpen" aria-selected="false" aria-controls="viewOpen" type="button">Recover a secret</button>
+</div>
+
+<!-- Dividir -->
+<section id="viewSplit" role="tabpanel" aria-labelledby="tabSplit" class="panel">
+  <h2>1. The secret</h2>
+  <label class="f"><span>Name of the secret <small>shown to the guardians, for example “Family passwords”</small></span><input type="text" id="title" maxlength="128" autocomplete="off"></label>
+  <label class="f"><span>Your name <small>who splits it; shown to the guardians</small></span><input type="text" id="by" maxlength="128" autocomplete="off"></label>
+  <label class="f"><span>The secret <small id="secretCount">up to 1,000 simple characters; never leaves this device</small></span><textarea id="secret" rows="4" spellcheck="false" autocomplete="off"></textarea></label>
+
+  <h2>2. The guardians</h2>
+  <p class="small muted">At most 12. The names appear in every share, so the guardians know whom to ask for the others; the contacts don’t.</p>
+  <table class="g">
+    <thead><tr><th></th><th>Name</th><th>Phone or e-mail <small>(optional, for sending)</small></th><th></th></tr></thead>
+    <tbody id="gRows"></tbody>
+  </table>
+  <div class="row"><button class="btn small" id="addRow" type="button">+ Guardian</button><button class="btn small" id="importOpen" type="button">Paste a list</button></div>
+  <div class="import" id="importBox" hidden>
+    <label class="f"><span>One person per line <small>name and, optionally, phone (with country code) or e-mail; for example “Ben; +1 555 010 7777” or “Clara clara@example.com”. You can paste two columns from a spreadsheet.</small></span>
+      <textarea id="importText" rows="5" spellcheck="false"></textarea></label>
+    <p class="small muted" id="importPreview" aria-live="polite"></p>
+    <div class="row"><button class="btn small primary" id="importUse" type="button" disabled>Use this list</button><button class="btn small" id="importCancel" type="button">Cancel</button></div>
+  </div>
+  <div class="k-line">How many guardians must come together to recover it? <select id="kSel" aria-label="Number needed"></select> <span id="kOf"></span></div>
+  <p class="small muted" id="kHint"></p>
+  <label class="check"><input type="checkbox" id="rehearse"><span>I will do a rehearsal with the guardians <small>(the message tells them you will ask for the shares back to check them, without showing the secret)</small></span></label>
+
+  <div class="row"><button class="btn primary" id="splitBtn" type="button">Split the secret</button></div>
+  <div class="msg bad" id="splitErr" hidden role="alert"></div>
+
+  <div id="out" hidden>
+    <h2>3. Hand out the shares</h2>
+    <p class="small muted" id="sendIntro"></p>
+    <div class="shares" id="shares"></div>
+    <div class="msg warn" id="afterSend"><b>After sending:</b> delete the sent messages and the e-mails in your outbox. Together they contain all the shares, and whoever read them could recover the secret. When you close this page, the secret is not stored anywhere.</div>
+    <div class="row"><button class="btn" id="clearAll" type="button">Clear everything from this page</button></div>
+  </div>
+</section>
+
+<!-- Recuperar -->
+<section id="viewOpen" role="tabpanel" aria-labelledby="tabOpen" class="panel" hidden>
+  <h2>Combine the shares</h2>
+  <p class="small muted">Paste the guardians’ links (or share texts) here, one per line. With the agreed number of shares, the secret is recovered, and the page checks whether any share was altered. With one share more, it also finds and discards the wrong one.</p>
+  <label class="check"><input type="checkbox" id="rehearsal"><span>Rehearsal: check without showing the secret <small>(checks that the shares recover the secret; whoever has these shares could also recover it for real)</small></span></label>
+  <textarea class="mono" id="pasteIn" rows="4" spellcheck="false" placeholder="https://lucentcrypto.org/en/segredo/#p=LS2.…"></textarea>
+  <div class="row"><button class="btn primary" id="addShares" type="button">Add shares</button><button class="btn" id="resetOpen" type="button">Start over</button></div>
+  <div class="msg bad" id="openErr" hidden role="alert"></div>
+  <div id="gotWrap" hidden>
+    <p class="progress" id="progress"></p>
+    <ul class="got" id="got"></ul>
+  </div>
+  <div id="openResult" hidden>
+    <div class="msg" id="openStatus"></div>
+    <div class="secretOut" id="secretOut"></div>
+    <div class="row"><button class="btn" id="copySecret" type="button">Copy the secret</button><button class="btn" id="hideSecret" type="button">Hide</button><span class="small muted" id="copySecretNote" role="status"></span></div>
+  </div>
+</section>
+
+<section class="panel scope">
+  <h2>What this demo guarantees, and what it does not</h2>
+  <ul>
+    <li><b>Fewer guardians than agreed learn nothing</b> about the secret, not even with all the computing power in the world (Shamir secret sharing).</li>
+    <li><b>The secret never leaves the device</b> of whoever splits or recovers it. In the links, the share comes after the <code>#</code>, which the browser sends to no server, not even ours.</li>
+    <li><b>Altered shares are noticed:</b> before splitting, the secret is wrapped so that any change to a share scrambles the whole result, and the page notices with just the agreed number of shares. With one share more, it finds and discards the wrong one. This check only exists with all the needed shares together: no single share carries a digest of the secret, which would let a guardian try to guess a weak password.</li>
+    <li><b>The weak point is sending:</b> sent messages stay on your phone and in backups. Delete them, use different channels, or hand the shares over in person with the QR code.</li>
+    <li><b>Nothing is stored on a server:</b> if too many guardians lose their shares, so that fewer than the agreed number remain, nobody can recover the secret, not even us.</li>
+  </ul>
+  <div class="disclaimer" id="aviso">
+    <h3>Notice: demo, no guarantees</h3>
+    <p>This page is a demo, made in good faith and with care, to show how splitting a secret among people you trust works. It is offered “as is”, <b>without warranty of any kind</b>, express or implied, including of operation, security or fitness for a particular purpose. The authors and LucentCrypto <b>accept no liability</b> for loss of secrets, access, money or other assets, nor for any damage arising from its use.</p>
+    <p>The code has not yet been independently audited. A device with malware or spyware can see the secret while it is typed or recovered, whatever the mathematics. Mistakes in use, such as deleting shares, losing links or sending all shares through the same channel, can make the secret unrecoverable or exposed.</p>
+    <p><b>Don’t use this demo to keep access to money, investments or other things of value.</b> For that, look for a solution with an independent audit and professional support, such as DuraShare, from our partner company <a href="https://grifortis.com" target="_blank" rel="noopener">Grifortis</a>.</p>
+  </div>
+</section>
+<!-- FRAME-END -->
+<section class="lcf-end lcf-labend" id="lcfEnd" aria-label="More in the Lab">
+  <p class="lcf-kick">More in the Lab</p>
+  <div class="lcf-cards"><a class="lcf-card" href="/en/encrypt/"><b>Encrypt</b><span>Classic and post-quantum encryption, side by side.</span></a><a class="lcf-card" href="/en/amigo-oculto/"><b>Secret Santa</b><span>Everyone gets their match through their own link.</span></a></div>
+  <p>Made by <a href="/">LucentCrypto</a>, which runs verifiable draws, data publications and elections for organizations.</p>
+</section>
+<!-- /FRAME-END -->
+
+<footer>
+  <p>Format LS2 · the secret is padded to a multiple of 32 bytes (so its exact length is not revealed), gets 16 zero bytes for checking and is wrapped OAEP-style (G and H: MGF1 with SHA-256); the package is split with Shamir over GF(2<sup>8</sup>), byte by byte. The share header (name of the secret, guardians’ names etc.) goes into the hash, so it is checked too. Extra wrong shares are found with Berlekamp–Welch or by searching subsets. Each share carries a CRC-32 against copying errors (not a signature). After the share, each link carries a short hint of the format (<code>&amp;h=…</code>), so a programmer can recover the secret even without this page. QR generator: qrcode-generator, by Kazuhiko Arase (MIT license).</p>
+  <p>To use it offline, save this page and open the saved file. To check that a saved file is the official one, compare <code>shasum -a 256</code> with the fingerprint published with the code.</p>
+  <p><a href="/">LucentCrypto</a> · <a href="https://grifortis.com" target="_blank" rel="noopener">Grifortis · DuraShare</a></p>
+</footer>
+</div>
+
+<dialog id="qrDlg" aria-labelledby="qrTitle">
+  <div class="qrwrap">
+    <h2 id="qrTitle"></h2>
+    <div class="qrbox" id="qrBox"></div>
+    <p class="small muted" id="qrNote"></p>
+    <button class="btn primary" id="qrClose" type="button">Close</button>
+  </div>
+</dialog>
+
+<script>
+// qrcode-generator 1.4.4 · Copyright (c) 2009 Kazuhiko Arase · licença MIT · https://github.com/kazuhikoarase/qrcode-generator
+// Copyright (c) 2009 Kazuhiko Arase
+// Licensed under the MIT license:
+var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,(function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1}))},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(n*r,o*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(t,r){var e=n("友");if(2!=e.length||38726!=(e[0]<<8|e[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}((function(){return qrcode}));
+</script>
+<script>
+(() => {
+  "use strict";
+// SEGREDO-CORE-BEGIN
+// Núcleo do Lucent Segredo (formato LS2): Shamir sobre GF(2^8), byte a byte, sem acesso ao DOM.
+// Os testes (tests/segredo.test.mjs) extraem este bloco e o executam no Node.
+const LS_VERSION = "LS2";
+const LS_MAX_BYTES = 1000, LS_MAX_N = 12;
+// GF(2^8) com o polinômio do AES (x^8 + x^4 + x^3 + x + 1) e gerador 3.
+const GF_EXP = new Uint8Array(512), GF_LOG = new Uint8Array(256);
+(() => { let x = 1; for (let i = 0; i < 255; i++) { GF_EXP[i] = x; GF_LOG[x] = i; x ^= (x << 1) ^ ((x & 0x80) ? 0x11b : 0); x &= 0xff; } for (let i = 255; i < 512; i++) GF_EXP[i] = GF_EXP[i - 255]; })();
+const gfMul = (a, b) => (a && b ? GF_EXP[GF_LOG[a] + GF_LOG[b]] : 0);
+const gfDiv = (a, b) => { if (!b) throw new Error("division by zero"); return a ? GF_EXP[GF_LOG[a] + 255 - GF_LOG[b]] : 0; };
+const gfPolyEval = (c, x) => { let y = 0; for (let i = c.length - 1; i >= 0; i--) y = gfMul(y, x) ^ c[i]; return y; };
+
+// Pacote dividido (LS2): o texto é embrulhado à moda OAEP antes da divisão de Shamir.
+//   M  = tamanho (2 bytes) ‖ texto UTF-8 ‖ enchimento aleatório até múltiplo de 32 ‖ 16 bytes zero
+//   r  = 32 bytes aleatórios;  X = M ⊕ G(r);  Y = r ⊕ H(X);  pacote = X ‖ Y
+// G e H: MGF1 com SHA-256, SHA-256(rótulo ‖ h ‖ semente ‖ contador de 4 bytes), com rótulos "LS2/G" e "LS2/H"
+// e h = SHA-256 do cabeçalho comum (tudo menos o nº da parte): título, nomes etc. ficam amarrados ao pacote.
+// Ao recuperar, os 16 zeros conferem o pacote e o cabeçalho: qualquer alteração embaralha tudo (o hash impede
+// mirar a mudança), então ela é percebida já com o número combinado de partes. O teste só existe com o pacote
+// completo: com menos partes não há como testar palpites sobre o segredo.
+const LS_ZEROS = 16, LS_R = 32;
+const sha256 = async (b) => new Uint8Array(await crypto.subtle.digest("SHA-256", b));
+async function mgf1(label, h, seed, len) {
+  const out = new Uint8Array(len), lab = new TextEncoder().encode(label), pre = lab.length + h.length;
+  for (let c = 0, o = 0; o < len; c++) {
+    const buf = new Uint8Array(pre + seed.length + 4); buf.set(lab); buf.set(h, lab.length); buf.set(seed, pre);
+    new DataView(buf.buffer).setUint32(pre + seed.length, c);
+    const d = await sha256(buf); out.set(d.subarray(0, Math.min(32, len - o)), o); o += 32;
+  }
+  return out;
+}
+async function lsSeal(text, rand, h) {
+  const b = new TextEncoder().encode(text);
+  if (!b.length) throw new Error("vazio");
+  if (b.length > LS_MAX_BYTES) throw new Error("longo");
+  const body = Math.max(32, Math.ceil((b.length + 2) / 32) * 32), M = new Uint8Array(body + LS_ZEROS);
+  M.set(rand(body)); M[0] = b.length >> 8; M[1] = b.length & 0xff; M.set(b, 2); M.fill(0, body);
+  const r = rand(LS_R), g = await mgf1("LS2/G", h, r, M.length), X = M.map((v, i) => v ^ g[i]);
+  const hh = await mgf1("LS2/H", h, X, LS_R), Y = r.map((v, i) => v ^ hh[i]), pkg = new Uint8Array(X.length + LS_R);
+  pkg.set(X); pkg.set(Y, X.length);
+  return pkg;
+}
+// Devolve o texto, ou lança "alterada" se o pacote (ou o cabeçalho h) não confere.
+async function lsOpen(pkg, h) {
+  if (pkg.length < 32 + LS_ZEROS + LS_R) throw new Error("alterada");
+  const X = pkg.subarray(0, pkg.length - LS_R), Y = pkg.subarray(pkg.length - LS_R);
+  const hh = await mgf1("LS2/H", h, X, LS_R), r = Y.map((v, i) => v ^ hh[i]), g = await mgf1("LS2/G", h, r, X.length);
+  const M = X.map((v, i) => v ^ g[i]), body = M.length - LS_ZEROS;
+  if (M.subarray(body).some((v) => v)) throw new Error("alterada");
+  const n = (M[0] << 8) | M[1];
+  if (!n || n > body - 2) throw new Error("alterada");
+  try { return new TextDecoder("utf-8", { fatal: true }).decode(M.subarray(2, 2 + n)); } catch { throw new Error("alterada"); }
+}
+// Divide: para cada byte, um polinômio de grau k-1 com o byte no termo constante e coeficientes aleatórios.
+// A parte i (x = i, de 1 a n) recebe o valor do polinômio em x.
+function lsSplit(payload, k, n, rand) {
+  if (!(Number.isInteger(k) && Number.isInteger(n) && k >= 2 && k <= n && n <= LS_MAX_N)) throw new Error("invalid k and n");
+  const L = payload.length, coef = rand(L * (k - 1)), ys = [];
+  for (let x = 1; x <= n; x++) {
+    const y = new Uint8Array(L);
+    for (let j = 0; j < L; j++) {
+      let acc = 0;
+      for (let t = k - 1; t >= 1; t--) acc = gfMul(acc ^ coef[j * (k - 1) + t - 1], x);
+      y[j] = acc ^ payload[j];
+    }
+    ys.push({ x, y });
+  }
+  return ys;
+}
+// Interpolação de Lagrange em 0 com exatamente k pontos.
+function lsLagrange0(pts) {
+  const L = pts[0].y.length, out = new Uint8Array(L);
+  const w = pts.map((p, i) => { let num = 1, den = 1; pts.forEach((q, j) => { if (j !== i) { num = gfMul(num, q.x); den = gfMul(den, q.x ^ p.x); } }); return gfDiv(num, den); });
+  for (let j = 0; j < L; j++) { let s = 0; for (let i = 0; i < pts.length; i++) s ^= gfMul(w[i], pts[i].y[j]); out[j] = s; }
+  return out;
+}
+// Coeficientes do polinômio de grau < k pelos k primeiros pontos, numa posição j.
+function lsInterpCoeffs(xs, ys) {
+  const k = xs.length, c = new Uint8Array(k);
+  for (let i = 0; i < k; i++) {
+    let basis = new Uint8Array([1]), den = 1;
+    for (let j = 0; j < k; j++) if (j !== i) {
+      const nb = new Uint8Array(basis.length + 1);
+      for (let t = 0; t < basis.length; t++) { nb[t] ^= gfMul(basis[t], xs[j]); nb[t + 1] ^= basis[t]; }
+      basis = nb; den = gfMul(den, xs[i] ^ xs[j]);
+    }
+    const f = gfDiv(ys[i], den);
+    for (let t = 0; t < k; t++) c[t] ^= gfMul(basis[t], f);
+  }
+  return c;
+}
+// Resolve A·u = b sobre GF(2^8) (eliminação de Gauss); devolve uma solução ou null se inconsistente.
+function gfSolve(A, b) {
+  const m = A.length, N = A[0].length, M = A.map((r, i) => [...r, b[i]]), piv = [];
+  let r = 0;
+  for (let c = 0; c < N && r < m; c++) {
+    let p = r; while (p < m && !M[p][c]) p++;
+    if (p === m) continue;
+    [M[r], M[p]] = [M[p], M[r]];
+    const inv = gfDiv(1, M[r][c]);
+    for (let t = c; t <= N; t++) M[r][t] = gfMul(M[r][t], inv);
+    for (let i = 0; i < m; i++) if (i !== r && M[i][c]) { const f = M[i][c]; for (let t = c; t <= N; t++) M[i][t] ^= gfMul(f, M[r][t]); }
+    piv.push(c); r++;
+  }
+  for (let i = r; i < m; i++) if (M[i][N]) return null;
+  const u = new Array(N).fill(0);
+  piv.forEach((c, i) => { u[c] = M[i][N]; });
+  return u;
+}
+// Berlekamp–Welch numa posição: até e valores errados entre m pontos; devolve os coeficientes (grau < k) ou null.
+function lsBerlekampWelch(xs, ys, k, e) {
+  const m = xs.length, N = k + 2 * e, A = [], b = [];
+  for (let i = 0; i < m; i++) {
+    const row = []; let p = 1;
+    const pw = []; for (let t = 0; t < k + e; t++) { pw.push(p); p = gfMul(p, xs[i]); }
+    for (let t = 0; t < k + e; t++) row.push(pw[t]);                  // Q(x)
+    for (let t = 0; t < e; t++) row.push(gfMul(ys[i], pw[t]));        // y·E(x), sem o termo líder
+    A.push(row); b.push(gfMul(ys[i], pw[e] !== undefined ? pw[e] : 1)); // y·x^e
+  }
+  const u = gfSolve(A, b); if (!u) return null;
+  const Q = u.slice(0, k + e), E = u.slice(k + e).concat([1]);
+  // P = Q / E (divisão de polinômios; o resto precisa ser zero)
+  const rem = Q.slice(), P = new Array(Math.max(1, Q.length - E.length + 1)).fill(0);
+  for (let d = Q.length - E.length; d >= 0; d--) {
+    const f = rem[d + E.length - 1]; P[d] = f;
+    if (f) for (let t = 0; t < E.length; t++) rem[d + t] ^= gfMul(f, E[t]);
+  }
+  if (rem.some((x) => x)) return null;
+  if (P.slice(k).some((x) => x)) return null;
+  return P.slice(0, k);
+}
+// Recupera com m >= k partes: { text, checked, bad: [x...] } ou { error }.
+// 1) As partes concordam? (m = k: concordam por definição) → abre e confere o pacote (zeros do OAEP).
+// 2) Senão, Berlekamp–Welch corrige até ⌊(m-k)/2⌋ partes erradas.
+// 3) Senão, procura um subconjunto de k partes cujo pacote confere (com OAEP, k+1 partes já bastam para
+//    achar uma parte errada). Limite de 5.000 subconjuntos.
+async function lsRecoverSame(pts, k, h) {
+  const m = pts.length;
+  if (m < k) return { error: "faltam" };
+  const tryOpen = async (sub) => { try { return await lsOpen(lsLagrange0(sub), h); } catch { return null; } };
+  const disagree = (c, set) => set.filter((p) => { for (let j = 0; j < p.y.length; j++) if (gfPolyEval(c[j], p.x) !== p.y[j]) return true; return false; }).map((p) => p.x);
+  const coeffsOf = (sub) => { const xs = sub.map((p) => p.x), out = []; for (let j = 0; j < sub[0].y.length; j++) out.push(lsInterpCoeffs(xs, sub.map((p) => p.y[j]))); return out; };
+  const first = pts.slice(0, k);
+  let text = await tryOpen(first);
+  if (text !== null) {
+    if (m === k) return { text, checked: true, bad: [] };
+    const bad = disagree(coeffsOf(first), pts.slice(k));
+    if (!bad.length) return { text, checked: true, bad: [] };
+    // As k primeiras conferem e alguma das extras não: as extras divergentes estão erradas.
+    return { text, checked: true, bad };
+  }
+  if (m === k) return { error: "alterada" };
+  // Berlekamp–Welch
+  const e = Math.floor((m - k) / 2);
+  if (e >= 1) {
+    const L = pts[0].y.length, xs = pts.map((p) => p.x), pkg = new Uint8Array(L), bad = new Set(); let ok = true;
+    for (let j = 0; j < L && ok; j++) {
+      const ys = pts.map((p) => p.y[j]), c = lsBerlekampWelch(xs, ys, k, e);
+      if (!c) { ok = false; break; }
+      pts.forEach((p, i) => { if (gfPolyEval(c, p.x) !== ys[i]) bad.add(p.x); });
+      pkg[j] = c[0];
+    }
+    if (ok && bad.size <= e) { try { return { text: await lsOpen(pkg, h), checked: true, bad: [...bad].sort((a, b) => a - b) }; } catch {} }
+  }
+  // Busca por subconjuntos de k partes
+  const idx = [...Array(k).keys()]; let tries = 0;
+  for (;;) {
+    if (++tries > 5000) return { error: "demais" };
+    const sub = idx.map((i) => pts[i]), t = await tryOpen(sub);
+    if (t !== null) return { text: t, checked: true, bad: disagree(coeffsOf(sub), pts.filter((p) => !sub.includes(p))) };
+    let i = k - 1; while (i >= 0 && idx[i] === m - k + i) i--;
+    if (i < 0) return { error: "demais" };
+    idx[i]++; for (let j = i + 1; j < k; j++) idx[j] = idx[j - 1] + 1;
+  }
+}
+
+// Recupera com partes { x, y, hdr }: agrupa pelo cabeçalho (e tamanho de y); uma parte com cabeçalho alterado
+// fica num grupo à parte e é apontada como errada. { text, checked, bad, hdr } ou { error }.
+async function lsRecover(pts, k) {
+  if (pts.length < k) return { error: "faltam" };
+  const groups = new Map();
+  for (const p of pts) {
+    const key = b64u(p.hdr) + ":" + p.y.length;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(p);
+  }
+  let last = { error: "alterada" };
+  for (const g of [...groups.values()].sort((a, b) => b.length - a.length)) {
+    if (g.length < k) break;
+    const r = await lsRecoverSame(g.map((p) => ({ x: p.x, y: p.y })), k, await sha256(g[0].hdr));
+    if (!r.error) return { ...r, hdr: g[0].hdr, bad: [...r.bad, ...pts.filter((p) => !g.includes(p)).map((p) => p.x)].sort((a, b) => a - b) };
+    last = r;
+  }
+  return last;
+}
+
+// ---- formato da parte (LS2): "LS2." + base64url( binário ), com CRC-32 no fim (só contra erros de cópia)
+//   versão 0x02 · x (nº da parte) · cabeçalho comum · y (o resto) · CRC-32 (4 bytes, sobre todos os bytes anteriores)
+//   cabeçalho comum: id (8 bytes) · k · n · data (2 bytes: dias desde 2000-01-01) · nome do segredo · quem dividiu
+//   · os n nomes dos guardiões, em ordem (cada texto: 1 byte de tamanho + UTF-8, no máximo 128 bytes)
+// Junto da parte, o link leva uma dica (&h=…) que descreve o formato para quem precisar recuperar sem esta página.
+const LS_MAX_TEXT = 128;
+const LS_HINT = "LS2:b64url,last4=CRC32(all-before);v.x.hdr.y;hdr=id8.k.n.day2(since-2000-01-01).title.by.names*n,text=len1.utf8;" +
+  "Shamir:GF256/11b,Lagrange@0,bytewise=P;P=X.Y32;r=Y(xor)H(X);M=X(xor)G(r);G,H=MGF1-SHA256(label.h.seed.ctr4),label=LS2/G,LS2/H,h=SHA256(hdr);" +
+  "M=len2.text.randpad.0*16";
+const b64u = (bytes) => { let s = ""; for (const x of bytes) s += String.fromCharCode(x); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+const unb64u = (s) => { const t = s.replace(/-/g, "+").replace(/_/g, "/"); const bin = atob(t + "===".slice((t.length + 3) % 4)); return Uint8Array.from(bin, (c) => c.charCodeAt(0)); };
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = (b) => { let c = 0xffffffff; for (const x of b) c = CRC_T[(c ^ x) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+const LS_EPOCH = Date.UTC(2000, 0, 1);
+const dayOf = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ""); return m ? Math.round((Date.UTC(+m[1], m[2] - 1, +m[3]) - LS_EPOCH) / 864e5) : 0; };
+const isoOf = (d) => new Date(LS_EPOCH + d * 864e5).toISOString().slice(0, 10);
+const utf8Len = (s) => new TextEncoder().encode(String(s)).length;
+// Cabeçalho comum a todas as partes de um mesmo segredo (é ele que entra no hash h).
+function lsHeader(meta) {
+  const texts = [meta.title, meta.by, ...meta.guardians].map((t) => new TextEncoder().encode(String(t)));
+  if (texts.some((t) => t.length > LS_MAX_TEXT)) throw new Error("texto longo");
+  if (meta.guardians.length !== meta.n || !(meta.k >= 2 && meta.k <= meta.n && meta.n <= LS_MAX_N)) throw new Error("k/n");
+  const day = dayOf(meta.date), out = new Uint8Array(8 + 4 + texts.reduce((a, t) => a + 1 + t.length, 0));
+  out.set(Uint8Array.from(meta.id.match(/../g), (h) => parseInt(h, 16)));
+  out[8] = meta.k; out[9] = meta.n; out[10] = day >> 8; out[11] = day & 0xff;
+  let o = 12; for (const t of texts) { out[o++] = t.length; out.set(t, o); o += t.length; }
+  return out;
+}
+const lsHeaderHash = (meta) => sha256(lsHeader(meta));
+function lsEncodeShare(meta, x, y) {
+  const hdr = lsHeader(meta), out = new Uint8Array(2 + hdr.length + y.length + 4);
+  out[0] = 2; out[1] = x; out.set(hdr, 2); out.set(y, 2 + hdr.length);
+  new DataView(out.buffer).setUint32(out.length - 4, crc32(out.subarray(0, out.length - 4)));
+  return LS_VERSION + "." + b64u(out);
+}
+// Aceita um link inteiro ou só o texto da parte.
+function lsDecodeShare(text) {
+  const m = String(text).match(/LS2\.([A-Za-z0-9_-]+)/);
+  if (!m) return { error: "formato" };
+  let b; try { b = unb64u(m[1]); } catch { return { error: "formato" }; }
+  if (b.length < 2 + 12 + 2 + 4) return { error: "copia" };
+  const body = b.subarray(0, b.length - 4);
+  if (crc32(body) !== new DataView(b.buffer, b.byteOffset).getUint32(b.length - 4)) return { error: "copia" };
+  if (body[0] !== 2) return { error: "formato" };
+  const x = body[1], id = [...body.subarray(2, 10)].map((v) => v.toString(16).padStart(2, "0")).join("");
+  const k = body[10], n = body[11], day = (body[12] << 8) | body[13];
+  if (!(k >= 2 && k <= n && n <= LS_MAX_N && x >= 1 && x <= n)) return { error: "formato" };
+  let o = 14;
+  const str = () => { const l = body[o++]; if (l > LS_MAX_TEXT || o + l > body.length) throw new Error(); const s = new TextDecoder("utf-8", { fatal: true }).decode(body.subarray(o, o + l)); o += l; return s; };
+  let title, by, names = [];
+  try { title = str(); by = str(); for (let i = 0; i < n; i++) names.push(str()); } catch { return { error: "formato" }; }
+  const hdr = body.slice(2, o), y = body.slice(o);
+  if (y.length < 32 + LS_ZEROS + LS_R || (y.length - LS_ZEROS - LS_R) % 32) return { error: "formato" };
+  return { share: { id, title, by, date: isoOf(day), k, n, x, names, guardian: names[x - 1], hdr, y, text: m[0] } };
+}
+// SEGREDO-CORE-END
+
+  // ---------------------------------------------------------------- interface
+  const $ = (id) => document.getElementById(id);
+  const rand = (n) => crypto.getRandomValues(new Uint8Array(n));
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const BASE = /^https?:$/.test(location.protocol) ? location.origin + location.pathname : "https://lucentcrypto.org/en/segredo/";
+  const linkOf = (shareText) => BASE + "#p=" + shareText + "&h=" + LS_HINT;
+  const fmtDate = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ""); return m ? m[3] + "/" + m[2] + "/" + m[1] : iso; };
+  const listPt = (a, conj = "and") => a.length <= 1 ? (a[0] || "") : a.slice(0, -1).join(", ") + " " + conj + " " + a[a.length - 1];
+  const todayIso = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+  async function copyText(text, note) {
+    try { await navigator.clipboard.writeText(text); note.textContent = "Copied."; }
+    catch { note.textContent = "Could not copy automatically; select and copy by hand."; }
+    setTimeout(() => { note.textContent = ""; }, 4000);
+  }
+
+  // ---- tema
+  const LSget = (k, d) => { try { const v = localStorage.getItem("lucent-segredo-" + k); return v === null ? d : v; } catch { return d; } };
+  const LSset = (k, v) => { try { localStorage.setItem("lucent-segredo-" + k, v); } catch {} };
+  const THEMES = ["auto", "light", "dark"], THEME_LABEL = { auto: "Theme: auto", light: "Theme: light", dark: "Theme: dark" };
+  let theme = LSget("theme", "dark"); if (!THEMES.includes(theme)) theme = "dark"; // Laboratório: escuro por padrão
+  function applyTheme(t) { if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = t; $("themeBtn").textContent = THEME_LABEL[t]; }
+  $("themeBtn").addEventListener("click", () => { theme = THEMES[(THEMES.indexOf(theme) + 1) % 3]; LSset("theme", theme); applyTheme(theme); });
+  applyTheme(theme);
+  // ---- língua: o botão leva à outra versão com o mesmo link (a parte depois do #)
+  $("langBtn").addEventListener("click", (e) => { e.preventDefault(); location.href = $("langBtn").getAttribute("href") + location.hash; });
+
+  // ---- abas
+  function selectTab(which) {
+    const split = which === "split";
+    $("tabSplit").setAttribute("aria-selected", String(split)); $("tabOpen").setAttribute("aria-selected", String(!split));
+    $("viewSplit").hidden = !split; $("viewOpen").hidden = split;
+  }
+  $("tabSplit").addEventListener("click", () => selectTab("split"));
+  $("tabOpen").addEventListener("click", () => selectTab("open"));
+
+  // ---- guardiões
+  let rows = [{ name: "", contact: "" }, { name: "", contact: "" }, { name: "", contact: "" }];
+  let locked = false;
+  function renderRows() {
+    const tb = $("gRows"); tb.innerHTML = "";
+    rows.forEach((r, i) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td class="num">${i + 1}</td><td><input type="text" maxlength="128" aria-label="Name of guardian ${i + 1}" value="${esc(r.name)}"></td>` +
+        `<td><input type="text" maxlength="80" aria-label="Phone or e-mail of guardian ${i + 1}" value="${esc(r.contact)}" placeholder="+1 555 010 0000 or name@example.com"></td>` +
+        `<td class="del"><button class="x" type="button" title="Remove guardian" aria-label="Remove guardian ${i + 1}">✕</button></td>`;
+      const [nameIn, contactIn] = tr.querySelectorAll("input"), del = tr.querySelector("button");
+      nameIn.addEventListener("input", () => { r.name = nameIn.value; });
+      contactIn.addEventListener("input", () => { r.contact = contactIn.value; });
+      del.disabled = locked || rows.length <= 2; nameIn.disabled = contactIn.disabled = locked;
+      del.addEventListener("click", () => { rows.splice(i, 1); renderRows(); });
+      tb.append(tr);
+    });
+    $("addRow").disabled = locked || rows.length >= LS_MAX_N; $("importOpen").disabled = locked;
+    renderK();
+  }
+  $("addRow").addEventListener("click", () => { rows.push({ name: "", contact: "" }); renderRows(); });
+  let kChosen = null;
+  function renderK() {
+    const n = rows.length, sel = $("kSel");
+    const def = kChosen && kChosen <= n ? kChosen : Math.floor(n / 2) + 1;
+    sel.innerHTML = ""; for (let k = 2; k <= n; k++) { const o = document.createElement("option"); o.value = k; o.textContent = k; sel.append(o); }
+    sel.value = String(Math.min(Math.max(def, 2), n)); sel.disabled = locked;
+    $("kOf").textContent = "of " + n + " guardians";
+    const k = +sel.value;
+    $("kHint").textContent = (k - 1 === 1 ? "One guardian alone learns nothing." : "Up to " + (k - 1) + " guardians together learn nothing.") +
+      (n - k === 0 ? " Everyone must take part: if one loses their share, the secret is lost." : " If up to " + (n - k) + (n - k === 1 ? " guardian loses their share" : " guardians lose their shares") + ", it can still be recovered.");
+  }
+  $("kSel").addEventListener("change", () => { kChosen = +$("kSel").value; renderK(); });
+  function updateCount() {
+    const b = new TextEncoder().encode($("secret").value).length;
+    $("secretCount").textContent = b > LS_MAX_BYTES ? "too long: " + b + " of " + LS_MAX_BYTES + " bytes" : "never leaves this device · " + b + " of " + LS_MAX_BYTES + " bytes";
+  }
+  $("secret").addEventListener("input", updateCount);
+
+  // ---- colar uma lista de guardiões: nome e, opcionalmente, celular ou e-mail no fim da linha
+  function parseGuardians(text) {
+    const out = [];
+    for (const raw of String(text).split(/\r?\n/)) {
+      const line = raw.trim(); if (!line) continue;
+      if (!out.length && /^(nome|name|guardi[aã]o|guardian|pessoa|person)\b/i.test(line) && !/\d|@/.test(line)) continue; // cabeçalho de planilha
+      let name = line, contact = "";
+      const mail = line.match(/[^\s;,\t<>()]+@[^\s;,\t<>()]+\.[^\s;,\t<>()]+/);
+      if (mail) { contact = mail[0]; name = line.replace(mail[0], ""); }
+      else {
+        const ph = line.match(/(\+?\(?\d[\d\s().-]{7,}\d)\s*$/);
+        if (ph && ph[1].replace(/\D/g, "").length >= 8) { contact = ph[1].trim(); name = line.slice(0, ph.index); }
+      }
+      name = name.replace(/[<>()]/g, " ").replace(/[\s;,:\t|-]+$/, "").replace(/^[\s;,:\t|-]+/, "").replace(/\s+/g, " ").trim();
+      if (name) out.push({ name, contact });
+    }
+    return out;
+  }
+  function importPreview() {
+    const list = parseGuardians($("importText").value), max = LS_MAX_N;
+    $("importPreview").textContent = !list.length ? "" : list.length + (list.length === 1 ? " person read" : " people read") + ": " +
+      list.slice(0, 4).map((g) => g.name + (g.contact ? " (" + g.contact + ")" : "")).join(" · ") + (list.length > 4 ? " · …" : "") +
+      (list.length > max ? " — at most " + max + " guardians." : list.length < 2 ? " — at least 2 are needed." : "");
+    $("importUse").disabled = list.length < 2 || list.length > max;
+    return list;
+  }
+  $("importOpen").addEventListener("click", () => { $("importBox").hidden = false; $("importText").focus(); importPreview(); });
+  $("importCancel").addEventListener("click", () => { $("importBox").hidden = true; });
+  $("importText").addEventListener("input", importPreview);
+  $("importUse").addEventListener("click", () => {
+    const list = importPreview(); if (list.length < 2 || list.length > LS_MAX_N) return;
+    rows = list; kChosen = null; $("importBox").hidden = true; $("importText").value = ""; renderRows();
+  });
+
+  // ---- dividir
+  let current = null; // { meta, shares: [{ name, contact, text }] }
+  function showErr(id, text) { $(id).hidden = !text; $(id).textContent = text || ""; }
+  $("splitBtn").addEventListener("click", async () => {
+    showErr("splitErr", "");
+    const secret = $("secret").value, title = $("title").value.trim() || "Secret", by = $("by").value.trim();
+    if (!secret.trim()) return showErr("splitErr", "Type the secret.");
+    if (new TextEncoder().encode(secret).length > LS_MAX_BYTES) return showErr("splitErr", "The secret is too long (at most " + LS_MAX_BYTES + " bytes).");
+    if (!by) return showErr("splitErr", "Type your name: it is shown to the guardians.");
+    const names = rows.map((r) => r.name.trim());
+    if (utf8Len(title) > LS_MAX_TEXT) return showErr("splitErr", "The name of the secret is too long (at most " + LS_MAX_TEXT + " bytes).");
+    if (utf8Len(by) > LS_MAX_TEXT) return showErr("splitErr", "Your name is too long (at most " + LS_MAX_TEXT + " bytes).");
+    const longName = names.find((x) => utf8Len(x) > LS_MAX_TEXT);
+    if (longName) return showErr("splitErr", "The name “" + longName.slice(0, 30) + "…” is too long (at most " + LS_MAX_TEXT + " bytes).");
+    if (names.some((x) => !x)) return showErr("splitErr", "Give each guardian a name (or remove the empty rows).");
+    if (new Set(names.map((x) => x.toLowerCase())).size !== names.length) return showErr("splitErr", "Two guardians have the same name; tell them apart.");
+    const n = rows.length, k = +$("kSel").value;
+    const meta = { id: [...rand(8)].map((x) => x.toString(16).padStart(2, "0")).join(""), title, by, date: todayIso(), k, n, guardians: names };
+    const shares = lsSplit(await lsSeal(secret, rand, await lsHeaderHash(meta)), k, n, rand);
+    current = { meta, rehearse: $("rehearse").checked, shares: shares.map((s, i) => ({ name: names[i], contact: rows[i].contact.trim(), text: lsEncodeShare(meta, s.x, s.y) })) };
+    locked = true; $("secret").value = ""; updateCount();
+    ["title", "by", "secret", "splitBtn", "rehearse"].forEach((id) => { $(id).disabled = true; });
+    renderRows(); renderShares(); $("out").hidden = false; $("out").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  const contactOf = (c) => {
+    const isMail = /@/.test(c), digits = c.replace(/\D/g, "");
+    return { mail: isMail ? c : "", phone: !isMail && digits.length >= 10 ? (c.startsWith("+") || digits.length > 11 ? digits : "55" + digits) : "" };
+  };
+  function renderShares() {
+    const box = $("shares"); box.innerHTML = "";
+    const { meta } = current, cs = current.shares.map((s) => contactOf(s.contact));
+    const ways = [cs.some((c) => c.phone) && "via WhatsApp", cs.some((c) => c.mail) && "by e-mail"].filter(Boolean);
+    $("sendIntro").textContent = "Each guardian gets only their own share. " + (ways.length ? "Send it " + ways.join(" or ") + ", or copy the link" : "Copy the link") +
+      " (for Signal, say). Or hand it over in person: show the QR code on screen and the guardian scans it; nothing goes through a message.";
+    current.shares.forEach((s, i) => {
+      const link = linkOf(s.text), c = cs[i];
+      const others = meta.guardians.filter((_, j) => j !== i);
+      const msg = "Hello " + s.name + ", " + meta.by + " has split the secret “" + meta.title + "” among " + meta.n + " guardians, and you are one of them; the others are " + listPt(others) + ". With " + meta.k + " shares together, it can be recovered." +
+        (current.rehearse ? " " + meta.by + " will ask for your share back for a rehearsal, which checks the shares without showing the secret." : "") +
+        " Keep this link and don’t forward it to anyone:\n" + link;
+      const wa = "https://wa.me/" + c.phone + "?text=" + encodeURIComponent(msg);
+      const mail = "mailto:" + encodeURIComponent(c.mail) + "?subject=" + encodeURIComponent("Your share of the secret “" + meta.title + "”") + "&body=" + encodeURIComponent(msg);
+      const el = document.createElement("div"); el.className = "share";
+      el.innerHTML = `<span class="pill">share ${i + 1}</span><span class="who">${esc(s.name)} ${s.contact ? `<small>· ${esc(s.contact)}</small>` : ""}</span>
+        <div class="row">
+          ${c.phone ? `<a class="btn small primary" target="_blank" rel="noopener" href="${esc(wa)}">Send via WhatsApp</a>` : ""}
+          ${c.mail ? `<a class="btn small${c.phone ? "" : " primary"}" href="${esc(mail)}">Send by e-mail</a>` : ""}
+          <button class="btn small" type="button" data-a="copy">Copy link</button>
+          <button class="btn small" type="button" data-a="qr">Hand over in person (QR)</button>
+          <span class="small muted" role="status"></span>
+        </div>`;
+      const note = el.querySelector("[role=status]"), mark = () => el.classList.add("sent");
+      el.querySelectorAll("a").forEach((a) => a.addEventListener("click", mark));
+      el.querySelector('[data-a="copy"]').addEventListener("click", () => { copyText(link, note); mark(); });
+      el.querySelector('[data-a="qr"]').addEventListener("click", () => { showQr(s.text, s.name); mark(); });
+      box.append(el);
+    });
+  }
+  $("clearAll").addEventListener("click", () => {
+    current = null; locked = false; kChosen = null;
+    ["title", "by", "secret"].forEach((id) => { $(id).value = ""; $(id).disabled = false; });
+    $("rehearse").disabled = false; $("rehearse").checked = false;
+    $("splitBtn").disabled = false; $("out").hidden = true; $("shares").innerHTML = "";
+    rows = [{ name: "", contact: "" }, { name: "", contact: "" }, { name: "", contact: "" }];
+    renderRows(); updateCount(); window.scrollTo({ top: 0 });
+  });
+
+  // ---- QR (entrega pessoal)
+  let qrShare = null;
+  function drawQr() {
+    const data = linkOf(qrShare);
+    try {
+      const q = qrcode(0, data.length > 1200 ? "L" : "M"); q.addData(data, "Byte"); q.make();
+      $("qrBox").innerHTML = q.createSvgTag({ cellSize: 4, margin: 4, scalable: true });
+      $("qrNote").textContent = "The guardian scans it with their phone camera and keeps the link that opens. The share goes through no message.";
+    } catch { $("qrBox").innerHTML = ""; $("qrNote").textContent = "This share is too long for a QR code. Use “Copy link”."; }
+  }
+  function showQr(shareText, name) {
+    qrShare = shareText; $("qrTitle").textContent = name ? "Share of " + name : "Your share";
+    drawQr(); $("qrDlg").showModal();
+  }
+  $("qrClose").addEventListener("click", () => { $("qrDlg").close(); $("qrBox").innerHTML = ""; qrShare = null; });
+
+  // ---- abrir
+  let set = null; const got = new Map(); // x -> share
+  function resetOpen() { set = null; got.clear(); $("pasteIn").value = ""; showErr("openErr", ""); $("gotWrap").hidden = true; $("openResult").hidden = true; $("secretOut").textContent = ""; }
+  $("resetOpen").addEventListener("click", resetOpen);
+  function addShareTexts(text) {
+    const found = String(text).match(/LS2\.[A-Za-z0-9_-]+/g) || [], problems = [];
+    if (!found.length) problems.push("No share found in the pasted text.");
+    for (const t of found) {
+      const d = lsDecodeShare(t);
+      if (d.error) { problems.push(d.error === "copia" ? "A share is incomplete or was altered while copying." : "One of the texts is not a valid share."); continue; }
+      const s = d.share;
+      if (set && s.id !== set.id) { problems.push("The share of " + (s.guardian || "no. " + s.x) + " belongs to another secret (“" + s.title + "”)."); continue; }
+      if (!set) set = { id: s.id, k: s.k, n: s.n, title: s.title, by: s.by, date: s.date, names: s.names };
+      const prev = got.get(s.x);
+      if (prev && prev.text !== s.text) { problems.push("There are two different shares with no. " + s.x + "; the first one was kept."); continue; }
+      got.set(s.x, s);
+    }
+    showErr("openErr", problems.join(" "));
+    renderGot();
+  }
+  $("addShares").addEventListener("click", () => { addShareTexts($("pasteIn").value); $("pasteIn").value = ""; });
+  function showProgress() {
+    const m = got.size, missing = set.names.filter((_, i) => !got.has(i + 1));
+    $("progress").textContent = m + " of " + set.k + " needed shares · “" + set.title + "”, split by " + set.by + " on " + fmtDate(set.date) + " among " + set.n + " guardians" +
+      (m < set.k && missing.length ? ". " + (set.k - m === 1 ? "1 more share" : (set.k - m) + " more shares") + " needed, from: " + listPt(missing, "or") : "");
+  }
+  function renderGot(bad = []) {
+    if (!set) { $("gotWrap").hidden = true; return; }
+    $("gotWrap").hidden = false;
+    const m = got.size;
+    showProgress();
+    const ul = $("got"); ul.innerHTML = "";
+    [...got.values()].sort((a, b) => a.x - b.x).forEach((s) => {
+      const li = document.createElement("li"); if (bad.includes(s.x)) li.className = "bad";
+      li.innerHTML = `<span>Share no. ${s.x} · ${esc(s.guardian || "guardian")}</span><span class="pill">${bad.includes(s.x) ? "wrong, discarded" : "read"}</span>`;
+      ul.append(li);
+    });
+    if (m >= set.k) tryOpen(); else $("openResult").hidden = true;
+  }
+  async function tryOpen() {
+    const shares = [...got.values()].sort((a, b) => a.x - b.x), m = shares.length;
+    const r = await lsRecover(shares.map((s) => ({ x: s.x, y: s.y, hdr: s.hdr })), set.k);
+    if (r.error) return failOpen(r.error === "alterada"
+      ? "One of the " + m + " shares was altered: the secret doesn’t check out. With one share more, the page finds which one is wrong."
+      : "There are too many wrong shares to find the secret with the shares available. Gather more shares.");
+    const good = shares.find((s) => !r.bad.includes(s.x));
+    set = { ...set, title: good.title, by: good.by, date: good.date, names: good.names, n: good.n };
+    showProgress();
+    const nameOf = (x) => set.names[x - 1] ? " (" + set.names[x - 1] + ")" : "";
+    const rehearsal = $("rehearsal").checked, st = $("openStatus");
+    const done = rehearsal ? "Rehearsal: the shares check out, and the secret can be recovered. It was not shown." : "Recovered and checked";
+    if (r.bad.length) {
+      const who = r.bad.map((x) => "no. " + x + nameOf(x)).join(", ");
+      st.className = "msg warn"; st.textContent = (r.bad.length === 1 ? "Share " + who + " is wrong and was discarded" : "Shares " + who + " are wrong and were discarded") +
+        (rehearsal ? ". " + done : "; the secret was recovered and checked with the others.");
+      renderGotOnly(r.bad);
+    } else { st.className = "msg ok"; st.textContent = rehearsal ? done : done + (m > set.k ? ": all " + m + " shares agree." : " with " + m + " shares."); }
+    $("secretOut").textContent = rehearsal ? "" : r.text; $("secretOut").hidden = rehearsal;
+    document.querySelectorAll("#copySecret, #hideSecret").forEach((b) => { b.hidden = rehearsal; });
+    $("openResult").hidden = false; $("hideSecret").textContent = "Hide";
+  }
+  $("rehearsal").addEventListener("change", () => { if (set && got.size >= set.k) tryOpen(); });
+  function renderGotOnly(bad) { [...$("got").children].forEach((li) => { const x = +li.textContent.match(/no\. (\d+)/)[1]; if (bad.includes(x)) { li.className = "bad"; li.lastChild.textContent = "wrong, discarded"; } }); }
+  function failOpen(text) { const st = $("openStatus"); st.className = "msg bad"; st.textContent = text; $("secretOut").textContent = ""; $("secretOut").hidden = true; $("openResult").hidden = false; }
+  $("copySecret").addEventListener("click", () => copyText($("secretOut").textContent, $("copySecretNote")));
+  $("hideSecret").addEventListener("click", () => { const h = !$("secretOut").hidden; $("secretOut").hidden = h; $("hideSecret").textContent = h ? "Show" : "Hide"; });
+
+  // ---- visão do guardião (página aberta pelo link de uma parte)
+  function guardianFromHash() {
+    const h = location.hash.replace(/^#/, ""); if (!h) return;
+    const p = new URLSearchParams(h).get("p"); if (!p) return;
+    const d = lsDecodeShare(p), v = $("guardianView"); v.hidden = false;
+    if (d.error) {
+      $("gTitle").textContent = "This link is not a valid share";
+      $("gText").textContent = d.error === "copia" ? "The link seems to have been cut or altered while copying. Ask whoever split the secret to send it again." : "The link does not contain a Lucent Secret share.";
+      ["gAdvice", "gCopy", "gQr", "gOpen"].forEach((id) => { $(id).hidden = true; });
+      return;
+    }
+    const s = d.share;
+    $("gTitle").textContent = (s.guardian ? s.guardian + ", you" : "You") + " hold a share of the secret “" + s.title + "”";
+    const others = s.names.filter((_, j) => j !== s.x - 1);
+    $("gText").textContent = s.by + " split this secret on " + fmtDate(s.date) + " among " + s.n + " trusted people. The other guardians are " + listPt(others) + ". " +
+      "To recover it, combine " + s.k + " shares (the links) in the “Recover a secret” tab.";
+    $("gCopy").addEventListener("click", () => copyText(linkOf(s.text), $("gNote")));
+    $("gQr").addEventListener("click", () => showQr(s.text, s.guardian));
+    $("gOpen").addEventListener("click", () => { selectTab("open"); addShareTexts(s.text); $("viewOpen").scrollIntoView({ behavior: "smooth" }); });
+    selectTab("open");
+  }
+
+  renderRows(); updateCount(); guardianFromHash();
+})();
+
+</script>
+</body>
+</html>

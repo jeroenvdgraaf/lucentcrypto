@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<!-- Gerado por tools/translate-pages.mjs a partir de amigo-oculto/index.html; não edite à mão. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<!-- Copyright (C) 2026 Jeroen van de Graaf -->
+<title>Lucent Secret Santa · online Secret Santa draw</title>
+<meta name="description" content="Draw your Secret Santa online: everyone gets their match through their own link, on WhatsApp, no slips of paper. Free, in the browser, no sign-up.">
+<link rel="canonical" href="https://lucentcrypto.org/en/amigo-oculto/">
+<link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/amigo-oculto/">
+<link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/amigo-oculto/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23a85d08'/%3E%3Cpath d='M22 14h8v28h16v8H22z' fill='%23fff'/%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="LucentCrypto">
+<meta property="og:title" content="Lucent Secret Santa · online Secret Santa draw">
+<meta property="og:description" content="Draw your Secret Santa online: everyone gets their match through their own link, on WhatsApp, no slips of paper. Free, in the browser, no sign-up.">
+<meta property="og:url" content="https://lucentcrypto.org/en/amigo-oculto/">
+<meta property="og:image" content="https://lucentcrypto.org/og/amigo-oculto.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="robots" content="noindex">
+<style>
+/* Layout: one narrow column, like a card on a table. Organizer view = form + participant grid; reveal view = one big action. */
+:root {
+  --bg: #f6f3ee;
+  --surface: #ffffff;
+  --ink: #1d2a24;
+  --muted: #5c6b63;
+  --line: #ddd6ca;
+  --pine: #1f5a44;        /* primary: pine green */
+  --pine-ink: #ffffff;
+  --berry: #b02a3c;       /* accent: cranberry, used sparingly */
+  --berry-soft: #f8e5e7;
+  --pine-soft: #e3efe8;
+  --warn: #8a5a00; --warn-soft: #fbf0d9;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111814; --surface: #18221d; --ink: #e8efe9; --muted: #9db0a5; --line: #2b3a32;
+    --pine: #4fb487; --pine-ink: #08140e; --berry: #f07f8e; --berry-soft: #35181d; --pine-soft: #17322a;
+    --warn: #f0c060; --warn-soft: #2e2512; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink); font: 16px/1.5 var(--font);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: max(20px, env(safe-area-inset-top, 0px)) 48px;
+}
+.wrap { max-width: 680px; margin: 0 auto; display: grid; gap: 18px; min-width: 0; }
+header .fam { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+header .fam a.lang { text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 600; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+header .fam > span { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 2px 0 0; font-size: clamp(28px, 6vw, 38px); line-height: 1.1; letter-spacing: -0.02em; text-wrap: balance; }
+h1 span { color: var(--berry); }
+header p { margin: 6px 0 0; color: var(--muted); max-width: 52ch; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.stack { display: grid; gap: 10px; }
+h2 { margin: 0; font-size: 19px; }
+.hint { color: var(--muted); font-size: 14px; margin: 0; }
+label.f { display: grid; gap: 5px; font-weight: 600; font-size: 14px; }
+label.f small { font-weight: 400; color: var(--muted); }
+input[type=text], input[type=date] {
+  width: 100%; font: 16px var(--font); color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-width: 0;
+}
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+:focus-visible { outline: 3px solid var(--berry); outline-offset: 2px; }
+button { font: 600 15px var(--font); border-radius: 10px; padding: 10px 14px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+button.primary { background: var(--pine); border-color: var(--pine); color: var(--pine-ink); font-size: 17px; padding: 13px 18px; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.msg { border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+.msg.err { background: var(--berry-soft); color: var(--berry); }
+.msg.warn { background: var(--warn-soft); color: var(--warn); }
+.msg.ok { background: var(--pine-soft); color: var(--pine); }
+.example { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; background: var(--warn-soft); color: var(--warn); border-radius: 999px; padding: 2px 8px; font-weight: 600; }
+
+/* participant grid */
+.tablewrap { overflow-x: auto; margin: 0 -6px; padding: 0 6px; }
+table.people { border-collapse: collapse; width: 100%; min-width: 0; }
+table.people th { font-size: 12px; font-weight: 600; color: var(--muted); text-align: left; padding: 0 3px 6px; white-space: nowrap; }
+table.people th.c { text-align: center; }
+table.people td { padding: 4px 3px; vertical-align: middle; border-top: 1px solid var(--line); }
+td.num { width: 26px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; padding-right: 6px; }
+td.name input { min-width: 110px; }
+td.contact input { min-width: 150px; }
+.import { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 8px; }
+.import textarea { font: inherit; width: 100%; min-height: 110px; padding: 9px 11px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: inherit; resize: vertical; box-sizing: border-box; }
+td.help input { width: 48px; text-align: center; padding: 10px 4px; font-variant-numeric: tabular-nums; }
+td.help input.bad { border-color: var(--berry); background: var(--berry-soft); }
+td.tg { width: 34px; text-align: center; }
+button.toggle {
+  width: 30px; height: 30px; border-radius: 50%; padding: 0; border: 2px solid var(--line); background: var(--bg);
+  color: transparent; font-size: 0;
+}
+button.toggle[aria-pressed="true"] { background: var(--berry); border-color: var(--berry); }
+td.rm { width: 34px; text-align: center; }
+button.rmbtn { width: 30px; height: 30px; padding: 0; color: var(--muted); font-size: 15px; border-radius: 8px; }
+.legend { display: grid; gap: 4px; font-size: 14px; color: var(--muted); margin: 0; padding: 0; list-style: none; }
+.legend b { color: var(--ink); }
+.swipe { display: none; font-size: 13px; }
+@media (max-width: 620px) { .swipe { display: block; } }
+
+/* links list */
+.links { display: grid; gap: 8px; }
+.linkrow { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.linkrow:last-child { border-bottom: 0; }
+.linkrow .who { font-weight: 600; overflow-wrap: anywhere; }
+.linkrow .via { font-size: 13px; color: var(--muted); }
+.linkrow .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.linkrow .acts button { font-size: 14px; padding: 8px 11px; }
+a.btn { display: inline-block; text-decoration: none; font: 600 14px var(--font); border-radius: 10px; padding: 8px 11px; background: var(--pine); color: var(--pine-ink); }
+.sent { font-size: 12px; color: var(--pine); font-weight: 600; }
+.newtag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; background: var(--berry); color: #fff; border-radius: 999px; padding: 1px 8px; margin-left: 6px; vertical-align: 2px; }
+details summary { cursor: pointer; font-weight: 600; }
+fieldset.modes { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; }
+fieldset.modes legend { margin-bottom: 6px; }
+.modeopt { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; cursor: pointer; }
+.modeopt small { color: var(--muted); font-size: 13px; }
+.modeopt:has(input:checked) { border-color: var(--pine); background: var(--pine-soft); }
+.modeopt input { margin-top: 4px; }
+.progress { font-weight: 600; color: var(--pine); }
+button.mine { background: var(--berry); border-color: var(--berry); color: #fff; font-size: 15px; padding: 10px 14px; }
+.seen { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+/* reveal */
+.reveal { text-align: center; gap: 18px; padding: 28px 18px; }
+.reveal .for { font-size: 18px; color: var(--muted); margin: 0; }
+.reveal .for b { color: var(--ink); font-size: clamp(26px, 7vw, 34px); display: block; margin-top: 4px; }
+.handover { background: var(--berry-soft); color: var(--berry); border-radius: 12px; padding: 12px; font-weight: 600; font-size: 18px; }
+.hold {
+  width: 100%; min-height: 120px; border-radius: 20px; border: 0; background: var(--berry); color: #fff;
+  font-size: 24px; font-weight: 700; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.secret { min-height: 1.3em; font-size: clamp(40px, 12vw, 72px); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; overflow-wrap: anywhere; color: var(--ink); }
+.secret.hidden { color: transparent; }
+.secret .placeholder { color: var(--muted); font-size: 18px; font-weight: 400; letter-spacing: 0; }
+.meta { display: grid; gap: 4px; font-size: 15px; color: var(--muted); }
+.meta b { color: var(--ink); }
+.count { font-size: 14px; color: var(--muted); }
+.done { font-size: 22px; font-weight: 700; color: var(--pine); }
+footer { color: var(--muted); font-size: 13px; }
+@media (prefers-reduced-motion: no-preference) { .secret { transition: color .12s; } }
+/* FRAME-BEGIN (moldura do site: Laboratório ou Soluções; mesma em todas as páginas) */
+.lcf-bar { margin: calc(-1 * max(20px, env(safe-area-inset-top, 0px))) calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 24px; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.lcf-in { max-width: 1120px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; }
+.lcf-logo { font: 800 20px "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; text-decoration: none; white-space: nowrap; }
+.lcf-logo span { color: #a85d08; }
+.lcf-nav { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 14.5px; font-weight: 500; }
+.lcf-nav a { text-decoration: none; padding-bottom: 2px; border-bottom: 2px solid transparent; }
+.lcf-tag { font: 600 11.5px ui-monospace, Menlo, monospace; letter-spacing: .1em; text-transform: uppercase; }
+.lcf-lab { background: #13232b; border-bottom: 1px solid #26363d; }
+.lcf-lab .lcf-logo { color: #ffffff; } .lcf-lab .lcf-logo span { color: #f0a443; }
+.lcf-lab .lcf-logo i { font: normal 600 12px ui-monospace, Menlo, monospace; letter-spacing: .14em; color: #f0a443; margin-left: 10px; }
+.lcf-lab .lcf-nav a { color: #98abb2; } .lcf-lab .lcf-nav a[aria-current="page"] { color: #ffffff; border-color: #f0a443; }
+.lcf-lab .lcf-tag { color: #f0a443; border: 1px solid #f0a443; border-radius: 99px; padding: 3px 10px; }
+.lcf-sol { background: var(--surface, #ffffff); border-bottom: 1px solid var(--line, #cdd8dc); }
+.lcf-sol .lcf-logo { color: var(--ink, #13232b); }
+.lcf-sol .lcf-nav a { color: var(--ink, #13232b); } .lcf-sol .lcf-nav a.lcf-muted { color: var(--muted, #50646d); }
+.lcf-sol .lcf-nav a[aria-current="page"] { border-color: currentColor; }
+.lcf-btn { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 16px; border-radius: 10px; font-weight: 600; font-size: 14.5px; text-decoration: none; background: #1f5a44; color: #ffffff; }
+.lcf-end { border-radius: 16px; padding: 26px; display: grid; gap: 16px; }
+.lcf-end h2 { margin: 0; font: 800 24px "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; }
+.lcf-end .lcf-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.lcf-labend { background: #13232b; color: #e2ebee; }
+.lcf-labend .lcf-kick { font: 600 12px ui-monospace, Menlo, monospace; letter-spacing: .14em; text-transform: uppercase; color: #f0a443; margin: 0; }
+.lcf-labend a.lcf-card { background: #1b2f38; border: 1px solid #26363d; border-radius: 14px; padding: 16px; text-decoration: none; color: #e2ebee; display: grid; gap: 4px; }
+.lcf-labend a.lcf-card:hover { border-color: #f0a443; }
+.lcf-labend a.lcf-card b { color: #ffffff; } .lcf-labend a.lcf-card span { color: #98abb2; font-size: 14px; }
+.lcf-labend p { margin: 0; color: #98abb2; font-size: 14px; } .lcf-labend p a { color: #f0a443; }
+.lcf-solend { background: var(--surface, #ffffff); border: 1px solid var(--line, #cdd8dc); grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: center; gap: 24px; }
+.lcf-solend ul { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
+.lcf-solend .lcf-box { background: var(--bg, #eef2f3); border: 1px solid var(--line, #cdd8dc); border-radius: 14px; padding: 20px; display: grid; gap: 12px; justify-items: start; }
+.lcf-solend .lcf-box p { margin: 0; }
+/* FRAME-END */
+</style>
+</head>
+<body>
+<!-- FRAME-BAR -->
+<div class="lcf-bar lcf-lab" id="lcfBar"><div class="lcf-in">
+  <a class="lcf-logo" href="/#laboratorio">Lucent<span>Crypto</span><i>LAB</i></a>
+  <nav class="lcf-nav" aria-label="Lab"><a href="/en/encrypt/">Encrypt</a><a href="/en/segredo/">Secret</a><a href="/en/amigo-oculto/" aria-current="page">Secret Santa</a></nav>
+  <span class="lcf-tag">Demo</span>
+</div></div>
+<!-- /FRAME-BAR -->
+<div class="wrap">
+  <header>
+    <div class="fam"><span>LucentCrypto</span><a class="lang" id="langBtn" href="/amigo-oculto/" hreflang="pt" lang="pt-BR">Português</a></div>
+    <h1>Lucent <span>Secret Santa</span></h1>
+    <p id="tagline">Draw the family Secret Santa over WhatsApp. Everyone gets their own link and sees only who they drew.</p>
+  </header>
+
+  <!-- ===================== ORGANIZADOR ===================== -->
+  <main id="organizer" hidden>
+    <div class="wrap" style="padding:0">
+      <div class="msg warn" id="fileWarn" hidden>This page is not open at a web address (it was opened as a file or in a preview, for example), so it can’t send links from here. You can do the draw with <b>everyone together</b>: each person taps their own name and sees who they drew on this device, one at a time. To send links over WhatsApp, open the published address, lucentcrypto.org/en/amigo-oculto/.</div>
+
+      <section class="card">
+        <h2>1 · The group</h2>
+        <div class="grid2">
+          <label class="f" for="gName">Name of the Secret Santa
+            <input type="text" id="gName" value="Family Secret Santa, Christmas 2026">
+          </label>
+          <label class="f" for="gDate">Gift exchange day <small>optional</small>
+            <input type="date" id="gDate">
+          </label>
+          <label class="f" for="gValue">Suggested amount <small>optional</small>
+            <input type="text" id="gValue" placeholder="e.g. up to $50">
+          </label>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2>2 · Who takes part</h2>
+          <span class="example" id="exampleTag">example: replace with your family’s names</span>
+        </div>
+        <ul class="legend">
+          <li><b>Phone or e-mail</b> (optional): to send the link straight to the person, by WhatsApp or e-mail. Stays on this device only. Write phone numbers with the country code, e.g. +1 555 010 0000.</li>
+          <li><b>Helper:</b> the number of the person who opens the link together with them (for example, 3 for Ann to help the grandparents). A helped person never draws their own helper.</li>
+          <li><b>Columns 1, 2, 3…:</b> mark who belongs to the same couple or household. People marked in the same column never draw each other. A person can be in more than one column.</li>
+        </ul>
+        <div class="tablewrap">
+          <table class="people" id="peopleTable">
+            <thead id="peopleHead"></thead>
+            <tbody id="peopleBody"></tbody>
+          </table>
+        </div>
+        <p class="hint swipe">Swipe the table sideways to see all columns and the remove button.</p>
+        <div class="msg err" id="helperErr" hidden></div>
+        <div class="row">
+          <button type="button" id="addPerson">+ Add person</button>
+          <button type="button" id="addCol">+ Column</button>
+          <button type="button" id="importOpen">Paste a list</button>
+          <button type="button" id="fileBtn">Import file (.csv)</button>
+          <input type="file" id="fileIn" accept=".csv,.txt,.tsv,text/csv,text/plain" hidden>
+          <span class="hint" id="countInfo"></span>
+        </div>
+        <div class="import" id="importBox" hidden>
+          <label for="importText"><b>One person per line</b>, with a name and, optionally, a phone (with country code) or e-mail. For example “Peter; +1 555 010 7777”. Also reads spreadsheets saved as CSV (comma, semicolon or tab).</label>
+          <textarea id="importText" spellcheck="false"></textarea>
+          <p class="hint" id="importPreview" aria-live="polite"></p>
+          <div class="row"><button type="button" class="primary" id="importUse" disabled>Use this list</button><button type="button" id="importCancel">Cancel</button></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>3 · Draw</h2>
+        <p class="hint">The draw happens on this phone or computer. Nobody, not even you, sees the pairs on screen.</p>
+        <div class="msg err" id="drawErr" hidden></div>
+        <button type="button" class="primary" id="drawBtn">Draw and make the links</button>
+      </section>
+
+      <section class="card" id="linksCard" hidden>
+        <h2>4 · Everyone sees who they drew</h2>
+        <fieldset class="modes" id="modeBox">
+          <legend class="hint">How will each person see it?</legend>
+          <label class="modeopt"><input type="radio" name="mode" value="links" id="modeLinks"> <span><b>Each on their own phone</b><br><small>you send each person a link</small></span></label>
+          <label class="modeopt"><input type="radio" name="mode" value="room" id="modeRoom"> <span><b>Everyone together, passing this device round</b><br><small>each person taps their own name, looks and passes it on</small></span></label>
+        </fieldset>
+        <p class="hint" id="linksIntro"></p>
+        <div class="stack" id="changeBox" hidden>
+          <div class="msg warn" id="changeMsg"></div>
+          <p class="hint">Updating changes only what is needed: whoever joined gets a match, and one or two people get a new match, marked below. Everyone else stays the same. Note: when you send the new links, you will be able to work out who drew whom in that swap.</p>
+          <div class="row"><button type="button" class="primary" id="updateBtn">Update the draw</button></div>
+          <div class="msg err" id="updateErr" hidden></div>
+        </div>
+        <div class="msg ok" id="updatedMsg" hidden></div>
+        <div class="links" id="links"></div>
+        <details>
+          <summary>Redo the draw</summary>
+          <div class="stack" style="margin-top:10px">
+            <p class="hint">Links already sent keep opening the old draw, shown with its date and time. Tell the group to use only the new links.</p>
+            <label class="row" style="font-size:14px"><input type="checkbox" id="redoOk"> I understand, I want to draw again</label>
+            <div class="row"><button type="button" id="redoBtn" disabled>Draw again</button></div>
+          </div>
+        </details>
+      </section>
+
+      <section class="card" id="backupCard" hidden>
+        <h2>5 · Keep a recovery link</h2>
+        <p class="hint">If you lose this phone or clear the browser data, this link brings the draw back, with the same links. It contains the whole draw, so keep it to yourself: send it to yourself by e-mail or in your WhatsApp chat with yourself.</p>
+        <div class="row">
+          <button type="button" id="bkCopy">Copy recovery link</button>
+          <a class="btn" id="bkWa" target="_blank" rel="noopener">Send to myself on WhatsApp</a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ===================== RECUPERAÇÃO ===================== -->
+  <main id="restoreView" hidden>
+    <section class="card">
+      <h2>Recover a draw</h2>
+      <p class="hint" id="rsInfo"></p>
+      <div class="msg err" id="rsErr" hidden></div>
+      <div class="row"><button type="button" class="primary" id="rsBtn">Recover the draw</button></div>
+    </section>
+  </main>
+
+  <!-- ===================== REVELAÇÃO ===================== -->
+  <main id="revealView" hidden>
+    <section class="card reveal" aria-live="polite">
+      <p class="for" id="rFor"></p>
+      <div class="handover" id="rHandover" hidden></div>
+      <div class="secret hidden" id="rSecret" aria-hidden="true"><span class="placeholder">Hold the button to see</span></div>
+      <button type="button" class="hold" id="rHold">Hold to see</button>
+      <div class="done" id="rDone" hidden>Done! Keep it secret.</div>
+      <div class="count" id="rCount"></div>
+      <div class="meta" id="rMeta"></div>
+    </section>
+    <p class="hint" style="text-align:center" id="linkOnly">This link is yours alone. Don’t forward it to anyone.</p>
+    <div class="row" style="justify-content:center"><button type="button" class="primary" id="testBack" hidden>Done: pass the device on</button></div>
+  </main>
+
+  <main id="badLink" hidden>
+    <section class="card"><h2>This link didn’t open</h2><p class="hint">The link seems incomplete. Ask the organizer to send it again, or copy the whole link from the message.</p></section>
+  </main>
+<!-- FRAME-END -->
+<section class="lcf-end lcf-labend" id="lcfEnd" aria-label="More in the Lab">
+  <p class="lcf-kick">More in the Lab</p>
+  <div class="lcf-cards"><a class="lcf-card" href="/en/encrypt/"><b>Encrypt</b><span>Classic and post-quantum encryption, side by side.</span></a><a class="lcf-card" href="/en/segredo/"><b>Secret</b><span>Split a secret among people you trust.</span></a></div>
+  <p>Made by <a href="/">LucentCrypto</a>, which runs verifiable draws, data publications and elections for organizations.</p>
+</section>
+<!-- /FRAME-END -->
+
+  <footer id="footer">Lucent Secret Santa · part of the LucentCrypto family. Nothing is stored on a server: the draw happens in the organizer’s browser, and each person’s match travels only inside their own link, after the # sign, a part the site never receives. For draws with a proof: <a href="/en/sorteios/" style="color:inherit">Lucent Draw</a>.</footer>
+</div>
+
+<script>
+"use strict";
+// ---------------------------------------------------------------- CORE-BEGIN
+// Pure functions: draw, updates, link and backup encoding. No DOM access.
+// A person: { id, name, groups: [column numbers], helper: name or "" }.
+
+function randInt(n, rng) {                       // uniform integer in [0, n), rejection sampling
+  const lim = Math.floor(0x100000000 / n) * n;
+  for (;;) { const x = rng(); if (x < lim) return x % n; }
+}
+function cryptoRng() { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0]; }
+
+// May giver g give to receiver r? Not to oneself, not to anyone sharing a column, not to one's own helper.
+function allowedP(g, r) {
+  if (g === r || g.id === r.id) return false;
+  for (const c of g.groups) if (r.groups.includes(c)) return false;
+  if (g.helper && g.helper === r.name) return false;
+  return true;
+}
+function allowed(people, g, r) { return allowedP(people[g], people[r]); }
+
+// Uniform random single cycle among the valid ones (rejection sampling of uniform random cycles).
+function drawCycle(people, rng = cryptoRng, maxTries = 50000) {
+  const n = people.length, idx = [...Array(n).keys()];
+  for (let t = 0; t < maxTries; t++) {
+    for (let i = n - 1; i > 0; i--) { const j = randInt(i + 1, rng); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+    let ok = true;
+    for (let k = 0; k < n && ok; k++) ok = allowed(people, idx[k], idx[(k + 1) % n]);
+    if (ok) return idx.slice();
+  }
+  return null;
+}
+// Explains an impossible group when a simple check finds one; null otherwise.
+function feasibilityProblem(people) {
+  const n = people.length;
+  if (n < 3) return "At least 3 people are needed.";
+  const names = people.map((p) => p.name);
+  const dup = names.find((x, i) => names.indexOf(x) !== i);
+  if (dup) return "The name \"" + dup + "\" appears twice. Use different names (for example, \"Ann Smith\" and \"Ann Jones\").";
+  const counts = {};
+  for (const p of people) for (const c of p.groups) counts[c] = (counts[c] || 0) + 1;
+  for (const [c, k] of Object.entries(counts)) if (k > n / 2) return "Column " + c + " has " + k + " of " + n + " people marked. A column can have at most half of the people; otherwise the circle can’t close without someone drawing someone from the same column.";
+  return null;
+}
+function receiversFromCycle(cyc) { const m = new Array(cyc.length); cyc.forEach((g, k) => { m[g] = cyc[(k + 1) % cyc.length]; }); return m; }
+
+// Cycle as an ordered list of ids, from a receiver map m (index -> index).
+function orderFromReceivers(ids, m) {
+  const out = []; let k = 0;
+  for (let i = 0; i < ids.length; i++) { out.push(ids[k]); k = m[k]; }
+  return out;
+}
+// Local update after people left, joined or changed. oldOrder: ids in cycle order.
+// people: Map id -> person (the current list). Returns a new order of ids, or null if no local fix exists.
+// Leaving: the giver of X now gives to X's receiver. Joining: Y is inserted into a random allowed link A -> B.
+// Any link that breaks a rule is repaired by moving one of its two people to another allowed place.
+function updateOrder(oldOrder, people, rng = cryptoRng) {
+  let order = oldOrder.filter((id) => people.has(id));
+  const P = (id) => people.get(id);
+  const ok = (a, b) => allowedP(P(a), P(b));
+  const pick = (arr) => arr[randInt(arr.length, rng)];
+  for (const id of people.keys()) {
+    if (order.includes(id)) continue;
+    if (order.length < 2) { order.push(id); continue; }
+    const spots = [];
+    for (let k = 0; k < order.length; k++) if (ok(order[k], id) && ok(id, order[(k + 1) % order.length])) spots.push(k);
+    if (!spots.length) { order.push(id); continue; }        // left to the repair step below
+    const k = pick(spots); order.splice(k + 1, 0, id);
+  }
+  if (order.length < 3) return null;
+  const bad = (o) => { const b = []; for (let k = 0; k < o.length; k++) if (!ok(o[k], o[(k + 1) % o.length])) b.push(k); return b; };
+  // Repair: move one person to another place. Prefer the two people of a broken link; if that does not
+  // reduce the number of broken links, try anyone; as a last resort accept a move that keeps the count.
+  const moves = (o, movers) => {
+    const better = [], equal = [], nb = bad(o).length;
+    for (const mover of movers) {
+      const rest = o.filter((x) => x !== mover);
+      for (let j = 0; j < rest.length; j++) {
+        if (!ok(rest[j], mover) || !ok(mover, rest[(j + 1) % rest.length])) continue;
+        const trial = rest.slice(); trial.splice(j + 1, 0, mover);
+        const c = bad(trial).length;
+        if (c < nb) better.push(trial); else if (c === nb) equal.push(trial);
+      }
+    }
+    return { better, equal };
+  };
+  for (let step = 0; step < 60; step++) {
+    const b = bad(order);
+    if (!b.length) return order;
+    const ends = [...new Set(b.flatMap((k) => [order[k], order[(k + 1) % order.length]]))];
+    let m = moves(order, ends);
+    if (!m.better.length) { const all = moves(order, order); if (all.better.length) m = all; }
+    if (m.better.length) order = pick(m.better);
+    else if (m.equal.length) order = pick(m.equal);
+    else return null;
+  }
+  return null;
+}
+
+// Participant link payload: JSON -> UTF-8 -> light scrambling -> base64url. Hides names from a casual look; NOT encryption.
+function scramble(bytes) {
+  let s = 0x9e3779b9 >>> 0;
+  const out = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; out[i] = bytes[i] ^ (s & 0xff); }
+  return out;
+}
+function b64url(bytes) { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+function unb64url(str) { const s = atob(str.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((str.length + 3) % 4)); return Uint8Array.from(s, (c) => c.charCodeAt(0)); }
+function encodePayload(obj) { return "v1." + b64url(scramble(new TextEncoder().encode(JSON.stringify(obj)))); }
+function decodePayload(str) {
+  if (!str || !str.startsWith("v1.")) return null;
+  try { const o = JSON.parse(new TextDecoder().decode(scramble(unb64url(str.slice(3))))); return o && typeof o.p === "string" && typeof o.m === "string" ? o : null; }
+  catch { return null; }
+}
+// r: version of this person's link (1 = original), u: when it was replaced.
+function linkPayload(person, receiverName, g, t, r, u) {
+  return encodePayload({ p: person.name, m: receiverName, h: person.helper || undefined, g: g.g, d: g.d || undefined, v: g.v || undefined, t, r: r > 1 ? r : undefined, u: r > 1 ? u : undefined });
+}
+
+// Recovery link: the whole draw, so the organizer page and every participant link can be rebuilt exactly.
+// { v: 3, t, g, cols, ids, people: [[name, groups, helperName]], m: [receiver index], rev: [link version], upd: [time of that version] }
+function encodeBackup(o) { return "o2." + b64url(scramble(new TextEncoder().encode(JSON.stringify(o)))); }
+function decodeBackup(str) {
+  if (!str || !str.startsWith("o2.")) return null;
+  try {
+    const o = JSON.parse(new TextDecoder().decode(scramble(unb64url(str.slice(3)))));
+    if (!o || (o.v !== 2 && o.v !== 3) || !Array.isArray(o.people) || !Array.isArray(o.m) || o.m.length !== o.people.length) return null;
+    const n = o.people.length;
+    o.ids = Array.isArray(o.ids) && o.ids.length === n ? o.ids : o.people.map((_, i) => "b" + i);
+    o.rev = Array.isArray(o.rev) && o.rev.length === n ? o.rev : new Array(n).fill(1);
+    o.upd = Array.isArray(o.upd) && o.upd.length === n ? o.upd : new Array(n).fill(o.t);
+    o.v = 3;
+    return o;
+  } catch { return null; }
+}
+function linksFromBackup(o) {
+  return o.people.map(([name, groups, helper], i) => ({
+    id: o.ids[i], p: name, h: helper, r: o.rev[i],
+    payload: linkPayload({ name, groups, helper }, o.people[o.m[i]][0], o.g, o.t, o.rev[i], o.upd[i]),
+  }));
+}
+// New backup after an update. prev: old backup; people: Map id -> person in table order; order: new cycle of ids.
+// A person's link keeps its version unless its content (own name, helper, receiver) changed.
+function backupAfterUpdate(prev, people, order, now) {
+  const ids = [...people.keys()], idxOf = new Map(ids.map((id, i) => [id, i]));
+  const next = new Map(order.map((id, k) => [id, order[(k + 1) % order.length]]));
+  const oldIdx = new Map(prev.ids.map((id, i) => [id, i]));
+  const rev = [], upd = [], changed = [];
+  ids.forEach((id) => {
+    const p = people.get(id), recv = people.get(next.get(id)).name, oi = oldIdx.get(id);
+    const same = oi !== undefined && prev.people[oi][0] === p.name && (prev.people[oi][2] || "") === (p.helper || "") && prev.people[prev.m[oi]][0] === recv;
+    if (same) { rev.push(prev.rev[oi]); upd.push(prev.upd[oi]); }
+    else { rev.push(oi === undefined ? 1 : prev.rev[oi] + 1); upd.push(now); changed.push(id); }
+  });
+  const o = { v: 3, t: prev.t, g: prev.g, cols: prev.cols, ids, people: ids.map((id) => { const p = people.get(id); return [p.name, p.groups, p.helper]; }), m: ids.map((id) => idxOf.get(next.get(id))), rev, upd };
+  return { backup: o, changed };
+}
+// ---------------------------------------------------------------- CORE-END
+
+if (typeof window !== "undefined") (function () {
+const $ = (id) => document.getElementById(id);
+const el = (tag, props = {}, kids = []) => { const n = document.createElement(tag); Object.assign(n, props); for (const k of kids) n.append(k); return n; };
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem("lucentamigo." + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("lucentamigo." + k, JSON.stringify(v)); } catch {} },
+};
+const pad2 = (n) => String(n).padStart(2, "0");
+const fmtDate = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ""); return m ? m[3] + "/" + m[2] + "/" + m[1] : ""; };
+const fmtStamp = (ms) => { const d = new Date(ms); return pad2(d.getDate()) + "/" + pad2(d.getMonth() + 1) + " at " + pad2(d.getHours()) + ":" + pad2(d.getMinutes()); };
+const norm = (s) => (s || "").normalize("NFC").trim().replace(/\s+/g, " ");
+const newId = () => Math.random().toString(36).slice(2, 10);
+const list = (xs) => xs.length <= 1 ? xs.join("") : xs.slice(0, -1).join(", ") + " and " + xs[xs.length - 1];
+
+// A link opened in a tab that already shows this page only changes the hash: reload to route it.
+window.addEventListener("hashchange", () => location.reload());
+// Língua: o botão leva à outra versão com o mesmo link (a parte depois do #).
+$("langBtn").addEventListener("click", (e) => { e.preventDefault(); location.href = $("langBtn").getAttribute("href") + location.hash; });
+const hash = location.hash.slice(1);
+
+// ================= RECOVERY =================
+if (hash.startsWith("o")) {
+  $("restoreView").hidden = false;
+  const o = decodeBackup(hash);
+  if (!o) {
+    $("rsErr").textContent = "This recovery link is incomplete or damaged. Copy the whole link from the message.";
+    $("rsErr").hidden = false; $("rsBtn").hidden = true;
+    return;
+  }
+  $("rsInfo").textContent = "This link brings back the draw \"" + (o.g.g || "Secret Santa") + "\", made on " + fmtStamp(o.t) + ", with " + o.people.length + " people and the same links as before. If another draw is saved on this device, it will be replaced.";
+  $("rsBtn").addEventListener("click", () => {
+    const byName = new Map(o.people.map(([name], i) => [name, o.ids[i]]));
+    LS.set("rows", o.people.map(([name, groups, helper], i) => ({ id: o.ids[i], name, contact: "", groups, helper: helper ? byName.get(helper) || "" : "" })));
+    LS.set("cols", o.cols || 6);
+    LS.set("group", o.g);
+    LS.set("draw", { t: o.t, g: o.g, backup: o, sent: {}, fresh: [] });
+    history.replaceState(null, "", location.pathname);
+    location.reload();
+  });
+  return;
+}
+
+// ================= REVEAL =================
+// Also used in test mode, inside the organizer page, with a "voltar" action.
+function showReveal(o, onBack) {
+  $("rDone").hidden = true; $("rHandover").hidden = true;
+  $("rSecret").replaceChildren(el("span", { className: "placeholder", textContent: "Hold the button to see" }));
+  $("rSecret").classList.add("hidden");
+  $("testBack").hidden = !onBack; $("linkOnly").hidden = !!onBack;
+  if (onBack) $("testBack").onclick = onBack;
+  const fresh = $("rHold").cloneNode(true); fresh.textContent = "Hold to see"; $("rHold").replaceWith(fresh);   // drop listeners from a previous test
+
+  $("revealView").hidden = false;
+  $("tagline").textContent = o.g || "Secret Santa";
+  $("rFor").replaceChildren("Secret Santa match for", el("b", { textContent: o.p }));
+  if (o.h) { $("rHandover").hidden = false; $("rHandover").textContent = o.h + ", hand the phone to " + o.p + "."; }
+  const meta = [];
+  if (o.d) meta.push(["Gift exchange", fmtDate(o.d)]);
+  if (o.v) meta.push(["Suggested amount", o.v]);
+  if (o.t) meta.push(["Draw made on", fmtStamp(o.t)]);
+  if (o.r > 1) meta.push(["Link updated on", fmtStamp(o.u) + " (version " + o.r + "; replaces the earlier links)"]);
+  $("rMeta").replaceChildren(...meta.map(([k, v]) => el("div", {}, [k + ": ", el("b", { textContent: v })])));
+  const key = "seen." + (o.t || 0) + "." + o.p + "." + (o.r || 1);
+  let seen = LS.get(key, 0);
+  const showCount = () => { $("rCount").textContent = seen ? "Seen " + (seen === 1 ? "once" : seen + " times") + " on this phone." : ""; };
+  showCount();
+  const secret = $("rSecret"), btn = $("rHold");
+  let holding = false;
+  const show = (e) => {
+    if (e) e.preventDefault();
+    if (holding) return; holding = true;
+    secret.textContent = o.m; secret.classList.remove("hidden"); secret.setAttribute("aria-hidden", "false");
+    btn.textContent = "Let go to hide";
+    seen += 1; LS.set(key, seen);
+  };
+  const hide = () => {
+    if (!holding) return; holding = false;
+    secret.replaceChildren(el("span", { className: "placeholder", textContent: "Hold the button to see again" }));
+    secret.classList.add("hidden"); secret.setAttribute("aria-hidden", "true");
+    btn.textContent = "Hold to see"; $("rDone").hidden = false; showCount();
+  };
+  btn.addEventListener("pointerdown", (e) => { btn.setPointerCapture?.(e.pointerId); show(e); });
+  for (const ev of ["pointerup", "pointercancel", "lostpointercapture"]) btn.addEventListener(ev, hide);
+  btn.addEventListener("contextmenu", (e) => e.preventDefault());
+  btn.addEventListener("keydown", (e) => { if ((e.key === " " || e.key === "Enter") && !e.repeat) show(e); });
+  btn.addEventListener("keyup", (e) => { if (e.key === " " || e.key === "Enter") hide(); });
+  btn.addEventListener("blur", hide);
+  document.onvisibilitychange = () => { if (document.hidden) hide(); };
+}
+if (hash) {
+  const o = decodePayload(hash);
+  if (!o) { $("badLink").hidden = false; return; }
+  showReveal(o, null);
+  return;
+}
+
+// ================= ORGANIZER =================
+$("organizer").hidden = false;
+const TAGLINE = $("tagline").textContent;
+const webAddress = /^https?:$/.test(location.protocol) && location.origin !== "null";
+if (!webAddress) $("fileWarn").hidden = false;
+
+// rows: [{ id, name, groups: [column numbers], helper: id of the helper row, "" or "bad:<typed>" }]
+function exampleRows() {
+  return [
+    { id: "r1", name: "Grandma Mary", groups: [1], helper: "r3" },
+    { id: "r2", name: "Grandpa Joe", groups: [1], helper: "r3" },
+    { id: "r3", name: "Ann", groups: [2], helper: "" },
+    { id: "r4", name: "Peter", groups: [2], helper: "" },
+    { id: "r5", name: "Carla", groups: [], helper: "" },
+    { id: "r6", name: "Luke", groups: [], helper: "" },
+  ];
+}
+let rows = LS.get("rows", null);
+if (rows && rows.length && !Array.isArray(rows[0].groups)) rows = null;   // older format: start fresh
+let isExample = !rows;
+if (!rows) rows = exampleRows();
+let cols = Math.max(6, LS.get("cols", 6), ...rows.flatMap((r) => r.groups));
+const savedGroup = LS.get("group", null);
+if (savedGroup) { $("gName").value = savedGroup.g || ""; $("gDate").value = savedGroup.d || ""; $("gValue").value = savedGroup.v || ""; }
+// draw: { t, g, backup (v3), sent: {id: true}, fresh: [ids with a new link in the last update], updatedAt }
+let draw = LS.get("draw", null);
+if (draw && (!draw.backup || draw.backup.v !== 3)) draw = null;
+if (draw) { draw.sent = draw.sent || {}; draw.fresh = draw.fresh || []; }
+const saveDraw = () => LS.set("draw", draw);
+// links: each person gets a link; room: everyone present, the device goes round. Without a web address only room works.
+const modeOf = () => webAddress ? (draw && draw.mode) || "links" : "room";
+$("modeBox").hidden = !webAddress;
+for (const r of document.querySelectorAll('input[name="mode"]')) r.addEventListener("change", () => { if (draw) { draw.mode = r.value; saveDraw(); renderLinks(); } });
+
+const save = () => { LS.set("rows", rows); LS.set("cols", cols); };
+const numberOf = (id) => rows.findIndex((r) => r.id === id) + 1;
+function touched() { if (isExample) { isExample = false; $("exampleTag").hidden = true; } save(); updateCount(); checkHelpers(); renderChange(); }
+function updateCount() { const n = rows.filter((r) => norm(r.name)).length; $("countInfo").textContent = n + (n === 1 ? " person" : " people"); }
+
+function renderHead() {
+  const tr = el("tr");
+  tr.append(el("th", { textContent: "#" }), el("th", { textContent: "Name" }), el("th", { textContent: "Phone or e-mail" }), el("th", { className: "c", textContent: "Helper" }));
+  for (let c = 1; c <= cols; c++) { const th = el("th", { className: "c", textContent: String(c) }); th.title = "Couple / same household " + c; tr.append(th); }
+  tr.append(el("th"));
+  $("peopleHead").replaceChildren(tr);
+}
+function renderRows() {
+  renderHead();
+  const body = $("peopleBody"); body.replaceChildren();
+  rows.forEach((r, i) => {
+    const tr = el("tr");
+    tr.append(el("td", { className: "num", textContent: String(i + 1) }));
+    const nameIn = el("input", { type: "text", id: "pn-" + r.id, value: r.name, placeholder: "Name", autocomplete: "off" });
+    nameIn.setAttribute("aria-label", "Name of person " + (i + 1));
+    nameIn.addEventListener("input", () => { r.name = nameIn.value; touched(); });
+    tr.append(el("td", { className: "name" }, [nameIn]));
+    const contactIn = el("input", { type: "text", id: "pc-" + r.id, value: r.contact || "", placeholder: "optional", autocomplete: "off", inputMode: "email" });
+    contactIn.setAttribute("aria-label", "Phone or e-mail of " + (r.name || "person " + (i + 1)));
+    contactIn.addEventListener("input", () => { r.contact = contactIn.value; save(); if (draw) renderLinks(); });
+    tr.append(el("td", { className: "contact" }, [contactIn]));
+    const helpIn = el("input", { type: "text", id: "pa-" + r.id, value: r.helper && !r.helper.startsWith("bad:") ? String(numberOf(r.helper) || "") : (r.helper ? r.helper.slice(4) : ""), inputMode: "numeric", autocomplete: "off", placeholder: "–" });
+    helpIn.setAttribute("aria-label", "Helper number for " + (r.name || "person " + (i + 1)));
+    helpIn.addEventListener("input", () => {
+      const v = helpIn.value.trim();
+      if (!v) r.helper = "";
+      else { const k = parseInt(v, 10), target = rows[k - 1]; r.helper = (String(k) === v && target && target.id !== r.id) ? target.id : "bad:" + v; }
+      touched();
+    });
+    tr.append(el("td", { className: "help" }, [helpIn]));
+    for (let c = 1; c <= cols; c++) {
+      const on = r.groups.includes(c);
+      const tg = el("button", { type: "button", className: "toggle", textContent: on ? "yes" : "no" });
+      tg.setAttribute("aria-pressed", String(on));
+      tg.setAttribute("aria-label", "Column " + c + " for " + (r.name || "person " + (i + 1)));
+      tg.addEventListener("click", () => {
+        const now = !r.groups.includes(c);
+        r.groups = now ? [...r.groups, c].sort((a, b) => a - b) : r.groups.filter((x) => x !== c);
+        tg.setAttribute("aria-pressed", String(now)); tg.textContent = now ? "yes" : "no"; touched();
+      });
+      tr.append(el("td", { className: "tg" }, [tg]));
+    }
+    const rm = el("button", { type: "button", className: "rmbtn", textContent: "✕", title: "Remove person" });
+    rm.setAttribute("aria-label", "Remove " + (r.name || "person " + (i + 1)));
+    rm.addEventListener("click", () => {
+      rows.splice(i, 1);
+      for (const x of rows) if (x.helper === r.id) x.helper = "";   // helper removed: clear the reference
+      touched(); renderRows();
+    });
+    tr.append(el("td", { className: "rm" }, [rm]));
+    body.append(tr);
+  });
+  updateCount(); checkHelpers(); renderChange();
+  $("exampleTag").hidden = !isExample;
+}
+// Helper numbers follow the rows: after a deletion the inputs show the new numbers.
+function checkHelpers() {
+  const bad = [];
+  rows.forEach((r, i) => {
+    const inp = $("pa-" + r.id); if (!inp) return;
+    const isBad = typeof r.helper === "string" && r.helper.startsWith("bad:");
+    inp.classList.toggle("bad", isBad);
+    if (isBad) bad.push("person " + (i + 1) + " (\"" + r.helper.slice(4) + "\")");
+    else if (document.activeElement !== inp) inp.value = r.helper ? String(numberOf(r.helper)) : "";
+  });
+  const box = $("helperErr");
+  box.textContent = bad.length ? "Invalid helper for " + bad.join(", ") + ". Use the number of another person on the list." : "";
+  box.hidden = !bad.length;
+}
+$("addPerson").addEventListener("click", () => { const r = { id: newId(), name: "", contact: "", groups: [], helper: "" }; rows.push(r); touched(); renderRows(); $("pn-" + r.id).focus(); });
+$("addCol").addEventListener("click", () => { cols += 1; save(); renderRows(); });
+
+// ---- colar uma lista / importar planilha (o mesmo leitor da Lucent Votação)
+const fold = (x) => String(x).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+const looksContact = (c) => /@/.test(c) || String(c).replace(/\D/g, "").length >= 8 && /^[\d\s()+.\-]+$/.test(c);
+function splitRow(line, sep) {
+  const out = []; let cur = "", q = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (q) { if (ch === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+    else if (ch === '"' && !cur.trim()) { q = true; cur = ""; }
+    else if (ch === sep) { out.push(cur.trim()); cur = ""; }
+    else cur += ch;
+  }
+  out.push(cur.trim()); return out;
+}
+function parseFree(text) {
+  const out = [];
+  for (const raw of String(text).split(/\r?\n/)) {
+    const line = raw.trim(); if (!line) continue;
+    if (!out.length && /^(nome|name|pessoa|participante)\b/i.test(line) && !/\d|@/.test(line)) continue;
+    let name = line, contact = "";
+    const mail = line.match(/[^\s;,\t<>()]+@[^\s;,\t<>()]+\.[^\s;,\t<>()]+/);
+    if (mail) { contact = mail[0]; name = line.replace(mail[0], ""); }
+    else { const ph = line.match(/(\+?\(?\d[\d\s().-]{7,}\d)\s*$/); if (ph && ph[1].replace(/\D/g, "").length >= 8) { contact = ph[1].trim(); name = line.slice(0, ph.index); } }
+    name = name.replace(/[<>()]/g, " ").replace(/[\s;,:\t|-]+$/, "").replace(/^[\s;,:\t|-]+/, "").replace(/\s+/g, " ").trim();
+    if (name) out.push({ name, contact });
+  }
+  return out;
+}
+function parseList(text) {
+  const lines = String(text).split(/\r?\n/).filter((l) => l.trim());
+  if (!lines.length) return [];
+  const sample = lines.slice(0, 10), score = (sep) => sample.filter((l) => splitRow(l, sep).length >= 2).length;
+  const sep = ["\t", ";", ","].map((x) => [x, score(x)]).sort((a, b) => b[1] - a[1])[0];
+  if (sep[1] < Math.ceil(sample.length / 2)) return parseFree(text);
+  let table = lines.map((l) => splitRow(l, sep[0])), nameCol = -1, contactCols = [];
+  const head = table[0].map(fold), hn = head.findIndex((h) => /^(nome|name|participante|pessoa)/.test(h));
+  if (hn >= 0) { nameCol = hn; contactCols = head.map((h, i) => (/(contato|contact|celular|phone|telefone|fone|whats|e-?mail|email)/.test(h) ? i : -1)).filter((i) => i >= 0); table = table.slice(1); }
+  else { const first = table[0]; nameCol = first.findIndex((c) => c && !/^\d+$/.test(c) && !looksContact(c)); contactCols = first.map((c, i) => (looksContact(c) ? i : -1)).filter((i) => i >= 0); }
+  if (nameCol < 0) return parseFree(text);
+  return table.map((r) => ({ name: norm(r[nameCol] || ""), contact: (contactCols.map((i) => r[i]).find((c) => c && looksContact(c)) || "").trim() })).filter((x) => x.name);
+}
+function importPreview() {
+  // Enquanto a tabela mostra o exemplo, a lista colada o substitui.
+  const l = parseList($("importText").value), have = new Set(isExample ? [] : rows.filter((r) => norm(r.name)).map((r) => norm(r.name).toLowerCase()));
+  const fresh = l.filter((x) => !have.has(x.name.toLowerCase())), dup = l.length - fresh.length;
+  $("importPreview").textContent = l.length ? l.length + (l.length === 1 ? " person read" : " people read") + ": " + l.slice(0, 4).map((x) => x.name + (x.contact ? " (" + x.contact + ")" : "")).join(" · ") + (l.length > 4 ? " · …" : "") +
+    (dup ? ". " + dup + (dup === 1 ? " was" : " were") + " already on the list and will not be added again." : "") : "";
+  $("importUse").disabled = !fresh.length; return fresh;
+}
+$("importOpen").addEventListener("click", () => { $("importBox").hidden = false; $("importText").focus(); });
+$("importCancel").addEventListener("click", () => { $("importBox").hidden = true; });
+$("importText").addEventListener("input", importPreview);
+$("importUse").addEventListener("click", () => {
+  const fresh = importPreview(); if (!fresh.length) return;
+  if (isExample) rows = [];
+  rows = rows.filter((r) => norm(r.name) || (r.contact || "").trim()).concat(fresh.map((x) => ({ id: newId(), name: x.name, contact: x.contact, groups: [], helper: "" })));
+  $("importBox").hidden = true; $("importText").value = ""; touched(); renderRows();
+});
+$("fileBtn").addEventListener("click", () => $("fileIn").click());
+$("fileIn").addEventListener("change", async () => {
+  const f = $("fileIn").files[0]; if (!f) return;
+  let text = await f.text(); if (text.includes("\uFFFD")) text = new TextDecoder("windows-1252").decode(await f.arrayBuffer());
+  $("importBox").hidden = false; $("importText").value = text.replace(/^\uFEFF/, ""); importPreview(); $("fileIn").value = "";
+});
+for (const id of ["gName", "gDate", "gValue"]) $(id).addEventListener("input", () => LS.set("group", group()));
+function group() { return { g: norm($("gName").value), d: $("gDate").value || "", v: norm($("gValue").value) }; }
+
+// The current table as people (named rows only), in table order.
+function currentPeople() {
+  const kept = rows.filter((r) => norm(r.name));
+  const nameOfId = new Map(kept.map((r) => [r.id, norm(r.name)]));
+  return kept.map((r) => ({ id: r.id, name: norm(r.name), groups: r.groups.slice(), helper: r.helper && !r.helper.startsWith("bad:") ? nameOfId.get(r.helper) || "" : "" }));
+}
+const hasBadHelper = () => rows.some((r) => typeof r.helper === "string" && r.helper.startsWith("bad:"));
+
+function showErr(t) { $("drawErr").textContent = t || ""; $("drawErr").hidden = !t; }
+function doDraw() {
+  showErr("");
+  if (hasBadHelper()) return showErr("Fix the helpers marked in red before drawing.");
+  const people = currentPeople();
+  const prob = feasibilityProblem(people);
+  if (prob) return showErr(prob);
+  const cyc = drawCycle(people);
+  if (!cyc) return showErr("I couldn’t find a draw that respects all columns and helpers. Try unmarking a column or removing a helper.");
+  const g = group(), t = Date.now(), n = people.length;
+  const backup = { v: 3, t, g, cols, ids: people.map((p) => p.id), people: people.map((p) => [p.name, p.groups, p.helper]), m: receiversFromCycle(cyc), rev: new Array(n).fill(1), upd: new Array(n).fill(t) };
+  draw = { t, g, backup, sent: {}, fresh: [] };
+  saveDraw(); $("updatedMsg").hidden = true;
+  renderLinks();
+  $("linksCard").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+}
+$("drawBtn").addEventListener("click", doDraw);
+$("redoOk").addEventListener("change", () => { $("redoBtn").disabled = !$("redoOk").checked; });
+$("redoBtn").addEventListener("click", () => { $("redoOk").checked = false; $("redoBtn").disabled = true; $("redoBtn").closest("details").open = false; doDraw(); });
+
+// ---- changes after the draw: who left, who joined, whose details changed
+function diff() {
+  if (!draw) return null;
+  const b = draw.backup, now = currentPeople(), nowIds = new Set(now.map((p) => p.id));
+  const oldIdx = new Map(b.ids.map((id, i) => [id, i]));
+  const left = b.ids.filter((id) => !nowIds.has(id)).map((id) => b.people[oldIdx.get(id)][0]);
+  const joined = now.filter((p) => !oldIdx.has(p.id)).map((p) => p.name);
+  const changed = now.filter((p) => {
+    const i = oldIdx.get(p.id); if (i === undefined) return false;
+    const [name, groups, helper] = b.people[i];
+    return name !== p.name || (helper || "") !== (p.helper || "") || JSON.stringify(groups) !== JSON.stringify(p.groups);
+  }).map((p) => p.name);
+  return left.length || joined.length || changed.length ? { left, joined, changed } : null;
+}
+function renderChange() {
+  const d = diff();
+  $("changeBox").hidden = !d;
+  if (!d) return;
+  const parts = [];
+  if (d.left.length) parts.push(list(d.left) + " left");
+  if (d.joined.length) parts.push(list(d.joined) + " joined");
+  if (d.changed.length) parts.push("details changed for " + list(d.changed));
+  $("changeMsg").textContent = "The list has changed since the draw: " + parts.join("; ") + ".";
+  $("updateErr").hidden = true;
+}
+$("updateBtn").addEventListener("click", () => {
+  const err = (t) => { $("updateErr").textContent = t; $("updateErr").hidden = false; };
+  if (hasBadHelper()) return err("Fix the helpers marked in red before updating.");
+  const people = currentPeople();
+  const prob = feasibilityProblem(people);
+  if (prob) return err(prob);
+  const b = draw.backup, map = new Map(people.map((p) => [p.id, p]));
+  const order = updateOrder(orderFromReceivers(b.ids, b.m), map);
+  if (!order) return err("The draw couldn’t be adjusted with small swaps alone. Use \"Redo the draw\" below; everyone gets new links.");
+  const now = Date.now(), { backup, changed } = backupAfterUpdate(b, map, order, now);
+  for (const id of changed) delete draw.sent[id];
+  // "novo" stays on links from earlier updates that were not sent yet
+  draw.fresh = [...new Set([...draw.fresh.filter((id) => map.has(id) && !draw.sent[id]), ...changed])];
+  draw.backup = backup; draw.updatedAt = now;
+  saveDraw();
+  const names = changed.map((id) => map.get(id).name);
+  $("updatedMsg").textContent = !names.length ? "Draw updated; nobody needed to change."
+    : modeOf() === "room" ? "Draw updated. " + list(names) + " need" + (names.length > 1 ? "" : "s") + " to look again (marked as new below); everyone else keeps the same match."
+    : "Draw updated. Send the new link to " + list(names) + " (marked as new below). The other links remain valid. Also save the recovery link again (step 5): the old one doesn’t have this change.";
+  $("updatedMsg").hidden = false;
+  renderLinks();
+});
+
+// ---- links
+const base = () => location.href.split("#")[0];
+// Celular → WhatsApp direto (55 + DDD quando faltar); e-mail → mailto.
+function contactOf(c) {
+  c = String(c || "").trim(); const isMail = /@/.test(c), digits = c.replace(/\D/g, "");
+  return { mail: isMail ? c : "", phone: !isMail && digits.length >= 10 ? (c.startsWith("+") || digits.length > 11 ? digits : "55" + digits) : "" };
+}
+function messageFor(item) {
+  const g = draw.g.g || "the Secret Santa";
+  const extra = (draw.g.d ? " The gift exchange is on " + fmtDate(draw.g.d) + "." : "") + (draw.g.v ? " Suggested amount: " + draw.g.v + "." : "");
+  const again = item.r > 1 ? " This link is new and replaces the previous one." : "";
+  return item.h
+    ? item.h + ", this is " + item.p + "’s link for " + g + ". Open it together with " + item.p + " and hand over the phone when it’s time to look." + again + extra + "\n\n" + base() + "#" + item.payload
+    : item.p + ", this is your link for " + g + ". Open it and hold the button to see who you drew. Don’t show anyone!" + again + extra + "\n\n" + base() + "#" + item.payload;
+}
+async function copyTo(btn, text, label) {
+  try { await navigator.clipboard.writeText(text); btn.textContent = "Copied"; return true; }
+  catch { btn.textContent = "Not copied"; return false; }
+  finally { setTimeout(() => (btn.textContent = label), 1800); }
+}
+// Everyone present: show one person's reveal on this device, then come back to the list.
+function roomReveal(item) {
+  const o = decodePayload(item.payload);
+  const y = window.scrollY;
+  $("organizer").hidden = true; $("footer").hidden = true; $("lcfEnd").hidden = true;
+  showReveal(o, () => { $("revealView").hidden = true; $("organizer").hidden = false; $("footer").hidden = false; $("lcfEnd").hidden = false; $("tagline").textContent = TAGLINE; renderLinks(); window.scrollTo(0, y); });
+  window.scrollTo(0, 0);
+}
+// Has this person already looked on this device (current version of their link)?
+const seenHere = (item) => LS.get("seen." + draw.t + "." + item.p + "." + (item.r || 1), 0) > 0;
+function renderLinks() {
+  $("linksCard").hidden = !draw; $("backupCard").hidden = !draw || !webAddress;
+  if (!draw) return;
+  renderChange();
+  const mode = modeOf(), items = linksFromBackup(draw.backup);
+  $("modeLinks").checked = mode === "links"; $("modeRoom").checked = mode === "room";
+  const when = "Draw made on " + fmtStamp(draw.t) + (draw.updatedAt ? ", updated on " + fmtStamp(draw.updatedAt) : "") + ". ";
+  if (mode === "links") $("linksIntro").textContent = when + "Send each link only to the right person; links of people with a helper go to the helper. With the phone or e-mail in the table, the button sends straight to the person; without it, WhatsApp opens with the message ready and you choose the contact. \"Copy link\" copies just the link, to paste wherever you like.";
+  else {
+    const done = items.filter(seenHere).length;
+    $("linksIntro").replaceChildren(when + "Pass the device round: each person taps their own name, holds the button to see, taps Done and passes it on. Nobody should tap someone else’s name; if they do, that person sees \"already seen\" on their turn. ",
+      el("span", { className: "progress", textContent: done + " of " + items.length + " have looked." }));
+  }
+  const box = $("links"); box.replaceChildren();
+  const contactByName = new Map(rows.filter((r) => norm(r.name)).map((r) => [norm(r.name), (r.contact || "").trim()]));
+  for (const item of items) {
+    const who = el("div", { className: "who", textContent: item.p });
+    if (draw.fresh.includes(item.id) && !(mode === "room" && seenHere(item))) who.append(el("span", { className: "newtag", textContent: "new" }));
+    const left = el("div", {}, [who]);
+    if (mode === "room") {
+      if (item.h) left.append(el("div", { className: "via", textContent: "helped by " + item.h }));
+      if (seenHere(item)) left.append(el("span", { className: "seen", textContent: "already seen" }));
+      const mine = el("button", { type: "button", className: "mine", textContent: "I am " + item.p + ": see who I drew" });
+      mine.addEventListener("click", () => roomReveal(item));
+      box.append(el("div", { className: "linkrow" }, [left, el("div", { className: "acts" }, [mine])]));
+      continue;
+    }
+    if (item.h) left.append(el("div", { className: "via", textContent: "send to " + item.h + " (helper)" }));
+    const mark = el("span", { className: "sent", textContent: draw.sent[item.id] ? "sent" : "" });
+    left.append(mark);
+    const markSent = () => { draw.sent[item.id] = true; saveDraw(); mark.textContent = "sent"; };
+    // Quem recebe o link: o ajudante, se houver; senão, a própria pessoa. O contato vem da tabela (só neste aparelho).
+    const c = contactOf(contactByName.get(item.h || item.p)), acts = [];
+    if (c.phone || !c.mail) {
+      const wa = el("a", { className: "btn", textContent: c.phone ? "Send via WhatsApp" : "Send link via WhatsApp", href: "https://wa.me/" + c.phone + "?text=" + encodeURIComponent(messageFor(item)), target: "_blank", rel: "noopener",
+        title: c.phone ? "Opens the chat with " + (item.h || item.p) + " on WhatsApp, with the message ready" : "Opens WhatsApp with the message ready; you choose who to send it to" });
+      wa.addEventListener("click", markSent); acts.push(wa);
+    }
+    if (c.mail) {
+      const em = el("a", { className: "btn", textContent: "Send by e-mail", href: "mailto:" + encodeURIComponent(c.mail) + "?subject=" + encodeURIComponent("Secret Santa: " + (draw.g.g || "draw")) + "&body=" + encodeURIComponent(messageFor(item)) });
+      em.addEventListener("click", markSent); acts.push(em);
+    }
+    const cp = el("button", { type: "button", textContent: "Copy link", title: "Copies just the link, to paste somewhere else (e-mail, SMS, another app)" });
+    cp.addEventListener("click", async () => { if (await copyTo(cp, base() + "#" + item.payload, "Copy link")) markSent(); });
+    box.append(el("div", { className: "linkrow" }, [left, el("div", { className: "acts" }, [...acts, cp])]));
+  }
+  const bk = base() + "#" + encodeBackup(draw.backup);
+  $("bkWa").href = "https://wa.me/?text=" + encodeURIComponent("Recovery link for " + (draw.g.g || "the Secret Santa") + " (for me only, do not forward):\n\n" + bk);
+  $("bkCopy").onclick = () => copyTo($("bkCopy"), bk, "Copy recovery link");
+}
+renderRows(); renderLinks();
+})();
+
+</script>
+</body>
+</html>

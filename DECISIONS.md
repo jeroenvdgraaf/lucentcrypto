@@ -127,4 +127,4 @@ como MUST.
 - Sorteios: a tabela de textos inteira (const STR) vem de `sorteios/strings.en.js`; o teste confere que tem as mesmas
   chaves e os mesmos argumentos que a portuguesa. A ata sai na língua da página onde o sorteio é feito; o certificado
   (JSON) é o mesmo nas duas línguas, e um certificado feito numa confere na outra.
-- Feito: Votação (/en/votacao/), Sorteios (/en/sorteios/), Embaralhamento (/en/embaralhamento/). Próximos: Amigo Oculto, Encrypt, Segredo.
+- Feito (21/11/2026): Votação, Sorteios, Embaralhamento, Amigo Oculto, Encrypt e Segredo, todos em /en/<ferramenta>/. A moldura do Laboratório tem a sua tabela (tools/i18n/frame-lab.en.json). O Encrypt usa a mesma lista de palavras (BIP-39 em português) nas duas línguas, para que uma frase funcione nas duas.

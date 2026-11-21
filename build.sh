@@ -22,6 +22,7 @@ mkdir -p "$OUT/votacao/vendor" && cp votacao/index.html votacao/core.mjs votacao
 mkdir -p "$OUT/en/votacao" && cp en/votacao/index.html "$OUT/en/votacao/index.html"
 mkdir -p "$OUT/en/sorteios" && cp en/sorteios/index.html "$OUT/en/sorteios/index.html"
 mkdir -p "$OUT/en/embaralhamento" && cp en/embaralhamento/index.html "$OUT/en/embaralhamento/index.html"
+for t in amigo-oculto encrypt segredo; do mkdir -p "$OUT/en/$t" && cp "en/$t/index.html" "$OUT/en/$t/index.html"; done
 mkdir -p "$OUT/og" && cp site/og/*.png "$OUT/og/"
 cp LucentSorteios.html "$OUT/sorteios/index.html"
 cp amigo-oculto/index.html "$OUT/amigo-oculto/index.html"

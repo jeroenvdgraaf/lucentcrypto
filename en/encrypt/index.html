@@ -1,0 +1,2658 @@
+<!DOCTYPE html>
+<!-- Gerado por tools/translate-pages.mjs a partir de encrypt/index.html; não edite à mão. -->
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<!-- Copyright (C) 2026 Jeroen van de Graaf -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lucent Encrypt · public-key encryption, classic and post-quantum</title>
+<meta name="description" content="Make a key from a 7-word phrase, publish a link and receive messages only you can open. Compare X25519, ML-KEM-768 (post-quantum) and the X-Wing hybrid. Demo, no server.">
+<link rel="canonical" href="https://lucentcrypto.org/en/encrypt/">
+<link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/encrypt/">
+<link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/encrypt/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="LucentCrypto">
+<meta property="og:title" content="Lucent Encrypt · classic and post-quantum encryption">
+<meta property="og:description" content="A 7-word phrase becomes your key; a public link receives messages only you can open. Classic, post-quantum and hybrid, side by side.">
+<meta property="og:url" content="https://lucentcrypto.org/en/encrypt/">
+<meta property="og:image" content="https://lucentcrypto.org/og/encrypt.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232b4c9a'/%3E%3Crect x='17' y='29' width='30' height='22' rx='4' fill='%23fff'/%3E%3Cpath d='M23 29v-6a9 9 0 0 1 18 0v6' fill='none' stroke='%23fff' stroke-width='5'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #eef1f6; --surface: #ffffff; --sunk: #e3e8f0; --ink: #141c2b; --muted: #515d72; --line: #cdd5e2;
+  --accent: #2b4c9a; --accent-ink: #ffffff; --accent-soft: #e3eaf8;
+  --ok: #1d7a4e; --ok-soft: #dff2e8; --warn: #8a5100; --warn-soft: #fdf0d6; --bad: #b3261e; --bad-soft: #fbe3e1;
+  --display: "Avenir Next", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1119; --surface: #141b27; --sunk: #0f1520; --ink: #e3e9f3; --muted: #9aa6bb; --line: #263142;
+    --accent: #7d9ee8; --accent-ink: #0b1220; --accent-soft: #172440;
+    --ok: #5cc995; --ok-soft: #12291f; --warn: #f0b85a; --warn-soft: #2c2312; --bad: #f08a80; --bad-soft: #2e1715; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1119; --surface: #141b27; --sunk: #0f1520; --ink: #e3e9f3; --muted: #9aa6bb; --line: #263142;
+  --accent: #7d9ee8; --accent-ink: #0b1220; --accent-soft: #172440;
+  --ok: #5cc995; --ok-soft: #12291f; --warn: #f0b85a; --warn-soft: #2c2312; --bad: #f08a80; --bad-soft: #2e1715; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding: 24px max(16px, env(safe-area-inset-left, 0px)) 48px; }
+[hidden] { display: none !important; }
+.wrap { max-width: 860px; margin: 0 auto; display: grid; gap: 18px; }
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
+.kicker { font: 500 12px var(--mono); letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+.kicker a { color: inherit; text-decoration: none; }
+h1 { font: 800 clamp(30px, 6vw, 44px)/1.05 var(--display); letter-spacing: -.02em; margin: 4px 0 8px; }
+h1 span { color: var(--accent); }
+h2 { font: 700 20px var(--display); margin: 0; }
+h3 { font: 700 16px var(--display); margin: 0; }
+p { margin: 0; }
+.lead { color: var(--muted); max-width: 66ch; }
+.muted { color: var(--muted); }
+.small { font-size: 13.5px; }
+.mono { font-family: var(--mono); }
+.theme { text-decoration: none; font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+.danger { display: grid; grid-template-columns: auto 1fr; gap: 12px 16px; align-items: start; background: var(--warn-soft); border: 2px solid var(--warn); border-radius: 14px; padding: 14px 18px; }
+.danger svg { width: 40px; height: 40px; color: var(--warn); flex: none; }
+.danger b { font: 700 17px var(--display); color: var(--warn); display: block; margin-bottom: 2px; }
+.danger p { font-size: 14.5px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.panel.strong { border: 2px solid var(--accent); }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab { font: 700 15px var(--display); padding: 10px 16px; border-radius: 12px 12px 0 0; border: 1px solid var(--line); border-bottom: 0; background: var(--sunk); color: var(--muted); cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--surface); color: var(--ink); border-color: var(--accent); border-width: 2px 2px 0; }
+.f { display: grid; gap: 6px; }
+.f > span { font-weight: 600; font-size: 14px; }
+.f small { font-weight: 400; color: var(--muted); }
+input[type=text], textarea { font: inherit; width: 100%; padding: 9px 11px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+textarea { resize: vertical; min-height: 90px; }
+.btn { font: 600 14px var(--body); border-radius: 10px; padding: 8px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.small { padding: 5px 10px; font-size: 13px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn:focus-visible, input:focus-visible, textarea:focus-visible, .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.radios { display: grid; gap: 8px; }
+.radios label { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: baseline; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; cursor: pointer; background: var(--bg); }
+.radios label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.radios label small { grid-column: 2; color: var(--muted); }
+label.check { display: flex; gap: 8px; align-items: baseline; font-size: 14.5px; }
+label.check input { width: auto; flex: none; }
+.msg { border-radius: 10px; padding: 10px 12px; font-size: 14px; border: 1px solid var(--line); background: var(--bg); }
+.msg.ok { border-color: var(--ok); background: var(--ok-soft); }
+.msg.warn { border-color: var(--warn); background: var(--warn-soft); }
+.msg.bad { border-color: var(--bad); background: var(--bad-soft); }
+.words { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.word { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--bg); font: 600 17px var(--mono); }
+.word small { color: var(--muted); font: 500 12px var(--mono); margin-right: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 26px; }
+.chip { font: 600 13px var(--mono); border-radius: 99px; padding: 2px 10px; border: 1px solid var(--ok); background: var(--ok-soft); }
+.chip.bad { border-color: var(--bad); background: var(--bad-soft); }
+.linkbox { font: 12px/1.45 var(--mono); overflow-wrap: anywhere; background: var(--sunk); border: 1px solid var(--line); border-radius: 10px; padding: 10px; max-height: 140px; overflow: auto; }
+.fp { font: 700 clamp(20px, 4vw, 28px) var(--mono); letter-spacing: .06em; }
+.secret { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 16px; background: var(--sunk); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+table.cmp { width: 100%; border-collapse: collapse; font-size: 14px; }
+table.cmp th, table.cmp td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+table.cmp td.n { text-align: right; font-family: var(--mono); }
+table.cmp tr.on td { background: var(--accent-soft); font-weight: 600; }
+.bar { height: 8px; border-radius: 99px; background: var(--accent); min-width: 2px; }
+.who { font: 700 18px var(--display); }
+details.scope { display: block; border-left: 4px solid var(--accent); }
+details.scope > * + * { margin-top: 14px; }
+details.scope summary { cursor: pointer; list-style: none; display: flex; gap: 10px; align-items: baseline; }
+details.scope summary::-webkit-details-marker { display: none; }
+details.scope summary::before { content: "▸"; color: var(--accent); font-size: 18px; }
+details.scope[open] summary::before { content: "▾"; }
+.scope ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.disclaimer { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 8px; font-size: 14px; }
+.disclaimer h3 { color: var(--warn); }
+dialog { border: 0; border-radius: 16px; padding: 0; max-width: min(92vw, 460px); width: 100%; background: var(--surface); color: var(--ink); box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+dialog::backdrop { background: rgba(10, 15, 25, .6); }
+.qrwrap { padding: 18px; display: grid; gap: 12px; justify-items: center; text-align: center; }
+.qrbox { background: #fff; padding: 12px; border-radius: 12px; width: 100%; max-width: 360px; }
+.qrbox svg { width: 100%; height: auto; display: block; }
+footer { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
+/* FRAME-BEGIN (moldura do site: Laboratório ou Soluções; mesma em todas as páginas) */
+.lcf-bar { margin: calc(-1 * 24px) calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 24px; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.lcf-in { max-width: 1120px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; }
+.lcf-logo { font: 800 20px "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; text-decoration: none; white-space: nowrap; }
+.lcf-logo span { color: #a85d08; }
+.lcf-nav { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 14.5px; font-weight: 500; }
+.lcf-nav a { text-decoration: none; padding-bottom: 2px; border-bottom: 2px solid transparent; }
+.lcf-tag { font: 600 11.5px ui-monospace, Menlo, monospace; letter-spacing: .1em; text-transform: uppercase; }
+.lcf-lab { background: #13232b; border-bottom: 1px solid #26363d; }
+.lcf-lab .lcf-logo { color: #ffffff; } .lcf-lab .lcf-logo span { color: #f0a443; }
+.lcf-lab .lcf-logo i { font: normal 600 12px ui-monospace, Menlo, monospace; letter-spacing: .14em; color: #f0a443; margin-left: 10px; }
+.lcf-lab .lcf-nav a { color: #98abb2; } .lcf-lab .lcf-nav a[aria-current="page"] { color: #ffffff; border-color: #f0a443; }
+.lcf-lab .lcf-tag { color: #f0a443; border: 1px solid #f0a443; border-radius: 99px; padding: 3px 10px; }
+.lcf-sol { background: var(--surface, #ffffff); border-bottom: 1px solid var(--line, #cdd8dc); }
+.lcf-sol .lcf-logo { color: var(--ink, #13232b); }
+.lcf-sol .lcf-nav a { color: var(--ink, #13232b); } .lcf-sol .lcf-nav a.lcf-muted { color: var(--muted, #50646d); }
+.lcf-sol .lcf-nav a[aria-current="page"] { border-color: currentColor; }
+.lcf-btn { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 16px; border-radius: 10px; font-weight: 600; font-size: 14.5px; text-decoration: none; background: #1f5a44; color: #ffffff; }
+.lcf-end { border-radius: 16px; padding: 26px; display: grid; gap: 16px; }
+.lcf-end h2 { margin: 0; font: 800 24px "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; }
+.lcf-end .lcf-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.lcf-labend { background: #13232b; color: #e2ebee; }
+.lcf-labend .lcf-kick { font: 600 12px ui-monospace, Menlo, monospace; letter-spacing: .14em; text-transform: uppercase; color: #f0a443; margin: 0; }
+.lcf-labend a.lcf-card { background: #1b2f38; border: 1px solid #26363d; border-radius: 14px; padding: 16px; text-decoration: none; color: #e2ebee; display: grid; gap: 4px; }
+.lcf-labend a.lcf-card:hover { border-color: #f0a443; }
+.lcf-labend a.lcf-card b { color: #ffffff; } .lcf-labend a.lcf-card span { color: #98abb2; font-size: 14px; }
+.lcf-labend p { margin: 0; color: #98abb2; font-size: 14px; } .lcf-labend p a { color: #f0a443; }
+.lcf-solend { background: var(--surface, #ffffff); border: 1px solid var(--line, #cdd8dc); grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: center; gap: 24px; }
+.lcf-solend ul { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
+.lcf-solend .lcf-box { background: var(--bg, #eef2f3); border: 1px solid var(--line, #cdd8dc); border-radius: 14px; padding: 20px; display: grid; gap: 12px; justify-items: start; }
+.lcf-solend .lcf-box p { margin: 0; }
+/* FRAME-END */
+</style>
+</head>
+<body>
+<!-- FRAME-BAR -->
+<div class="lcf-bar lcf-lab" id="lcfBar"><div class="lcf-in">
+  <a class="lcf-logo" href="/#laboratorio">Lucent<span>Crypto</span><i>LAB</i></a>
+  <nav class="lcf-nav" aria-label="Lab"><a href="/en/encrypt/" aria-current="page">Encrypt</a><a href="/en/segredo/">Secret</a><a href="/en/amigo-oculto/">Secret Santa</a></nav>
+  <span class="lcf-tag">Demo</span>
+</div></div>
+<!-- /FRAME-BAR -->
+<div class="wrap">
+<header class="top">
+  <div>
+    <div class="kicker"><a href="/">LucentCrypto</a> · demo</div>
+    <h1>Lucent <span>Encrypt</span></h1>
+    <p class="lead">A 7-word phrase becomes your key. You publish a link, and anyone can use it to encrypt a message that only you can open, with the phrase. Nothing is stored anywhere: everything happens on this page. Three modes, side by side: classic (X25519), post-quantum (ML-KEM-768) and the hybrid of the two (X-Wing).</p>
+  </div>
+  <div class="row"><a class="theme" id="langBtn" href="/encrypt/" hreflang="pt" lang="pt-BR">Português</a><button class="theme" id="themeBtn" type="button"></button></div>
+</header>
+
+<div class="danger" role="note">
+  <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 2 44h44L24 4z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M24 18v12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="36.5" r="2.6" fill="currentColor"/></svg>
+  <div>
+    <b>Don’t use it for anything of value</b>
+    <p>Don’t use it for bank passwords, cryptocurrency wallet keys or anything of value. It is a demo, made with care, but without guarantees and without an independent audit. Lose the phrase and you lose the messages, forever.</p>
+  </div>
+</div>
+
+<div class="tabs" role="tablist">
+  <button class="tab" role="tab" id="tabCreate" aria-selected="true" type="button">Create my key</button>
+  <button class="tab" role="tab" id="tabSend" aria-selected="false" type="button">Encrypt for someone</button>
+  <button class="tab" role="tab" id="tabOpen" aria-selected="false" type="button">Open a message</button>
+</div>
+
+<!-- ===== Criar ===== -->
+<section class="panel" id="viewCreate" role="tabpanel">
+  <h2>1. Your identifier</h2>
+  <label class="f"><span>Name, phone or e-mail <small>goes into the key computation and appears in every link</small></span><input type="text" id="cId" maxlength="160" autocomplete="off" placeholder="Mary Smith, +44 7700 900123 or mary@example.com"></label>
+  <p class="small muted" id="cIdNorm"></p>
+  <p class="small muted">The identifier is visible in every link. Use a name if you don’t want to expose a phone number or e-mail. To recreate the key later, you will need the phrase and this identifier, typed the same way.</p>
+
+  <h2>2. Your phrase</h2>
+  <div id="cNew">
+    <div class="words" id="cWords"></div>
+    <div class="row"><button class="btn small" id="cRegen" type="button">Generate another phrase</button><button class="btn small" id="cHave" type="button">I already have a phrase</button></div>
+    <label class="check"><input type="checkbox" id="cWrote"><span><b>I wrote the phrase down somewhere safe.</b> Without it, nobody (not even LucentCrypto) can open your messages.</span></label>
+  </div>
+  <div id="cOld" hidden>
+    <label class="f"><span>Type the 7 words <small>the first 4 letters of each are enough; accents and capitals don’t matter</small></span><input type="text" id="cPhrase" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+    <div class="chips" id="cChips" aria-live="polite"></div>
+    <div class="row"><button class="btn small" id="cBackNew" type="button">Generate a new phrase</button></div>
+  </div>
+  <p class="small muted">Want to keep the phrase more safely? Split it among people you trust with <a href="/en/segredo/">Lucent Secret</a>. The words come from the Portuguese BIP-39 list, the same on both language versions, so a phrase works on either.</p>
+
+  <h2>3. The mode</h2>
+  <div class="radios" role="radiogroup" aria-label="Mode">
+    <label><input type="radio" name="cMode" value="xwing" checked><b>Hybrid: X25519 + ML-KEM-768 (X-Wing), recommended</b><small>Secure as long as either of the two holds, including against a quantum computer.</small></label>
+    <label><input type="radio" name="cMode" value="mlkem768"><b>Post-quantum: ML-KEM-768</b><small>The FIPS 203 standard, from 2024. Designed to resist quantum computers.</small></label>
+    <label><input type="radio" name="cMode" value="x25519"><b>Classic: X25519</b><small>Short and well studied, but a future quantum computer could read today’s messages.</small></label>
+  </div>
+  <div class="row"><button class="btn primary" id="cGo" type="button">Generate my public link</button><span class="small muted" id="cBusy" role="status"></span></div>
+  <div class="msg bad" id="cErr" hidden role="alert"></div>
+
+  <div id="cOut" hidden style="display:grid;gap:12px">
+    <h2>Your public link</h2>
+    <p>Send this link to whoever will write to you, or publish it. It opens nothing: it only encrypts for you.</p>
+    <div class="linkbox" id="cLink"></div>
+    <div class="row" id="cShare"></div>
+    <p class="small muted">Fingerprint, to confirm by phone or in person that the link really is yours:</p>
+    <p class="fp" id="cFp"></p>
+  </div>
+
+  <h3>What each mode costs</h3>
+  <table class="cmp" id="cCmp"></table>
+  <p class="small muted">Real sizes, in characters, for the identifier typed above. The same phrase gives a different key in each mode.</p>
+</section>
+
+<!-- ===== Cifrar ===== -->
+<section class="panel" id="viewSend" role="tabpanel" hidden>
+  <div id="sPaste">
+    <label class="f"><span>Paste the public link of the recipient</span><textarea id="sPub" rows="3" spellcheck="false" placeholder="https://lucentcrypto.org/en/encrypt/#k=…"></textarea></label>
+    <div class="msg bad" id="sPubErr" hidden></div>
+  </div>
+  <div id="sTo" hidden style="display:grid;gap:12px">
+    <p class="small muted">Encrypt for</p>
+    <p class="who" id="sWho"></p>
+    <p class="small"><span id="sMode"></span> · fingerprint <span class="mono" id="sFp"></span></p>
+    <p class="small muted">To be sure the link really belongs to that person, check the fingerprint with them another way (by phone, in person).</p>
+    <label class="f"><span>Message <small id="sCount">0 of 2000 characters</small></span><textarea id="sText" rows="6" maxlength="2000"></textarea></label>
+    <div class="row"><button class="btn primary" id="sGo" type="button">Encrypt</button><button class="btn small" id="sOther" type="button">Another recipient</button></div>
+    <div class="msg bad" id="sErr" hidden></div>
+    <div id="sOut" hidden style="display:grid;gap:12px">
+      <h2>Encrypted message</h2>
+      <p>Send this link to the person. Only their phrase opens it. The recipient won’t know who encrypted it unless you tell them.</p>
+      <div class="linkbox" id="sLink"></div>
+      <div class="row" id="sShare"></div>
+    </div>
+    <h3>This encrypted link, in each mode</h3>
+    <table class="cmp" id="sCmp"></table>
+  </div>
+</section>
+
+<!-- ===== Abrir ===== -->
+<section class="panel" id="viewOpen" role="tabpanel" hidden>
+  <div id="oPaste">
+    <label class="f"><span>Paste the link of the encrypted message</span><textarea id="oMsg" rows="3" spellcheck="false" placeholder="https://lucentcrypto.org/en/encrypt/#m=…"></textarea></label>
+    <div class="msg bad" id="oMsgErr" hidden></div>
+  </div>
+  <div id="oFor" hidden style="display:grid;gap:12px">
+    <p class="small muted">Message for</p>
+    <p class="who" id="oWho"></p>
+    <p class="small" id="oMode"></p>
+    <label class="f"><span>Your phrase <small>the first 4 letters of each word are enough</small></span><input type="text" id="oPhrase" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+    <div class="chips" id="oChips" aria-live="polite"></div>
+    <div class="row"><button class="btn primary" id="oGo" type="button">Open</button><span class="small muted" id="oBusy" role="status"></span></div>
+    <div class="msg bad" id="oErr" hidden role="alert"></div>
+    <div id="oOut" hidden style="display:grid;gap:10px">
+      <div class="secret" id="oText"></div>
+      <div class="row"><button class="btn small" id="oCopy" type="button">Copy</button><button class="btn small" id="oHide" type="button">Hide</button><span class="small muted" id="oNote" role="status"></span></div>
+    </div>
+  </div>
+</section>
+
+<details class="panel scope">
+  <summary><h2>What this demo guarantees, and what it does not</h2></summary>
+  <ul>
+    <li><b>Only the phrase opens it.</b> Nobody else reads the message, not even LucentCrypto, which never sees anything: there is no server.</li>
+    <li><b>Quantum computers:</b> in classic mode, a future quantum computer could read today’s messages. Post-quantum mode is designed to resist. The hybrid stays secure as long as either of the two holds.</li>
+    <li><b>The phrase is everything.</b> Anyone with the public link can try to guess the phrase, forever and with unlimited attempts. That is why the page draws the phrase at random (77 bits) and each attempt costs a slow derivation (Argon2id). A phrase you made up yourself would not be secure.</li>
+    <li><b>Unknown sender.</b> The recipient doesn’t know who encrypted. There are no signatures.</li>
+    <li><b>Links can be forged.</b> Someone can publish a link in another person’s name. The defense is the fingerprint, checked another way.</li>
+    <li><b>Does not protect:</b> against malware on the device or someone watching the phrase being typed; files are not supported (text only, up to 2000 characters).</li>
+  </ul>
+  <div class="disclaimer">
+    <h3>Notice: demo, no guarantees</h3>
+    <p>This page is a demo, made in good faith and with care. It is offered “as is”, <b>without warranty of any kind</b>, including of operation, security or fitness for a particular purpose. The authors and LucentCrypto accept no liability for any damage arising from its use. The code has not yet been independently audited.</p>
+  </div>
+</details>
+<!-- FRAME-END -->
+<section class="lcf-end lcf-labend" id="lcfEnd" aria-label="More in the Lab">
+  <p class="lcf-kick">More in the Lab</p>
+  <div class="lcf-cards"><a class="lcf-card" href="/en/segredo/"><b>Secret</b><span>Split a secret among people you trust.</span></a><a class="lcf-card" href="/en/amigo-oculto/"><b>Secret Santa</b><span>Everyone gets their match through their own link.</span></a></div>
+  <p>Made by <a href="/">LucentCrypto</a>, which runs verifiable draws, data publications and elections for organizations.</p>
+</section>
+<!-- /FRAME-END -->
+
+<footer>
+  <p>Format LucentEncrypt/1 · 7-word phrase (77 bits) → Argon2id (64 MiB, 3 passes) with the identifier as salt → one key per mode; KEM and AES-256-GCM. Specification (in Portuguese): <a href="https://github.com/jeroenvdgraaf/lucentcrypto/blob/main/spec/ENCRYPT.md" target="_blank" rel="noopener">spec/ENCRYPT.md</a>. Works when saved, offline.</p>
+  <p>Libraries: noble-curves, noble-post-quantum and noble-hashes, by Paul Miller; hash-wasm, by Dani Biró; qrcode-generator, by Kazuhiko Arase (all MIT licensed). Word list: the Portuguese BIP-39 list, via @scure/bip39 (MIT license).</p>
+  <p><a href="/">LucentCrypto</a></p>
+</footer>
+</div>
+
+<dialog id="qrDlg" aria-labelledby="qrTitle">
+  <div class="qrwrap">
+    <h2 id="qrTitle"></h2>
+    <div class="qrbox" id="qrBox"></div>
+    <p class="small muted" id="qrNote"></p>
+    <button class="btn primary" id="qrClose" type="button">Close</button>
+  </div>
+</dialog>
+
+<script id="lelib">// Bibliotecas empacotadas com esbuild 0.25.5 (licença MIT, Paul Miller e Dani Biró): @noble/post-quantum 0.7.1 (ML-KEM-768, X-Wing),
+// @noble/curves 2.4.0 (X25519), @noble/hashes 2.4.0 (SHA-2, HMAC, HKDF, SHA-3), hash-wasm 4.12.0 (Argon2id), @scure/bip39 2.4.0 (lista em português).
+var LELIB=(()=>{var QI=Object.defineProperty;var jg=Object.getOwnPropertyDescriptor;var _g=Object.getOwnPropertyNames;var $g=Object.prototype.hasOwnProperty;var AB=(A,I,i)=>I in A?QI(A,I,{enumerable:!0,configurable:!0,writable:!0,value:i}):A[I]=i;var IB=(A,I)=>{for(var i in I)QI(A,i,{get:I[i],enumerable:!0})},iB=(A,I,i,B)=>{if(I&&typeof I=="object"||typeof I=="function")for(let g of _g(I))!$g.call(A,g)&&g!==i&&QI(A,g,{get:()=>I[g],enumerable:!(B=jg(I,g))||B.enumerable});return A};var gB=A=>iB(QI({},"__esModule",{value:!0}),A);var w=(A,I,i)=>AB(A,typeof I!="symbol"?I+"":I,i);var Te={};IB(Te,{argon2id:()=>Vg,hkdf:()=>Mg,hmac:()=>AI,ml_kem768:()=>JI,ml_kem768_x25519:()=>xg,sha256:()=>Li,sha512:()=>Xi,wordlist:()=>vg,x25519:()=>GI});var oI=BigInt(4294967295),yi=BigInt(32);function BB(A,I=!1){return I?{h:Number(A&oI),l:Number(A>>yi&oI)}:{h:Number(A>>yi&oI)|0,l:Number(A&oI)|0}}function tI(A,I=!1){let i=A.length,B=new Uint32Array(i),g=new Uint32Array(i);for(let e=0;e<i;e++){let{h:Q,l:o}=BB(A[e],I);[B[e],g[e]]=[Q,o]}return[B,g]}var eB=A=>A/2**32|0,QB=A=>A>>>0;function pi(A,I,i,B){let g=eB(i),e=QB(i);A.setUint32(I,B?e:g,B),A.setUint32(I+4,B?g:e,B)}var zI=(A,I,i)=>A>>>i,LI=(A,I,i)=>A<<32-i|I>>>i,DA=(A,I,i)=>A>>>i|I<<32-i,wA=(A,I,i)=>A<<32-i|I>>>i,bA=(A,I,i)=>A<<64-i|I>>>i-32,zA=(A,I,i)=>A>>>i-32|I<<64-i;function iA(A,I,i,B){let g=(I>>>0)+(B>>>0);return{h:A+i+(g/2**32|0)|0,l:g|0}}var ki=(A,I,i)=>(A>>>0)+(I>>>0)+(i>>>0),Gi=(A,I,i,B)=>I+i+B+(A/2**32|0)|0,Si=(A,I,i,B)=>(A>>>0)+(I>>>0)+(i>>>0)+(B>>>0),Hi=(A,I,i,B,g)=>I+i+B+g+(A/2**32|0)|0,Ui=(A,I,i,B,g)=>(A>>>0)+(I>>>0)+(i>>>0)+(B>>>0)+(g>>>0),Ni=(A,I,i,B,g,e)=>I+i+B+g+e+(A/2**32|0)|0;function lA(A){return A instanceof Uint8Array||ArrayBuffer.isView(A)&&A.constructor.name==="Uint8Array"&&"BYTES_PER_ELEMENT"in A&&A.BYTES_PER_ELEMENT===1}var CI=A=>A?`"${A}" `:"";function Y(A,I=""){if(typeof A!="number")throw new TypeError(CI(I)+"expected number, got "+typeof A);if(!Number.isSafeInteger(A)||A<0)throw new RangeError(CI(I)+"expected integer >= 0, got "+A);return A}function mi(A,I=""){if(typeof A!="boolean")throw new TypeError(CI(I)+"expected boolean, got type="+typeof A);return A}function q(A,I,i=""){if(lA(A)&&(I===void 0||A.length===I))return A;I!==void 0&&Y(I,"length");let B=lA(A),g=I!==void 0?` of length ${I}`:"",e=B?`length=${A.length}`:`type=${typeof A}`,Q=CI(i)+"expected Uint8Array"+g+", got "+e;throw B?new RangeError(Q):new TypeError(Q)}function uA(A){if(typeof A!="function"||typeof A.create!="function")throw new TypeError("expected hash wrapped by utils.createHasher");if(Y(A.outputLen),Y(A.blockLen),A.outputLen<1||A.blockLen<1)throw new Error("hash blockLen / outputLen must be >= 1")}var tB=(A,I)=>{if(A===null||typeof A!="object"||Array.isArray(A))throw new TypeError((I==="object"?"":`"${I}" `)+"expected object, got type="+typeof A)},qi=(A,I)=>{tB(A,I);let i=Object.getPrototypeOf(A);if(i!==Object.prototype&&i!==null)throw new TypeError(`"${I}" expected plain object`);if(Object.hasOwn(A,"__proto__"))throw new TypeError(`"${I}.__proto__" is not allowed`)};function QA(A,I=!0){if(A.destroyed)throw new Error("hash was destroyed");if(I&&A.finished)throw new Error("digest() was already called")}function qA(A,I){q(A,void 0,"output");let i=I.outputLen;if(!(A.length>=i))throw new RangeError('"output" expected length >= '+i)}function LA(A){return new Uint32Array(A.buffer,A.byteOffset,Math.floor(A.byteLength/4))}function Z(...A){for(let I=0;I<A.length;I++)A[I].fill(0)}function nI(A){return new DataView(A.buffer,A.byteOffset,A.byteLength)}function $(A,I){return A<<32-I|A>>>I}var Ki=new Uint8Array(new Uint32Array([287454020]).buffer)[0]===68;function CB(A){return A<<24&4278190080|A<<8&16711680|A>>>8&65280|A>>>24&255}function nB(A){for(let I=0;I<A.length;I++)A[I]=CB(A[I]);return A}var JA=Ki?A=>A:nB,Mi=typeof Uint8Array.from([]).toHex=="function"&&typeof Uint8Array.fromHex=="function",rB=Array.from({length:256},(A,I)=>I.toString(16).padStart(2,"0"));function XA(A){if(q(A),Mi)return A.toHex();let I="";for(let i=0;i<A.length;i++)I+=rB[A[i]];return I}function Ji(A){return A>=48&&A<=57?A-48:A>=65&&A<=70?A-55:A>=97&&A<=102?A-87:void 0}function XI(A){if(typeof A!="string")throw new TypeError("hex string expected, got "+typeof A);if(Mi)try{return Uint8Array.fromHex(A)}catch(g){throw g instanceof SyntaxError?new RangeError(g.message):g}let I=A.length,i=I/2;if(I%2)throw new RangeError("hex string expected, got unpadded hex of length "+I);let B=new Uint8Array(i);for(let g=0,e=0;g<i;g++,e+=2){let Q=Ji(A.charCodeAt(e)),o=Ji(A.charCodeAt(e+1));if(Q===void 0||o===void 0){let t=A[e]+A[e+1];throw new RangeError('hex string expected, got non-hex character "'+t+'" at index '+e)}B[g]=Q*16+o}return B}function OI(...A){let I=0;for(let B=0;B<A.length;B++){let g=A[B];q(g),I+=g.length}let i=new Uint8Array(I);for(let B=0,g=0;B<A.length;B++){let e=A[B];i.set(e,g),g+=e.length}return i}function ZI(A,I,i="opts"){return qi(A,"defaults"),I!==void 0&&qi(I,i),Object.assign(Object.create(null),A,I)}function mA(A,I={}){if(typeof A!="function")throw new TypeError('"hashCons" expected function, got type='+typeof A);I=ZI({},I,"info");let i=(g,e)=>A(e).update(g).digest(),B=A(void 0);return i.outputLen=B.outputLen,i.blockLen=B.blockLen,i.canXOF=B.canXOF,i.create=g=>A(g),Object.assign(i,I),Object.freeze(i)}function rI(A=32){Y(A,"bytesLength");let I=typeof globalThis=="object"?globalThis.crypto:null;if(typeof I?.getRandomValues!="function")throw new Error("crypto.getRandomValues must be defined");if(A>65536)throw new RangeError(`"bytesLength" expected <= 65536, got ${A}`);return I.getRandomValues(new Uint8Array(A))}var EA=A=>({oid:Uint8Array.from([6,9,96,134,72,1,101,3,4,2,A])});function xi(A,I,i){return A&I^~A&i}function Ri(A,I,i){return A&I^A&i^I&i}var OA=class{constructor(I,i,B,g){w(this,"blockLen");w(this,"outputLen");w(this,"canXOF",!1);w(this,"padOffset");w(this,"isLE");w(this,"buffer");w(this,"view");w(this,"finished",!1);w(this,"length",0);w(this,"pos",0);w(this,"destroyed",!1);this.blockLen=I,this.outputLen=i,this.padOffset=B,this.isLE=g,this.buffer=new Uint8Array(I),this.view=nI(this.buffer)}update(I){QA(this),q(I);let{view:i,buffer:B,blockLen:g}=this,e=I.length,Q=!1;for(let o=0;o<e;){let t=Math.min(g-this.pos,e-o);if(t===g){let C=nI(I);for(;g<=e-o;o+=g)this.process(C,o);Q=!0;continue}B.set(o===0&&t===e?I:I.subarray(o,o+t),this.pos),this.pos+=t,o+=t,this.pos===g&&(this.process(i,0),this.pos=0,Q=!0)}return this.length+=I.length,Q&&this.roundClean(),this}digestInto(I){QA(this),qA(I,this),this.finished=!0;let{buffer:i,view:B,blockLen:g,isLE:e}=this,{pos:Q}=this;i[Q++]=128,i.fill(0,Q),this.padOffset>g-Q&&(this.process(B,0),i.fill(0)),pi(B,g-8,this.length*8,e),this.process(B,0),this.roundClean();let o=I===i?B:nI(I),t=this.outputLen,C=t/4,r=this.get();if(t%4||C>r.length)throw new Error("invalid outputLen");for(let E=0;E<C;E++)o.setUint32(4*E,r[E],e)}digest(){let{buffer:I,outputLen:i}=this;this.digestInto(I);let B=I.slice(0,i);return this.destroy(),B}_cloneIntoMeta(I){let{buffer:i,length:B,finished:g,destroyed:e,pos:Q}=this;return I.destroyed=e,I.finished=g,I.length=B,I.pos=Q,Q&&I.buffer.set(i),I}clone(){return this._cloneInto()}},Yi=Uint32Array.from([1779033703,3144134277,1013904242,2773480762,1359893119,2600822924,528734635,1541459225]);var bi=Uint32Array.from([1779033703,4089235720,3144134277,2227873595,1013904242,4271175723,2773480762,1595750129,1359893119,2917565137,2600822924,725511199,528734635,4215389547,1541459225,327033209]);var aB=Uint32Array.from([1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298]),sA=new Uint32Array(64),VI=class extends OA{constructor(i,B){super(64,i,8,!1);w(this,"A",0);w(this,"B",0);w(this,"C",0);w(this,"D",0);w(this,"E",0);w(this,"F",0);w(this,"G",0);w(this,"H",0);this.A=B[0]|0,this.B=B[1]|0,this.C=B[2]|0,this.D=B[3]|0,this.E=B[4]|0,this.F=B[5]|0,this.G=B[6]|0,this.H=B[7]|0}get(){let{A:i,B,C:g,D:e,E:Q,F:o,G:t,H:C}=this;return[i,B,g,e,Q,o,t,C]}set(i,B,g,e,Q,o,t,C){this.A=i|0,this.B=B|0,this.C=g|0,this.D=e|0,this.E=Q|0,this.F=o|0,this.G=t|0,this.H=C|0}_cloneInto(i){return(i||(i=new this.constructor)).set(...this.get()),this._cloneIntoMeta(i)}process(i,B){for(let s=0;s<16;s++,B+=4)sA[s]=i.getUint32(B,!1);for(let s=16;s<64;s++){let f=sA[s-15],F=sA[s-2],l=$(f,7)^$(f,18)^f>>>3,y=$(F,17)^$(F,19)^F>>>10;sA[s]=y+sA[s-7]+l+sA[s-16]|0}let{A:g,B:e,C:Q,D:o,E:t,F:C,G:r,H:E}=this;for(let s=0;s<64;s++){let f=$(t,6)^$(t,11)^$(t,25),F=E+f+xi(t,C,r)+aB[s]+sA[s]|0,y=($(g,2)^$(g,13)^$(g,22))+Ri(g,e,Q)|0;E=r,r=C,C=t,t=o+F|0,o=Q,Q=e,e=g,g=F+y|0}g=g+this.A|0,e=e+this.B|0,Q=Q+this.C|0,o=o+this.D|0,t=t+this.E|0,C=C+this.F|0,r=r+this.G|0,E=E+this.H|0,this.set(g,e,Q,o,t,C,r,E)}roundClean(){Z(sA)}destroy(){this.destroyed=!0,this.set(0,0,0,0,0,0,0,0),Z(this.buffer)}},vI=class extends VI{constructor(){super(32,Yi)}};var zi=tI(["0x428a2f98d728ae22","0x7137449123ef65cd","0xb5c0fbcfec4d3b2f","0xe9b5dba58189dbbc","0x3956c25bf348b538","0x59f111f1b605d019","0x923f82a4af194f9b","0xab1c5ed5da6d8118","0xd807aa98a3030242","0x12835b0145706fbe","0x243185be4ee4b28c","0x550c7dc3d5ffb4e2","0x72be5d74f27b896f","0x80deb1fe3b1696b1","0x9bdc06a725c71235","0xc19bf174cf692694","0xe49b69c19ef14ad2","0xefbe4786384f25e3","0x0fc19dc68b8cd5b5","0x240ca1cc77ac9c65","0x2de92c6f592b0275","0x4a7484aa6ea6e483","0x5cb0a9dcbd41fbd4","0x76f988da831153b5","0x983e5152ee66dfab","0xa831c66d2db43210","0xb00327c898fb213f","0xbf597fc7beef0ee4","0xc6e00bf33da88fc2","0xd5a79147930aa725","0x06ca6351e003826f","0x142929670a0e6e70","0x27b70a8546d22ffc","0x2e1b21385c26c926","0x4d2c6dfc5ac42aed","0x53380d139d95b3df","0x650a73548baf63de","0x766a0abb3c77b2a8","0x81c2c92e47edaee6","0x92722c851482353b","0xa2bfe8a14cf10364","0xa81a664bbc423001","0xc24b8b70d0f89791","0xc76c51a30654be30","0xd192e819d6ef5218","0xd69906245565a910","0xf40e35855771202a","0x106aa07032bbd1b8","0x19a4c116b8d2d0c8","0x1e376c085141ab53","0x2748774cdf8eeb99","0x34b0bcb5e19b48a8","0x391c0cb3c5c95a63","0x4ed8aa4ae3418acb","0x5b9cca4f7763e373","0x682e6ff3d6b2b8a3","0x748f82ee5defb2fc","0x78a5636f43172f60","0x84c87814a1f0ab72","0x8cc702081a6439ec","0x90befffa23631e28","0xa4506cebde82bde9","0xbef9a3f7b2c67915","0xc67178f2e372532b","0xca273eceea26619c","0xd186b8c721c0c207","0xeada7dd6cde0eb1e","0xf57d4f7fee6ed178","0x06f067aa72176fba","0x0a637dc5a2c898a6","0x113f9804bef90dae","0x1b710b35131c471b","0x28db77f523047d84","0x32caab7b40c72493","0x3c9ebe0a15c9bebc","0x431d67c49c100d4c","0x4cc5d4becb3e42b6","0x597f299cfc657e2a","0x5fcb6fab3ad6faec","0x6c44198c4a475817"].map(A=>BigInt(A))),cB=zi[0],EB=zi[1],hA=new Uint32Array(80),fA=new Uint32Array(80),WI=class extends OA{constructor(i,B){super(128,i,16,!1);w(this,"Ah",0);w(this,"Al",0);w(this,"Bh",0);w(this,"Bl",0);w(this,"Ch",0);w(this,"Cl",0);w(this,"Dh",0);w(this,"Dl",0);w(this,"Eh",0);w(this,"El",0);w(this,"Fh",0);w(this,"Fl",0);w(this,"Gh",0);w(this,"Gl",0);w(this,"Hh",0);w(this,"Hl",0);this.Ah=B[0]|0,this.Al=B[1]|0,this.Bh=B[2]|0,this.Bl=B[3]|0,this.Ch=B[4]|0,this.Cl=B[5]|0,this.Dh=B[6]|0,this.Dl=B[7]|0,this.Eh=B[8]|0,this.El=B[9]|0,this.Fh=B[10]|0,this.Fl=B[11]|0,this.Gh=B[12]|0,this.Gl=B[13]|0,this.Hh=B[14]|0,this.Hl=B[15]|0}get(){let{Ah:i,Al:B,Bh:g,Bl:e,Ch:Q,Cl:o,Dh:t,Dl:C,Eh:r,El:E,Fh:s,Fl:f,Gh:F,Gl:l,Hh:y,Hl:u}=this;return[i,B,g,e,Q,o,t,C,r,E,s,f,F,l,y,u]}set(i,B,g,e,Q,o,t,C,r,E,s,f,F,l,y,u){this.Ah=i|0,this.Al=B|0,this.Bh=g|0,this.Bl=e|0,this.Ch=Q|0,this.Cl=o|0,this.Dh=t|0,this.Dl=C|0,this.Eh=r|0,this.El=E|0,this.Fh=s|0,this.Fl=f|0,this.Gh=F|0,this.Gl=l|0,this.Hh=y|0,this.Hl=u|0}_cloneInto(i){return(i||(i=new this.constructor)).set(...this.get()),this._cloneIntoMeta(i)}process(i,B){for(let n=0;n<16;n++,B+=4)hA[n]=i.getUint32(B),fA[n]=i.getUint32(B+=4);for(let n=16;n<80;n++){let h=hA[n-15]|0,a=fA[n-15]|0,d=DA(h,a,1)^DA(h,a,8)^zI(h,a,7),p=wA(h,a,1)^wA(h,a,8)^LI(h,a,7),k=hA[n-2]|0,G=fA[n-2]|0,S=DA(k,G,19)^bA(k,G,61)^zI(k,G,6),H=wA(k,G,19)^zA(k,G,61)^LI(k,G,6),U=Si(p,H,fA[n-7],fA[n-16]),K=Hi(U,d,S,hA[n-7],hA[n-16]);hA[n]=K|0,fA[n]=U|0}let{Ah:g,Al:e,Bh:Q,Bl:o,Ch:t,Cl:C,Dh:r,Dl:E,Eh:s,El:f,Fh:F,Fl:l,Gh:y,Gl:u,Hh:D,Hl:c}=this;for(let n=0;n<80;n++){let h=DA(s,f,14)^DA(s,f,18)^bA(s,f,41),a=wA(s,f,14)^wA(s,f,18)^zA(s,f,41),d=s&F^~s&y,p=f&l^~f&u,k=Ui(c,a,p,EB[n],fA[n]),G=Ni(k,D,h,d,cB[n],hA[n]),S=k|0,H=DA(g,e,28)^bA(g,e,34)^bA(g,e,39),U=wA(g,e,28)^zA(g,e,34)^zA(g,e,39),K=g&Q^g&t^Q&t,L=e&o^e&C^o&C;D=y|0,c=u|0,y=F|0,u=l|0,F=s|0,l=f|0,{h:s,l:f}=iA(r|0,E|0,G|0,S|0),r=t|0,E=C|0,t=Q|0,C=o|0,Q=g|0,o=e|0;let N=ki(S,U,L);g=Gi(N,G,H,K),e=N|0}({h:g,l:e}=iA(this.Ah|0,this.Al|0,g|0,e|0)),{h:Q,l:o}=iA(this.Bh|0,this.Bl|0,Q|0,o|0),{h:t,l:C}=iA(this.Ch|0,this.Cl|0,t|0,C|0),{h:r,l:E}=iA(this.Dh|0,this.Dl|0,r|0,E|0),{h:s,l:f}=iA(this.Eh|0,this.El|0,s|0,f|0),{h:F,l}=iA(this.Fh|0,this.Fl|0,F|0,l|0),{h:y,l:u}=iA(this.Gh|0,this.Gl|0,y|0,u|0),{h:D,l:c}=iA(this.Hh|0,this.Hl|0,D|0,c|0),this.set(g,e,Q,o,t,C,r,E,s,f,F,l,y,u,D,c)}roundClean(){Z(hA,fA)}destroy(){this.destroyed=!0,Z(this.buffer),this.set(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)}},PI=class extends WI{constructor(){super(64,bi)}};var Li=mA(()=>new vI,EA(1));var Xi=mA(()=>new PI,EA(3));function ZA(A,I,i=()=>{}){if(!Array.isArray(A))throw new TypeError(`"${I}" expected array, got type=${typeof A}`);for(let B=0;B<A.length;B++)i(A[B],`${I}[${B}]`);return A}var oA=(A,I,i)=>q(A,I,i),TI=Y;function dA(A,I="object"){if(A===null||typeof A!="object"||Array.isArray(A))throw new TypeError(I==="object"?"expected valid options object":`"${I}" expected object, got type=${typeof A}`);return A}function v(A,I){if(typeof A!="function")throw new TypeError(`"${I}" is invalid: expected function, got ${typeof A}`);return A}var Zi=XA,jI=(...A)=>OI(...A),Vi=A=>XI(A),cI=lA,EI=A=>rI(A),aI=BigInt(0),Oi=BigInt(1),sB=A=>A?`"${A}" `:"";function tA(A,I=""){if(typeof A!="boolean")throw new TypeError(sB(I)+"expected boolean, got type="+typeof A);return A}function hB(A){if(typeof A=="bigint"){if(!FA(A))throw new RangeError("positive bigint expected, got "+A)}else TI(A);return A}function VA(A,I=""){if(typeof A!="number"){let i=I&&`"${I}" `;throw new TypeError(i+"expected number, got type="+typeof A)}if(!Number.isSafeInteger(A)){let i=I&&`"${I}" `;throw new RangeError(i+"expected safe integer, got "+A)}}function vi(A){if(typeof A!="string")throw new TypeError("hex string expected, got "+typeof A);return A===""?aI:BigInt("0x"+A)}function KA(A){return vi(XA(A))}function CA(A){return vi(XA(yA(q(A)).reverse()))}function sI(A,I){if(Y(I),I===0)throw new Error("zero output length is invalid");A=hB(A);let i=I*2,B=A.toString(16);if(B.length>i)throw new RangeError("number is too large");return XI(B.padStart(i,"0"))}function hI(A,I){return sI(A,I).reverse()}function yA(A){return Uint8Array.from(oA(A))}function Wi(A){if(typeof A!="string")throw new TypeError("ascii string expected, got "+typeof A);return Uint8Array.from(A,(I,i)=>{let B=I.charCodeAt(0);if(I.length!==1||B>127)throw new RangeError(`string contains non-ASCII character "${A[i]}" with code ${B} at position ${i}`);return B})}function FA(A){return typeof A=="bigint"&&aI<=A}function _I(A,I,i){return FA(A)&&FA(I)&&FA(i)&&I<=A&&A<i}function pA(A,I,i,B){if(!_I(I,i,B))throw new RangeError("expected valid "+A+": "+i+" <= n < "+B+", got "+I)}function $I(A){if(A<aI)throw new Error("expected non-negative bigint, got "+A);return A===aI?0:A.toString(2).length}var Pi=A=>(VA(A,"n"),(Oi<<BigInt(A))-Oi);function nA(A,I={},i={},B="object"){dA(A,B),dA(I,"fields"),dA(i,"optFields");function g(Q,o,t){let C=B==="object"?`param "${String(Q)}"`:`"${B}.${String(Q)}"`,r=A[Q];if(!Object.hasOwn(A,Q)&&(t?r!==void 0:o!=="function"))throw new TypeError(`${C} is invalid: expected own property`);if(t&&r===void 0)return;let E=typeof r;if(E!==o||r===null)throw new TypeError(`${C} is invalid: expected ${o}, got ${E}`)}let e=(Q,o)=>Object.entries(Q).forEach(([t,C])=>g(t,C,o));e(I,!1),e(i,!0)}var z=BigInt(0),x=BigInt(1),kA=BigInt(2),_i=BigInt(3),Ai=BigInt(4),$i=BigInt(5),fB=BigInt(7),Ag=BigInt(8),dB=BigInt(9),FB=BigInt(15),Ig=BigInt(16),DB=BigInt("0x10000000000000000");function m(A,I){if(I<=z)throw new Error("mod: expected positive modulus, got "+I);let i=A%I;return i>=z?i:I+i}function wB(A,I,i){if(i<=x)throw new Error("pow: expected modulus > 1, got "+i);if(typeof I!="bigint")throw new TypeError("invalid exponent: expected bigint, got "+typeof I);if(I<z)throw new Error("invalid exponent, negatives unsupported");if(I===z)return x;if(I===x)return A;let B=A%i;if(B<z&&(B+=i),I<DB){let o=x;for(;I>z;)I&x&&(o=o*B%i),B=B*B%i,I>>=x;return o}let g=[];for(;I>z;)g.push(Number(I&FB)),I>>=Ai;let e=new Array(16);e[0]=x,e[1]=B;for(let o=2;o<16;o++)e[o]=e[o-1]*B%i;let Q=e[g[g.length-1]];for(let o=g.length-2;o>=0;o--){Q=Q*Q%i,Q=Q*Q%i,Q=Q*Q%i,Q=Q*Q%i;let t=g[o];t!==0&&(Q=Q*e[t]%i)}return Q}function P(A,I,i){if(i<=x)throw new Error("pow2: expected modulus > 1, got "+i);if(I<z)throw new Error("pow2: expected non-negative exponent, got "+I);let B=A;for(;I-- >z;)B*=B,B%=i;return B}function Ti(A,I){if(A===z)throw new Error("invert: expected non-zero number");if(I<=x)throw new Error("invert: expected modulus > 1, got "+I);let i=m(A,I),B=I,g=z,e=x;for(;i!==z;){let o=B/i,t=B-i*o,C=g-e*o;B=i,i=t,g=e,e=C}if(B!==x)throw new Error("invert: does not exist");return m(g,I)}function Ii(A,I,i){let B=A;if(!B.eql(B.sqr(I),i))throw new Error("Cannot find square root")}function ii(A,I){if((A&x)===z)throw new Error(I+": expected odd modulus, got "+A)}function ig(A,I){let i=A,B=(i.ORDER+x)/Ai,g=i.pow(I,B);return Ii(i,g,I),g}function lB(A,I){let i=A,B=(i.ORDER-$i)/Ag,g=i.mul(I,kA),e=i.pow(g,B),Q=i.mul(I,e),o=i.mul(i.mul(Q,kA),e),t=i.mul(Q,i.sub(o,i.ONE));return Ii(i,t,I),t}function uB(A){let I=FI(A),i=gg(A),B=i(I,I.neg(I.ONE)),g=i(I,B),e=i(I,I.neg(B)),Q=(A+fB)/Ig;return(o,t)=>{let C=o,r=C.pow(t,Q),E=C.mul(r,B),s=C.mul(r,g),f=C.mul(r,e),F=C.eql(C.sqr(E),t),l=C.eql(C.sqr(s),t);r=C.cmov(r,E,F),E=C.cmov(f,s,l);let y=C.eql(C.sqr(E),t),u=C.cmov(r,E,y);return Ii(C,u,t),u}}function gg(A){if(A<_i)throw new Error("sqrt is not defined for small field");ii(A,"tonelliShanks");let I=A-x,i=0;for(;I%kA===z;)I/=kA,i++;let B=kA,g=FI(A);for(;vA(g,B)===1;)if(B++>1e3)throw new Error("Cannot find square root: probably non-prime P");if(i===1)return ig;let e=g.pow(B,I),Q=(I+x)/kA;return function(t,C){let r=t;if(r.is0(C))return C;if(vA(r,C)!==1)throw new Error("Cannot find square root");let E=i,s=r.mul(r.ONE,e),f=r.pow(C,I),F=r.pow(C,Q);for(;!r.eql(f,r.ONE);){if(r.is0(f))throw new Error("Cannot find square root: probably non-prime P");let l=1,y=r.sqr(f);for(;!r.eql(y,r.ONE);)if(l++,y=r.sqr(y),l===E)throw new Error("Cannot find square root");let u=x<<BigInt(E-l-1),D=r.pow(s,u);E=l,s=r.sqr(D),f=r.mul(f,s),F=r.mul(F,D)}return F}}function yB(A){return ii(A,"Fp.sqrt"),A%Ai===_i?ig:A%Ag===$i?lB:A%Ig===dB?uB(A):gg(A)}var Bg=(A,I)=>(m(A,I)&x)===x,pB=["create","isValid","is0","neg","inv","sqrt","sqr","eql","add","sub","mul","pow","div","addN","subN","mulN","sqrN"];function MA(A){if(dA(A,"field"),typeof A.ORDER!="bigint")throw new TypeError('param "ORDER" is invalid: expected bigint, got '+typeof A.ORDER);VA(A.BYTES,"BYTES"),VA(A.BITS,"BITS");for(let I of pB)v(A[I],"field."+I);if(A.BYTES<1||A.BITS<1)throw new Error("invalid field: expected BYTES/BITS > 0");if(A.ORDER<=x)throw new Error("invalid field: expected ORDER > 1, got "+A.ORDER);return A}function dI(A,I,i=!1){MA(A),ZA(I,"nums"),tA(i,"passZero");let B=A,g=new Array(I.length).fill(i?B.ZERO:void 0),e=I.reduce((o,t,C)=>B.is0(t)?o:(g[C]=o,B.mul(o,t)),B.ONE),Q=B.inv(e);return I.reduceRight((o,t,C)=>B.is0(t)?o:(g[C]=B.mul(o,g[C]),B.mul(o,t)),Q),g}function vA(A,I){MA(A);let i=A;ii(i.ORDER,"FpLegendre");let B=(i.ORDER-x)/kA,g=i.pow(I,B),e=i.eql(g,i.ONE),Q=i.eql(g,i.ZERO),o=i.eql(g,i.neg(i.ONE));if(!e&&!Q&&!o)throw new Error("invalid Legendre symbol result");return e?1:Q?0:-1}function kB(A,I){if(I!==void 0&&TI(I),A<=z)throw new Error("invalid n length: expected positive n, got "+A);if(I!==void 0&&I<1)throw new Error("invalid n length: expected positive bit length, got "+I);let i=$I(A);if(I!==void 0&&I<i)throw new Error(`invalid n length: expected nBitLength (${I}) >= bitLen(n) (${i})`);let B=I!==void 0?I:i,g=Math.ceil(B/8);return{nBitLength:B,nByteLength:g}}var ji=new WeakMap,fI=class{constructor(I,i={}){w(this,"ORDER");w(this,"BITS");w(this,"BYTES");w(this,"isLE");w(this,"ZERO",z);w(this,"ONE",x);w(this,"_lengths");w(this,"_mod");if(I<=x)throw new Error("invalid field: expected ORDER > 1, got "+I);let B;this.isLE=!1,i!=null&&typeof i=="object"&&(typeof i.BITS=="number"&&(B=i.BITS),typeof i.sqrt=="function"&&Object.defineProperty(this,"sqrt",{value:i.sqrt,enumerable:!0}),typeof i.isLE=="boolean"&&(this.isLE=i.isLE),i.allowedLengths&&(this._lengths=Object.freeze(i.allowedLengths.slice())),typeof i.modFromBytes=="boolean"&&(this._mod=i.modFromBytes));let{nBitLength:g,nByteLength:e}=kB(I,B);if(e>2048)throw new Error("invalid field: expected ORDER of <= 2048 bytes");this.ORDER=I,this.BITS=g,this.BYTES=e,Object.freeze(this)}create(I){return m(I,this.ORDER)}isValid(I){if(typeof I!="bigint")throw new TypeError("invalid field element: expected bigint, got "+typeof I);return z<=I&&I<this.ORDER}is0(I){return I===z}isValidNot0(I){return!this.is0(I)&&this.isValid(I)}isOdd(I){return(I&x)===x}neg(I){return m(-I,this.ORDER)}eql(I,i){return I===i}sqr(I){return m(I*I,this.ORDER)}add(I,i){return m(I+i,this.ORDER)}sub(I,i){return m(I-i,this.ORDER)}mul(I,i){return m(I*i,this.ORDER)}pow(I,i){return wB(I,i,this.ORDER)}div(I,i){return m(I*Ti(i,this.ORDER),this.ORDER)}sqrN(I){return I*I}addN(I,i){return I+i}subN(I,i){return I-i}mulN(I,i){return I*i}inv(I){return Ti(I,this.ORDER)}sqrt(I){let i=ji.get(this);return i||ji.set(this,i=yB(this.ORDER)),i(this,I)}toBytes(I){return this.isLE?hI(I,this.BYTES):sI(I,this.BYTES)}fromBytes(I,i=!1){oA(I);let{_lengths:B,BYTES:g,isLE:e,ORDER:Q,_mod:o}=this;if(B){if(I.length<1||!B.includes(I.length)||I.length>g)throw new Error("Field.fromBytes: expected "+B+" bytes, got "+I.length);let C=new Uint8Array(g);C.set(I,e?0:C.length-I.length),I=C}if(I.length!==g)throw new Error("Field.fromBytes: expected "+g+" bytes, got "+I.length);let t=e?CA(I):KA(I);if(o&&(t=m(t,Q)),!i&&!this.isValid(t))throw new Error("invalid field element: outside of range 0..ORDER");return t}invertBatch(I){return dI(this,I,!0)}cmov(I,i,B){return tA(B,"condition"),B?i:I}};function FI(A,I={}){return Object.freeze(fI.prototype),new fI(A,I)}var ei=BigInt(0),WA=BigInt(1),GB=BigInt(4),gi=16,eg=128,SB=5,Qg=2**31;function wI(A){let I=A;if(typeof I!="function")throw new TypeError('"Point" expected constructor, got type='+typeof A);v(I.fromAffine,"Point.fromAffine"),v(I.fromBytes,"Point.fromBytes"),v(I.fromHex,"Point.fromHex"),dA(I.BASE,"Point.BASE"),dA(I.ZERO,"Point.ZERO"),MA(I.Fp),MA(I.Fn)}function tg(A,I){wI(A),Cg(I,A);let i=dI(A.Fp,I.map(B=>B.Z));return I.map((B,g)=>A.fromAffine(B.toAffine(i[g])))}function HB(A,I,i=1){if(!Number.isSafeInteger(A)||A<i||A>I)throw new Error("invalid window size, expected ["+i+".."+I+"], got W="+A)}function UB(A,I){let i=A*(4*I+128);if(i>Qg)throw new Error("invalid window size: table would need ~"+Math.ceil(i/2**20)+" MiB, max "+Qg/2**20+" MiB")}function NB(A,I){if(A!==void 0){v(A,"randomBytes");try{let i=A(I);if(!cI(i)||i.length!==I)return}catch{return}return A}}function Cg(A,I){ZA(A,"points"),A.forEach((i,B)=>{if(!(i instanceof I))throw new Error("invalid point at index "+B)})}function qB(A,I,i){if(!Array.isArray(A))throw new Error("array of scalars expected");A.forEach((B,g)=>{if(!(i===void 0?I.isValid(B):FA(B)&&B<i))throw new Error("invalid scalar at index "+g)})}var ng=new WeakMap;function Bi(A){return ng.get(A)||1}function JB(A,I){let i=A.double(),B=[A];for(let g=1;g<I;g++)B.push(B[g-1].add(i));return B}function mB(A,I){let i=2**I,B=i/2,g=BigInt(i-1),e=[];for(;A>ei;){let Q=0;A&WA&&(Q=Number(A&g),Q>=B&&(Q-=i),A-=BigInt(Q)),e.push(Q),A>>=WA}return e}function KB(A,I,i){let B=2**I,g=B/2,e=BigInt(B-1),Q=BigInt(I),o=[];for(let t=0;t<i;t++){let C=Number(A&e);A>>=Q,C>g&&(C-=B,A+=WA),o.push(C)}if(A!==ei)throw new Error("invalid wnaf");return o}function MB(A,I,i){let B=0;for(let e of i)B=Math.max(B,e.length);let g=A;for(let e=B-1;e>=0;e--){e!==B-1&&(g=g.double());for(let Q=0;Q<i.length;Q++){let o=i[Q][e];if(o){let t=I[Q][Math.abs(o)-1>>1];g=g.add(o<0?t.negate():t)}}}return g}var DI=class{constructor(I,i){w(this,"Point");w(this,"BASE");w(this,"ZERO");w(this,"randomBytes");w(this,"wnafPrecomputes",new WeakMap);w(this,"baseCanBeBlinded");w(this,"bits");wI(I),this.randomBytes=NB(i,gi),this.Point=I,this.BASE=I.BASE,this.ZERO=I.ZERO,this.bits=I.Fn.BITS}buildWnafTable(I,i,B){let g=Math.ceil(B/i)+1,e=2**(i-1),Q=[],o=I;for(let t=0;t<g;t++){let C=o;for(let r=0;r<e;r++)Q.push(C),C=C.add(o);o=Q[Q.length-1].double()}return{W:i,bits:B,windows:g,comp:Q}}wnafCachedCT(I,i){let{W:B,windows:g,comp:e}=I,Q=2**(B-1),o=KB(i,B,g),t=this.ZERO,C=this.BASE;for(let r=0;r<g;r++){let E=o[r],s=r*Q,f=Math.abs(E)-1,F=e[s];for(let y=1;y<Q;y++)F=y===f?e[s+y]:F;let l=F.negate();E===0?C=C.add(e[s]):t=t.add(E<0?l:F)}return{p:t,f:C}}getWnafPrecomputes(I,i,B,g){let e=this.wnafPrecomputes.get(i),Q=e?.find(o=>o.W===I&&o.bits===B);return Q||(Q=this.buildWnafTable(i,I,B),typeof g=="function"&&(Q={...Q,comp:g(Q.comp)}),e||(e=[],this.wnafPrecomputes.set(i,e)),e.push(Q)),Q}assertPoint(I){if(!(I instanceof this.Point))throw new TypeError('"point" expected Point instance, got type='+typeof I)}validateMulInput(I,i){if(this.assertPoint(I),!_I(i,WA,this.Point.Fn.ORDER))throw new Error("invalid scalar")}runCT(I,i,B,g){let e=Bi(I);return e===1?this.fixedWindowCT(I,i,B):this.wnafCachedCT(this.getWnafPrecomputes(e,I,B,g),i)}mulCT(I,i,B){return this.validateMulInput(I,i),this.runCT(I,i,this.bits,B)}mulCTBlinded(I,i,B){if(this.validateMulInput(I,i),this.randomBytes===void 0)throw new Error("randomBytes is required for scalar blinding");let g=this.Point.Fn.BITS+eg,e=this.randomBytes(gi);if(!cI(e)||e.length!==gi)throw new Error("randomBytes returned invalid byte array");e[0]=e[0]&63|128;let Q=i+KA(e)*this.Point.Fn.ORDER;return this.runCT(I,Q,g,B)}fixedWindowCT(I,i,B){let g=SB,e=1<<g,Q=Pi(g),o=new Array(e);o[0]=this.ZERO;for(let r=1;r<e;r++)o[r]=o[r-1].add(I);let t=Math.ceil(B/g),C=this.ZERO;for(let r=t-1;r>=0;r--){if(r!==t-1)for(let f=0;f<g;f++)C=C.double();let E=Number(i>>BigInt(r*g)&Q),s=o[0];for(let f=1;f<e;f++)s=f===E?o[f]:s;C=C.add(s)}return{p:C,f:C}}shouldBlind(I,i){return this.randomBytes===void 0?!1:i===WA?!0:I!==this.BASE?!1:(this.baseCanBeBlinded===void 0&&(this.baseCanBeBlinded=this.mulUnsafe(this.BASE,this.Point.Fn.ORDER).is0()),this.baseCanBeBlinded)}mulSecret(I,i,B,g){return this.shouldBlind(I,B)?this.mulCTBlinded(I,i,g):this.mulCT(I,i,g)}mulUnsafe(I,i,B){if(this.assertPoint(I),!FA(i))throw new Error("invalid scalar");let g=Bi(I);if(g===1||i>=this.Point.Fn.ORDER)return xB(this.Point,[I],[i],!0);let e=this.getWnafPrecomputes(g,I,this.bits,B);return this.wnafCachedCT(e,i).p}setWindowSize(I,i){this.assertPoint(I),HB(i,this.bits);let B=Math.ceil((this.bits+eg)/i)+1;UB(B*2**(i-1),this.Point.Fp.BYTES),ng.set(I,i),this.wnafPrecomputes.delete(I)}hasWindowSize(I){return Bi(I)!==1}};function xB(A,I,i,B=!1){if(wI(A),Cg(I,A),tA(B,"allowOversized"),qB(i,A.Fn,B?A.Fn.ORDER**GB:void 0),I.length!==i.length)throw new Error("arrays of points and scalars must have equal length");let g=I.map(Q=>JB(Q,4)),e=i.map(Q=>mB(Q,4));return MB(A.ZERO,g,e)}function og(A,I,i){if(I){if(I.ORDER!==A)throw new Error("Field.ORDER must match order: Fp == p, Fn == n");return MA(I),I}else return FI(A,{isLE:i})}function rg(A,I,i={},B){if(A!=="weierstrass"&&A!=="edwards")throw new Error('expected curve type "weierstrass" or "edwards"');if(B===void 0&&(B=A==="edwards"),!I||typeof I!="object")throw new Error(`expected valid ${A} CURVE object`);nA(i);for(let t of["p","n","h"]){let C=I[t];if(!(FA(C)&&C!==ei))throw new Error(`CURVE.${t} must be positive bigint`)}let g=og(I.p,i.Fp,B),e=og(I.n,i.Fn,B),o=["Gx","Gy","a",A==="weierstrass"?"b":"d"];for(let t of o)if(!g.isValid(I[t]))throw new Error(`CURVE.${t} must be valid field element of CURVE.Fp`);return I=Object.freeze(Object.assign({},I)),{CURVE:I,Fp:g,Fn:e}}function Qi(A,I){return function(B){let g=A(B);return{secretKey:g,publicKey:I(g)}}}var lI=BigInt(0),uI=BigInt(1),yI=BigInt(2),RB=BigInt(4),ag=BigInt(8);function YB(A,I,i,B){let g=A.sqr(i),e=A.sqr(B),Q=A.add(A.mul(I.a,g),e),o=A.add(A.ONE,A.mul(I.d,A.mul(g,e)));return A.eql(Q,o)}function cg(A,I={}){nA(I,{},{},"extraOpts");let i=I,B=rg("edwards",A,i,i.FpFnLE),{Fp:g,Fn:e}=B,Q=B.CURVE,{h:o}=Q;if(vA(g,Q.a)!==1)throw new Error("edwards: CURVE.a must be a square in Fp for complete addition formulas");if(vA(g,Q.d)!==-1)throw new Error("edwards: CURVE.d must be a non-square in Fp for complete addition formulas");nA(i,{},{uvRatio:"function",randomBytes:"function"});let t=i.randomBytes===void 0?EI:i.randomBytes,C=yI<<BigInt(g.BYTES*8)-uI;function r(c){if(!g.isOdd)throw new Error("Field does not have .isOdd()");return g.isOdd(c)}let E=i.uvRatio===void 0?(c,n)=>{try{return{isValid:!0,value:g.sqrt(g.div(c,n))}}catch{return{isValid:!1,value:lI}}}:i.uvRatio;if(!YB(g,Q,Q.Gx,Q.Gy))throw new Error("bad curve params: generator point");let s=g.eql(Q.a,g.neg(g.ONE))?c=>g.neg(c):g.eql(Q.a,g.ONE)?c=>c:c=>g.mul(Q.a,c);function f(c,n,h=!1){let a=h?uI:lI;return pA("coordinate "+c,n,a,C),n}function F(c){if(!(c instanceof l))throw new Error("EdwardsPoint expected")}let D=class D{constructor(n,h,a,d){w(this,"X");w(this,"Y");w(this,"Z");w(this,"T");this.X=f("x",n),this.Y=f("y",h),this.Z=f("z",a,!0),this.T=f("t",d),Object.freeze(this)}static CURVE(){return Q}static fromAffine(n){if(n instanceof D)throw new Error("extended point not allowed");let{x:h,y:a}=n||{};return f("x",h),f("y",a),new D(h,a,g.ONE,g.mul(h,a))}static fromBytes(n,h=!1){let a=g.BYTES,{a:d,d:p}=Q;n=yA(oA(n,a,"point")),tA(h,"zip215");let k=yA(n),G=n[a-1];k[a-1]=G&-129;let S=CA(k),H=h?C:g.ORDER;pA("point.y",S,lI,H);let U=g.sqr(S),K=g.sub(U,g.ONE),L=g.sub(g.mulN(p,U),d),{isValid:N,value:R}=E(K,L);if(!N)throw new Error("bad point: invalid y coordinate");let b=r(R),V=(G&128)!==0;if(!h&&g.is0(R)&&V)throw new Error("bad point: x=0 and x_0=1");return V!==b&&(R=g.neg(R)),D.fromAffine({x:R,y:S})}static fromHex(n,h=!1){return D.fromBytes(Vi(n),h)}get x(){return this.toAffine().x}get y(){return this.toAffine().y}precompute(n=6,h=!0){return u.setWindowSize(this,n),h||this.multiply(yI),this}assertValidity(){let n=this,{a:h,d:a}=Q;if(n.is0())throw new Error("bad point: ZERO");let{X:d,Y:p,Z:k,T:G}=n,S=g.sqr(d),H=g.sqr(p),U=g.sqr(k),K=g.sqr(U),L=g.mul(S,h),N=g.mul(g.add(L,H),U),R=g.add(K,g.mul(a,g.mul(S,H)));if(!g.eql(N,R))throw new Error("bad point: equation left != right (1)");let b=g.mul(d,p),V=g.mul(k,G);if(!g.eql(b,V))throw new Error("bad point: equation left != right (2)")}equals(n){F(n);let{X:h,Y:a,Z:d}=this,{X:p,Y:k,Z:G}=n,S=g.mul(h,G),H=g.mul(p,d),U=g.mul(a,G),K=g.mul(k,d);return g.eql(S,H)&&g.eql(U,K)}is0(){return this.equals(D.ZERO)}negate(){return new D(g.neg(this.X),this.Y,this.Z,g.neg(this.T))}double(){let{X:n,Y:h,Z:a}=this,d=g.sqr(n),p=g.sqr(h),k=g.mul(g.sqr(a),yI),G=s(d),S=g.addN(n,h),H=g.sub(g.subN(g.sqr(S),d),p),U=g.addN(G,p),K=g.subN(U,k),L=g.subN(G,p),N=g.mul(H,K),R=g.mul(U,L),b=g.mul(H,L),V=g.mul(K,U);return new D(N,R,V,b)}add(n){F(n);let{d:h}=Q,{X:a,Y:d,Z:p,T:k}=this,{X:G,Y:S,Z:H,T:U}=n,K=g.mul(a,G),L=g.mul(d,S),N=g.mul(g.mulN(k,h),U),R=g.mul(p,H),b=g.sub(g.subN(g.mulN(g.addN(a,d),g.addN(G,S)),K),L),V=g.subN(R,N),j=g.addN(R,N),_=g.sub(L,s(K)),BA=g.mul(b,V),eA=g.mul(j,_),MI=g.mul(b,_),eI=g.mul(V,j);return new D(BA,eA,eI,MI)}subtract(n){return F(n),this.add(n.negate())}multiply(n){if(!e.isValidNot0(n))throw new RangeError("invalid scalar: expected 1 <= sc < curve.n");let{p:h,f:a}=u.mulSecret(this,n,o,y);return y([h,a])[0]}multiplyUnsafe(n){if(!e.isValid(n))throw new RangeError("invalid scalar: expected 0 <= sc < curve.n");return n===lI?D.ZERO:this.is0()||n===uI?this:u.mulUnsafe(this,n,y)}isSmallOrder(){return this.clearCofactor().is0()}isTorsionFree(){return u.mulUnsafe(this,Q.n).is0()}toAffine(n){let h=this,a=n;if(a!=null&&typeof a!="bigint")throw new TypeError('"invertedZ" expected bigint, got type='+typeof a);let{X:d,Y:p,Z:k}=h,G=h.is0();a==null&&(a=G?g.create(ag):g.inv(k));let S=g.mul(d,a),H=g.mul(p,a),U=g.mul(k,a);if(G)return{x:g.ZERO,y:g.ONE};if(!g.eql(U,g.ONE))throw new Error("invZ was invalid");return{x:S,y:H}}clearCofactor(){return o===uI?this:o===yI?this.double():o===RB?this.double().double():o===ag?this.double().double().double():this.multiplyUnsafe(o)}toBytes(){let{x:n,y:h}=this.toAffine(),a=g.toBytes(h);return a[a.length-1]|=r(n)?128:0,a}toHex(){return Zi(this.toBytes())}toString(){return`<Point ${this.is0()?"ZERO":this.toHex()}>`}};w(D,"BASE",new D(Q.Gx,Q.Gy,g.ONE,g.mul(Q.Gx,Q.Gy))),w(D,"ZERO",new D(g.ZERO,g.ONE,g.ONE,g.ZERO)),w(D,"Fp",g),w(D,"Fn",e);let l=D,y=c=>tg(l,c),u=new DI(l,t);return u.bits>=6&&l.BASE.precompute(6),Object.freeze(l.prototype),Object.freeze(l),l}function PA(A,I="n"){if(typeof A!="number")throw new TypeError(`wrong u32 integer "${I}": expected number, got type=${typeof A}`);if(!Number.isSafeInteger(A)||A<0||A>4294967295)throw new RangeError(`wrong u32 integer "${I}": expected 0..4294967295, got ${A}`);return A}function sg(A){return PA(A,"x"),(A&A-1)===0&&A!==0}function oi(A,I){if(PA(A),typeof I!="number")throw new TypeError('"bits" expected number, got type='+typeof I);if(!Number.isSafeInteger(I)||I<0||I>32)throw new Error(`expected integer 0 <= bits <= 32, got ${I}`);let i=0;for(let B=0;B<I;B++,A>>>=1)i=i<<1|A&1;return i>>>0}function hg(A){return PA(A),31-Math.clz32(A)}function Eg(A){if(!A||typeof A!="object"||typeof A.length!="number")throw new TypeError('"values" expected array-like, got type='+typeof A);let I=A.length;if(!sg(I))throw new Error("expected positive power-of-two length, got "+I);let i=hg(I);for(let B=0;B<I;B++){let g=oi(B,i);if(B<g){let e=A[B];A[B]=A[g],A[g]=e}}return A}var ti=(A,I)=>{nA(I,{N:"number",roots:"object",dit:"boolean"},{invertButterflies:"boolean",skipStages:"number",brp:"boolean"},"coreOpts");let{N:i,roots:B,dit:g,invertButterflies:e=!1,skipStages:Q=0,brp:o=!0}=I;PA(i,"coreOpts.N");let t=hg(i);if(!sg(i))throw new Error("FFT: Polynomial size should be power of two");PA(Q,"coreOpts.skipStages");let C=t===0?0:t-1;if(Q>C)throw new Error(`FFT: wrong skipStages: expected 0 <= skipStages <= ${C}`);if(B.length!==i)throw new Error(`FFT: wrong roots length: expected ${i}, got ${B.length}`);let r=g!==e;return E=>{if(E.length!==i)throw new Error("FFT: wrong Polynomial length");g&&o&&Eg(E);for(let s=0,f=1;s<t-Q;s++){let F=g?s+1+Q:t-s,l=1<<F,y=l>>1,u=i>>F;for(let D=0;D<i;D+=l)for(let c=0,n=f++;c<y;c++){let h=e?g?i-n:n:c*u,a=D+c,d=D+c+y,p=B[h],k=E[d],G=E[a];if(r){let S=A.mul(k,p);E[a]=A.add(G,S),E[d]=A.sub(G,S)}else e?(E[a]=A.add(k,G),E[d]=A.mul(A.sub(k,G),p)):(E[a]=A.add(G,k),E[d]=A.mul(A.sub(G,k),p))}}return!g&&o&&Eg(E),E}};var GA=BigInt(0),T=BigInt(1),pI=BigInt(2);function fg(A,I){return A+I-(I>>T<<T)}function bB(A){let I=BigInt(6)*A;return(i,B,g)=>{let e=B+g,o=((I+g-B)*i+B)%A;return{x_2:o,x_3:e-o}}}function zB(A){return nA(A,{P:"bigint",type:"string",adjustScalarBytes:"function",powPminus2:"function"},{randomBytes:"function",scalarMultBase:"function"}),Object.freeze({...A})}function dg(A){let I=zB(A),{P:i,type:B,adjustScalarBytes:g,powPminus2:e,randomBytes:Q}=I,o=I.scalarMultBase,t=B==="x25519";if(!t&&B!=="x448")throw new Error("invalid type");let C=Q===void 0?EI:Q,r=t?255:448,E=bB(i),s=t?32:56,f=BigInt(t?9:5),F=BigInt(t?121665:39081),l=t?pI**BigInt(254):pI**BigInt(447),y=t?BigInt(8)*(pI**BigInt(251)-T):BigInt(4)*(pI**BigInt(445)-T),u=l+y+T,D=N=>m(N,i),c=n(f);function n(N){return hI(D(N),s)}function h(N){let R=yA(oA(N,s,"uCoordinate"));return t&&(R[31]&=127),D(CA(R))}function a(N){return CA(g(yA(oA(N,s,"scalar"))))}let d=new Set(t?[GA,T,i-T,BigInt("325606250916557431795983626356110631294008115727848805560023387167927233504"),BigInt("39382357235489614581723060781553021112529911719440698176882885853963445705823")]:[GA,T,i-T]);function p(N,R){let b=h(R);if(d.has(b))throw new Error("invalid private or public key received");let V=H(b,a(N));if(V===GA)throw new Error("invalid private or public key received");return n(V)}function k(N){if(o===void 0)return p(N,c);let R=a(N);pA("scalar",R,l,u);let b=D(o(R));if(b===GA)throw new Error("invalid private or public key received");return n(b)}let G=k,S=p;function H(N,R){pA("u",N,GA,i),pA("scalar",R,l,u);let b=R,V=N,j=T,_=GA,BA=N,eA=T,MI=b^b>>T;for(let xI=BigInt(r-1);xI>=GA;xI--){let fi=fg(i,MI>>xI);({x_2:j,x_3:BA}=E(fi,j,BA)),{x_2:_,x_3:eA}=E(fi,_,eA);let RI=j+_,YI=D(RI*RI),bI=j-_,di=D(bI*bI),Fi=YI-di,Pg=BA+eA,Tg=BA-eA,Di=D(Tg*RI),wi=D(Pg*bI),li=Di+wi,ui=Di-wi;BA=D(li*li),eA=D(V*D(ui*ui)),j=D(YI*di),_=D(Fi*(YI+D(F*Fi)))}let eI=fg(i,b);({x_2:j,x_3:BA}=E(eI,j,BA)),{x_2:_,x_3:eA}=E(eI,_,eA);let Wg=e(_);return D(j*Wg)}let U={secretKey:s,publicKey:s,seed:s},K=N=>(N=N===void 0?C(s):N,oA(N,U.seed,"seed"),N),L={randomSecretKey:K};return Object.freeze(U),Object.freeze(L),Object.freeze({keygen:Qi(K,G),getSharedSecret:S,getPublicKey:G,scalarMult:p,scalarMultBase:k,utils:L,GuBytes:c.slice(),lengths:U})}var Fg=BigInt(0),LB=BigInt(1),Dg=BigInt(2),XB=BigInt(3),OB=BigInt(5),ZB=BigInt(8),kI=BigInt("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed"),VB={p:kI,n:BigInt("0x1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed"),h:ZB,a:BigInt("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffec"),d:BigInt("0x52036cee2b6ffe738cc740797779e89800700a4d4141d8ab75eb4dca135978a3"),Gx:BigInt("0x216936d3cd6e53fec0a4e231fdd6dc5c692cc7609525a7b2c9562d608f25d51a"),Gy:BigInt("0x6666666666666666666666666666666666666666666666666666666666666658")};function ug(A){let I=BigInt(10),i=BigInt(20),B=BigInt(40),g=BigInt(80),e=kI,o=A*A%e*A%e,t=P(o,Dg,e)*o%e,C=P(t,LB,e)*A%e,r=P(C,OB,e)*C%e,E=P(r,I,e)*r%e,s=P(E,i,e)*E%e,f=P(s,B,e)*s%e,F=P(f,g,e)*f%e,l=P(F,g,e)*f%e,y=P(l,I,e)*r%e;return{pow_p_5_8:P(y,Dg,e)*A%e,b2:o}}function vB(A){return A[0]&=248,A[31]&=127,A[31]|=64,A}var wg=BigInt("19681161376707505956807079304988542015446066515923890162744021073123829784752");function WB(A,I){let i=kI,B=m(I*I*I,i),g=m(B*B*I,i),e=ug(A*g).pow_p_5_8,Q=m(A*B*e,i),o=m(I*Q*Q,i),t=Q,C=m(Q*wg,i),r=o===A,E=o===m(-A,i),s=o===m(-A*wg,i);return r&&(Q=t),(E||s)&&(Q=C),Bg(Q,i)&&(Q=m(-Q,i)),{isValid:r||E,value:Q}}var lg=cg(VB,{uvRatio:WB});var GI=(()=>{let A=kI,I=i=>{let{pow_p_5_8:B,b2:g}=ug(i);return m(P(B,XB,A)*g,A)};return dg({P:A,type:"x25519",powPminus2:I,adjustScalarBytes:vB,scalarMultBase:i=>{let B=m(i,lg.Fn.ORDER);if(B===Fg)return Fg;let g=lg.BASE.multiply(B);return m((g.Z+g.Y)*I(m(g.Z-g.Y,A)),A)}})})();var PB=BigInt(0),TA=BigInt(1),TB=BigInt(2),jB=BigInt(7),_B=BigInt(256),$B=BigInt(113),kg=[],Gg=[],Sg=[];for(let A=0,I=TA,i=1,B=0;A<24;A++){[i,B]=[B,(2*i+3*B)%5],kg.push(2*(5*B+i)),Gg.push((A+1)*(A+2)/2%64);let g=PB;for(let e=0;e<7;e++)I=(I<<TA^(I>>jB)*$B)%_B,I&TB&&(g^=TA<<(TA<<BigInt(e))-TA);Sg.push(g)}var Hg=tI(Sg,!0),Ae=Hg[0],Ie=Hg[1],ie=(A,I,i)=>A<<i|I>>>32-i,ge=(A,I,i)=>I<<i|A>>>32-i,Be=(A,I,i)=>I<<i-32|A>>>64-i,ee=(A,I,i)=>A<<i-32|I>>>64-i,yg=(A,I,i)=>i>32?Be(A,I,i):ie(A,I,i),pg=(A,I,i)=>i>32?ee(A,I,i):ge(A,I,i),xA=new Uint32Array(5*2);function Qe(A,I=24){if(!(A instanceof Uint32Array))throw new TypeError('"s" expected Uint32Array(50), got type='+typeof A);if(A.length!==50)throw new RangeError('"s" expected Uint32Array(50), got length='+A.length);if(Y(I,"rounds"),I<1||I>24)throw new Error('"rounds" expected integer 1..24');for(let i=24-I;i<24;i++){for(let e=0;e<10;e++)xA[e]=A[e]^A[e+10]^A[e+20]^A[e+30]^A[e+40];for(let e=0;e<10;e+=2){let Q=(e+8)%10,o=(e+2)%10,t=xA[o],C=xA[o+1],r=yg(t,C,1)^xA[Q],E=pg(t,C,1)^xA[Q+1];for(let s=0;s<50;s+=10)A[e+s]^=r,A[e+s+1]^=E}let B=A[2],g=A[3];for(let e=0;e<24;e++){let Q=Gg[e],o=yg(B,g,Q),t=pg(B,g,Q),C=kg[e];B=A[C],g=A[C+1],A[C]=o,A[C+1]=t}for(let e=0;e<50;e+=10){let Q=A[e],o=A[e+1],t=A[e+2],C=A[e+3];A[e]^=~A[e+2]&A[e+4],A[e+1]^=~A[e+3]&A[e+5],A[e+2]^=~A[e+4]&A[e+6],A[e+3]^=~A[e+5]&A[e+7],A[e+4]^=~A[e+6]&A[e+8],A[e+5]^=~A[e+7]&A[e+9],A[e+6]^=~A[e+8]&Q,A[e+7]^=~A[e+9]&o,A[e+8]^=~Q&t,A[e+9]^=~o&C}A[0]^=Ae[i],A[1]^=Ie[i]}Z(xA)}var SI=class A{constructor(I,i,B,g=!1,e=24){w(this,"state");w(this,"pos",0);w(this,"posOut",0);w(this,"finished",!1);w(this,"state32");w(this,"destroyed",!1);w(this,"blockLen");w(this,"suffix");w(this,"outputLen");w(this,"canXOF");w(this,"enableXOF",!1);w(this,"rounds");if(Y(I,"blockLen"),Y(i,"suffix"),Y(e,"rounds"),mi(g,"enableXOF"),this.blockLen=I,this.suffix=i,this.outputLen=B,this.enableXOF=g,this.canXOF=g,this.rounds=e,Y(B,"outputLen"),!(0<I&&I<200))throw new Error('"blockLen" must be 1..199');this.state=new Uint8Array(200),this.state32=LA(this.state)}clone(){return this._cloneInto()}keccak(){JA(this.state32),Qe(this.state32,this.rounds),JA(this.state32),this.posOut=0,this.pos=0}update(I){QA(this),q(I);let{blockLen:i,state:B,state32:g}=this,e=I.length,Q=i%4===0&&I.byteOffset%4===0,o=i/4,t=Q&&e>=i?LA(I):void 0;for(let C=0;C<e;){if(t!==void 0&&this.pos===0&&C%4===0&&e-C>=i){for(let E=0,s=C/4;E<o;E++)g[E]^=t[s+E];C+=i,this.pos=i,this.keccak();continue}let r=Math.min(i-this.pos,e-C);for(let E=0;E<r;E++)B[this.pos++]^=I[C++];this.pos===i&&this.keccak()}return this}finish(){if(this.finished)return;this.finished=!0;let{state:I,suffix:i,pos:B,blockLen:g}=this;I[B]^=i,(i&128)!==0&&B===g-1&&this.keccak(),I[g-1]^=128,this.keccak()}writeInto(I){QA(this,!1),q(I),this.finish();let i=this.state,{blockLen:B}=this;for(let g=0,e=I.length;g<e;){this.posOut>=B&&this.keccak();let Q=Math.min(B-this.posOut,e-g);I.set(i.subarray(this.posOut,this.posOut+Q),g),this.posOut+=Q,g+=Q}return I}xofInto(I){if(!this.enableXOF)throw new Error("XOF is not enabled");return this.writeInto(I)}xof(I){return Y(I),this.xofInto(new Uint8Array(I))}digestInto(I){if(qA(I,this),this.finished)throw new Error("digest() was already called");this.writeInto(I.length===this.outputLen?I:I.subarray(0,this.outputLen)),this.destroy()}digest(){let I=new Uint8Array(this.outputLen);return this.digestInto(I),I}destroy(){this.destroyed=!0,Z(this.state)}_cloneInto(I){let{blockLen:i,suffix:B,outputLen:g,rounds:e,enableXOF:Q}=this;return I||(I=new A(i,B,g,Q,e)),I.blockLen=i,I.state32.set(this.state32),I.pos=this.pos,I.posOut=this.posOut,I.finished=this.finished,I.rounds=e,I.suffix=B,I.outputLen=g,I.enableXOF=Q,I.canXOF=this.canXOF,I.destroyed=this.destroyed,I}},Ug=(A,I,i,B={})=>mA(()=>new SI(I,A,i),B);var HI=Ug(6,136,32,EA(8));var Ng=Ug(6,72,64,EA(10));var qg=(A,I,i,B={})=>mA((g={})=>(g=ZI({},g),new SI(I,A,g.dkLen===void 0?i:g.dkLen,!0)),B),Jg=qg(31,168,16,EA(11)),RA=qg(31,136,32,EA(12));var AA=q;var rA=rI;function oe(A,I,i=()=>{}){if(!Array.isArray(A))throw new TypeError(`"${I}" expected array, got type=${typeof A}`);for(let B=0;B<A.length;B++)i(A[B],`${I}[${B}]`);return A}function jA(A,I="object"){if(A===null||typeof A!="object"||Array.isArray(A))throw new TypeError(I==="object"?"expected valid options object":`"${I}" expected object, got type=${typeof A}`);return A}function SA(A,I){if(A=q(A),I=q(I),A.length!==I.length)return!1;let i=0;for(let B=0;B<A.length;B++)i|=A[B]^I[B];return i===0}function gA(A){return new Uint8Array(q(A))}function HA(A,...I){let i=g=>typeof g=="number"?g:g.bytesLen,B=I.reduce((g,e)=>g+i(e),0);return{bytesLen:B,encode:g=>{let e=new Uint8Array(B);for(let Q=0,o=0;Q<I.length;Q++){let t=I[Q],C=i(t),r=typeof t=="number"?g[Q]:t.encode(g[Q]);q(r,C,A),e.set(r,o),typeof t!="number"&&r.fill(0),o+=C}return e},decode:g=>{q(g,B,A);let e=[];for(let Q of I){let o=i(Q),t=g.subarray(0,o);e.push(typeof Q=="number"?t:Q.decode(t)),g=g.subarray(o)}return e}}}function UI(A,I){let i=A,B=I*i.bytesLen;return{bytesLen:B,encode:g=>{let e=oe(g,"u");if(e.length!==I)throw new RangeError(`vecCoder.encode: wrong length=${e.length}. Expected: ${I}`);let Q=new Uint8Array(B);for(let o=0,t=0;o<e.length;o++){let C=i.encode(e[o]);Q.set(C,t),C.fill(0),t+=C.length}return Q},decode:g=>{q(g,B);let e=[];for(let Q=0;Q<g.length;Q+=i.bytesLen)e.push(i.decode(g.subarray(Q,Q+i.bytesLen)));return e}}}function J(...A){for(let I of A)if(Array.isArray(I))for(let i of I)i.fill(0);else I.fill(0)}function NI(A){if(Y(A,"bits"),A>32)throw new RangeError('"bits" expected <= 32, got '+A);return A===32?4294967295:~(-1<<A)>>>0}var mg=A=>{let{newPoly:I,N:i,Q:B,F:g,ROOT_OF_UNITY:e,brvBits:Q,isKyber:o}=A,t=(c,n=B)=>{let h=c%n|0;return(h>=0?h|0:n+h|0)|0},C=(c,n=B)=>{let h=t(c,n)|0;return(h>n>>1?h-n|0:h)|0};function r(){let c=I(i);for(let n=0;n<i;n++){let h=oi(n,Q),a=BigInt(e)**BigInt(h)%BigInt(B);c[n]=Number(a)|0}return c}let E=r(),s=c=>{throw new Error("not implemented")},f=o?{add:(c,n)=>{let h=c+n|0;return h>=B?h-B|0:h},sub:(c,n)=>{let h=c-n|0;return h<0?h+B|0:h},mul:(c,n)=>t((c|0)*(n|0))|0,inv:s}:{add:(c,n)=>t((c|0)+(n|0))|0,sub:(c,n)=>t((c|0)-(n|0))|0,mul:(c,n)=>t((c|0)*(n|0))|0,inv:s},F={N:i,roots:E,invertButterflies:!0,skipStages:o?1:0,brp:!1},l=ti(f,{dit:!1,...F}),y=ti(f,{dit:!0,...F}),u={encode:c=>l(c),decode:c=>{y(c);for(let n=0;n<c.length;n++)c[n]=t(g*c[n]);return c}};return{mod:t,smod:C,nttZetas:E,NTT:{encode:c=>u.encode(c),decode:c=>u.decode(c)},bitsCoder:(c,n)=>{for(let d=0,p=0;d<i;d++)p+=c,p>32&&NI(p),p%=8;let h=NI(c),a=c*(i/8);return{bytesLen:a,encode:d=>{let p=d,k=new Uint8Array(a);for(let G=0,S=0,H=0,U=0;G<p.length;G++)for(S|=(n.encode(p[G])&h)<<H,H+=c;H>=8;H-=8,S>>=8)k[U++]=S&255;return k},decode:d=>{let p=I(i);for(let k=0,G=0,S=0,H=0;k<d.length;k++)for(G|=d[k]<<S,S+=8;S>=c;S-=c,G>>=c)p[H++]=n.decode(G&h);return p}}}}},te=A=>(I,i)=>{i||(i=A.blockLen);let B=new Uint8Array(I.length+2);B.set(I);let g=I.length,e=new Uint8Array(i),Q=A.create({}),o=0,t=0;return{stats:()=>({calls:o,xofs:t}),get:(C,r)=>(B[g+0]=C,B[g+1]=r,Q.destroy(),Q=A.create({}).update(B),o++,()=>(t++,Q.xofInto(e))),clean:()=>{Q.destroy(),J(e,B)}}},Kg=te(Jg);var O=256,X=3329,Ce=3303,ne=17,W=mg({N:O,Q:X,F:Ce,ROOT_OF_UNITY:ne,newPoly:A=>new Uint16Array(A),brvBits:7,isKyber:!0}),re=Object.freeze({512:Object.freeze({N:O,Q:X,K:2,ETA1:3,ETA2:2,du:10,dv:4,RBGstrength:128}),768:Object.freeze({N:O,Q:X,K:3,ETA1:2,ETA2:2,du:10,dv:4,RBGstrength:192}),1024:Object.freeze({N:O,Q:X,K:4,ETA1:2,ETA2:2,du:11,dv:5,RBGstrength:256})}),ae=A=>{if(A>=12)return{encode:i=>i,decode:i=>i>=X?i-X:i};let I=2**(A-1);return{encode:i=>((i<<A)+X/2)/X,decode:i=>i*X+I>>>A}},ce=A=>W.bitsCoder(A,A===12?{encode:I=>I,decode:I=>I>=X?I-X:I}:{encode:I=>I,decode:I=>I}),_A=A=>A===12?ce(12):W.bitsCoder(A,ae(A));function UA(A,I){let i=A,B=I;for(let g=0;g<O;g++){let e=i[g]+B[g];i[g]=e>=X?e-X:e}}function Ee(A,I){let i=A,B=I;for(let g=0;g<O;g++){let e=i[g]-B[g];i[g]=e<0?e+X:e}}function se(A,I,i,B,g){let e=W.mod(W.mod(I*B)*g+A*i),Q=W.mod(A*B+I*i);return{c0:e,c1:Q}}function qI(A,I){let i=A,B=I;for(let g=0;g<O/2;g++){let e=W.nttZetas[64+(g>>1)];g&1&&(e=-e);let{c0:Q,c1:o}=se(i[2*g+0],i[2*g+1],B[2*g+0],B[2*g+1],e);i[2*g+0]=Q,i[2*g+1]=o}return i}function Ci(A){let I=A,i=new Uint16Array(O);for(let B=0;B<O;){let g=I();if(g.length%3)throw new Error("SampleNTT: unaligned block");for(let e=0;B<O&&e+3<=g.length;e+=3){let Q=(g[e+0]>>0|g[e+1]<<8)&4095,o=(g[e+1]>>4|g[e+2]<<4)&4095;Q<X&&(i[B++]=Q),B<O&&o<X&&(i[B++]=o)}}return i}var he=(A,I)=>{let i=new Uint16Array(O),B=LA(A);JA(B);let g=0;for(let e=0,Q=0,o=0,t=0;e<B.length;e++){let C=B[e];for(let r=0;r<32;r++)o+=C&1,C>>=1,g+=1,g===I?(t=o,o=0):g===2*I&&(i[Q++]=W.mod(t-o),o=0,g=0)}if(JA(B),g)throw new Error(`sampleCBD: leftover bits: ${g}`);return i};function $A(A,I,i,B){return he(A(B*O/4,I,i),B)}var fe=A=>{let I=A,{K:i,PRF:B,XOF:g,HASH512:e,ETA1:Q,ETA2:o,du:t,dv:C}=I,r=_A(1),E=_A(C),s=_A(t),f=HA("publicKey",UI(_A(12),i),32),F=UI(_A(12),i),l=HA("ciphertext",UI(s,i),E),y=HA("seed",32,32),u=(D,c,n,h)=>{let a=[];for(let S=0;S<i;S++)a.push(W.NTT.encode($A(B,h,S,Q)));let d=new Uint16Array(O),p=[];for(let S=0;S<i;S++){let H=$A(B,h,i+S,o),U=new Uint16Array(O);for(let K=0;K<i;K++){let L=c(S,K);UA(U,qI(L,a[K]))}UA(H,W.NTT.decode(U)),p.push(H),UA(d,qI(D[S],a[S])),J(U)}let k=$A(B,h,2*i,o);UA(k,W.NTT.decode(d));let G=r.decode(n);return UA(G,k),J(D,a,d,k),l.encode([p,G])};return{secretCoder:F,lengths:{secretKey:F.bytesLen,publicKey:f.bytesLen,cipherText:l.bytesLen},keygen:D=>{AA(D,32,"seed");let c=new Uint8Array(33);c.set(D),c[32]=i;let n=e(c),[h,a]=y.decode(n),d=[],p=[];for(let S=0;S<i;S++)d.push(W.NTT.encode($A(B,a,S,Q)));let k=g(h);for(let S=0;S<i;S++){let H=W.NTT.encode($A(B,a,i+S,Q));for(let U=0;U<i;U++){let K=Ci(k.get(U,S));UA(H,qI(K,d[U]))}p.push(H)}k.clean();let G={publicKey:f.encode([p,h]),secretKey:F.encode(d)};return J(h,a,d,p,c,n),G},encrypt:(D,c,n)=>{let[h,a]=f.decode(D),d=g(a),p=u(h,(k,G)=>Ci(d.get(k,G)),c,n);return d.clean(),p},prepare:D=>{let[c,n]=f.decode(D),h=g(n),a=[];for(let d=0;d<i;d++)for(let p=0;p<i;p++)a.push(Ci(h.get(d,p)));return h.clean(),{encrypt:(d,p)=>u(c.map(k=>k.slice()),(k,G)=>a[k*i+G].slice(),d,p),clean:()=>J(c,a)}},decrypt:(D,c)=>{let[n,h]=l.decode(D),a=F.decode(c),d=new Uint16Array(O);for(let k=0;k<i;k++)UA(d,qI(a[k],W.NTT.encode(n[k])));Ee(h,W.NTT.decode(d));let p=r.encode(h);return J(d,a,n,h),p}}};function de(A){let I=A,i=fe(I),{HASH256:B,HASH512:g,KDF:e}=I,{secretCoder:Q,lengths:o}=i,t=HA("secretKey",o.secretKey,o.publicKey,32,32),C=32,r=64,E=(f,F)=>{let l=f.subarray(0,384*I.K),y=Q.encode(Q.decode(gA(l))),u=SA(y,l);if(J(y),!u)throw new Error(`ML-KEM.${F}: wrong publicKey modulus`)},s=Object.freeze({...o,seed:64,msg:C,msgRand:C,secretKey:t.bytesLen});return Object.freeze({info:Object.freeze({type:"ml-kem"}),lengths:s,keygen:f=>{let F=f===void 0,l=F?rA(r):f,y,u;try{AA(l,r,"seed");let D=i.keygen(l.subarray(0,32)),c=D.publicKey;y=D.secretKey,u=B(c);let n=t.encode([y,c,u,l.subarray(32)]);return{publicKey:c,secretKey:n}}finally{y!==void 0&&J(y),u!==void 0&&J(u),F&&J(l)}},getPublicKey:f=>{let[F,l,y,u]=t.decode(f);return Uint8Array.from(l)},encapsulate:(f,F)=>{let l=F===void 0,y=l?rA(C):F,u;try{return AA(f,o.publicKey,"publicKey"),AA(y,C,"message"),E(f,"encapsulate"),u=g.create().update(y).update(B(f)).digest(),{cipherText:i.encrypt(f,y,u.subarray(32,64)),sharedSecret:u.subarray(0,32)}}finally{u!==void 0&&J(u.subarray(32)),l&&J(y)}},decapsulate:(f,F)=>{AA(F,t.bytesLen,"secretKey"),AA(f,o.cipherText,"cipherText");let l=t.bytesLen-96,y=l+32,u=B(F.subarray(l/2,y));if(!SA(u,F.subarray(y,y+32)))throw new Error("invalid secretKey: hash check failed");let[D,c,n,h]=t.decode(F),a=i.decrypt(f,D),d=g.create().update(a).update(n).digest(),p=d.subarray(0,32),k=i.encrypt(c,a,d.subarray(32,64)),G=SA(f,k),S=e.create({dkLen:32}).update(h).update(f).digest();return J(a,k,d.subarray(32),G?S:p),G?p:S},prepare:f=>{AA(f,o.publicKey,"publicKey"),E(f,"prepare");let F=gA(f),l=B(F),y=i.prepare(F);return Object.freeze({publicKey:F,encapsulate:u=>{let D=u===void 0,c=D?rA(C):u,n;try{return AA(c,C,"message"),n=g.create().update(c).update(l).digest(),{cipherText:y.encrypt(c,n.subarray(32,64)),sharedSecret:n.subarray(0,32)}}finally{n!==void 0&&J(n.subarray(32)),D&&J(c)}},decapsulate:(u,D)=>{AA(D,t.bytesLen,"secretKey"),AA(u,o.cipherText,"cipherText");let[c,n,h,a]=t.decode(D);if(!SA(n,F)||!SA(h,l))throw new Error("ML-KEM.decapsulate: secretKey does not match prepared publicKey");let d=i.decrypt(u,c),p=g.create().update(d).update(l).digest(),k=p.subarray(0,32),G=y.encrypt(d,p.subarray(32,64)),S=SA(u,G),H=e.create({dkLen:32}).update(a).update(u).digest();return J(d,G,p.subarray(32),S?H:k),S?k:H},clean:y.clean})}})}function Fe(A,I,i){return RA.create({dkLen:A}).update(I).update(new Uint8Array([i])).digest()}var De={HASH256:HI,HASH512:Ng,KDF:RA,XOF:Kg,PRF:Fe},we=A=>de({...De,...A});var JI=we(re[768]);var mI=class{constructor(I,i){w(this,"oHash");w(this,"iHash");w(this,"blockLen");w(this,"outputLen");w(this,"canXOF",!1);w(this,"finished",!1);w(this,"destroyed",!1);if(uA(I),q(i,void 0,"key"),this.iHash=I.create(),typeof this.iHash.update!="function")throw new Error("expected Hash instance");this.blockLen=this.iHash.blockLen,this.outputLen=this.iHash.outputLen;let B=this.blockLen,g=new Uint8Array(B);g.set(i.length>B?I.create().update(i).digest():i);for(let e=0;e<g.length;e++)g[e]^=54;this.iHash.update(g),this.oHash=I.create();for(let e=0;e<g.length;e++)g[e]^=106;this.oHash.update(g),Z(g)}update(I){return QA(this),this.iHash.update(I),this}digestInto(I){QA(this),qA(I,this),this.finished=!0;let i=I.subarray(0,this.outputLen);this.iHash.digestInto(i),this.oHash.update(i),this.oHash.digestInto(i),this.destroy()}digest(){let I=new Uint8Array(this.oHash.outputLen);return this.digestInto(I),I}_cloneInto(I){I||(I=Object.create(Object.getPrototypeOf(this),{}));let{oHash:i,iHash:B,finished:g,destroyed:e,blockLen:Q,outputLen:o,canXOF:t}=this;return I=I,I.finished=g,I.destroyed=e,I.blockLen=Q,I.outputLen=o,I.canXOF=t,I.oHash=i._cloneInto(I.oHash),I.iHash=B._cloneInto(I.iHash),I}clone(){return this._cloneInto()}destroy(){this.destroyed=!0,this.oHash.destroy(),this.iHash.destroy()}},AI=(()=>{let A=(I,i,B)=>new mI(I,i).update(B).digest();return A.create=(I,i)=>new mI(I,i),A})();var II=Uint8Array.of(0),le=Uint8Array.of();function ue(A,I,i,B=32,g){uA(A),Y(B,"length"),q(I,void 0,"prk");let e=A.outputLen;if(I.length<e)throw new Error('"prk" must be at least HashLen octets');if(B>255*e)throw new Error("Length must be <= 255*HashLen");let Q=Math.ceil(B/e);if(i===void 0?i=le:q(i,void 0,"info"),!Q)return g&&Z(I),new Uint8Array;let o=g&&Q===1?I:new Uint8Array(Q*e),{iHash:t,oHash:C}=AI.create(A,I),r=g?I:new Uint8Array(e),E=Q>1?g?.iHash||A.create():void 0;for(let f=0;f<Q-1;f++){II[0]=f+1;let F=t._cloneInto(E);f&&F.update(r),F.update(i).update(II).digestInto(r),C._cloneInto(E).update(r).digestInto(r),o.set(r,e*f)}if(II[0]=Q,Q>1&&t.update(r),t.update(i).update(II).digestInto(r),C.update(r).digestInto(r),o.set(r,e*(Q-1)),t.destroy(),C.destroy(),E?.destroy(),r!==o&&Z(r),Z(II),B===o.length)return o;let s=o.slice(0,B);return Z(o),s}var Mg=(A,I,i,B,g)=>{uA(A),i===void 0&&(i=new Uint8Array(A.outputLen));let e=AI.create(A,i).update(I);return ue(A,e.digest(),B,g,e)};var ye=(A,I)=>{let i=jA(A,I);return jA(i.lengths,`${I}.lengths`),v(i.keygen,`${I}.keygen`),v(i.getPublicKey,`${I}.getPublicKey`),v(i.encapsulate,`${I}.encapsulate`),v(i.decapsulate,`${I}.decapsulate`),i};function pe(A,I=!1){let i=jA(A,"curve");jA(i.lengths,"curve.lengths"),v(i.keygen,"curve.keygen"),v(i.getPublicKey,"curve.getPublicKey"),tA(I,"allowZeroKey");let B=A.lengths,g=A.keygen;if(I){if(!("getSharedSecret"in A&&"sign"in A&&"verify"in A))throw new Error("allowZeroKey requires a Weierstrass curve");let Q=A.Point.Fn;g=(o=rA(B.seed))=>{q(o,B.seed,"seed");let t=Q.isLE?CA(o):KA(o),C=Q.toBytes(Q.create(t));return{secretKey:C,publicKey:A.getPublicKey(C)}}}return{lengths:{secretKey:B.secretKey,publicKey:B.publicKey,seed:B.seed},keygen:e=>g(e),getPublicKey:e=>A.getPublicKey(e)}}function ke(A,I=!1){let i=pe(A,I);if(!A.getSharedSecret)throw new Error("wrong curve");let B=(g,e)=>{let Q=A.getSharedSecret(e,g);return A.lengths.publicKeyHasPrefix?Q.subarray(1):Q};return{lengths:{...i.lengths,msg:i.lengths.seed,cipherText:i.lengths.publicKey},keygen:i.keygen,getPublicKey:i.getPublicKey,encapsulate(g,e=rA(A.lengths.seed)){let Q=gA(e),o;try{o=i.keygen(Q).secretKey;let t=B(g,o),C=A.getPublicKey(o);return{sharedSecret:t,cipherText:C}}finally{J(Q),o&&J(o)}},decapsulate:B}}function YA(A,I){let i=Y(A,I);if(i===0)throw new RangeError(`"${I}" expected integer greater than 0, got 0`);return i}function iI(A,I){let i=HA(I,...A.map(B=>{if(typeof B.lengths[I]!="number")throw new Error("wrong length: "+I);return YA(B.lengths[I],I)}));return YA(i.bytesLen,I),i}function Ge(A){return(I,i)=>A(I,{dkLen:i})}function Se(A,I,...i){let B=I,g=i,e=iI(g,"seed"),Q=iI(g,"publicKey"),o=YA(A===void 0?e.bytesLen:A,"realSeedLen");function t(r){q(r,o);let E=B(r,e.bytesLen),s=E.buffer===r.buffer?gA(E):E,f=[],F=[],l=[],y=[],u=!1;try{for(let D of e.decode(s))f.push(gA(D));for(let D=0;D<g.length;D++){let c=g[D].keygen(f[D]);F.push(c.secretKey),l.push(gA(c.secretKey)),y.push(c.publicKey)}return u=!0,{secretKey:l,publicKey:y}}finally{J(s,f,F),u||J(l)}}let C=r=>{let E=r===void 0?rA(o):gA(r),s;try{let{publicKey:f,secretKey:F}=t(E);try{s={secretKey:E,publicKey:Q.encode(f)}}finally{J(f,F)}return s}finally{s||J(E)}};return{info:{lengths:{seed:o,publicKey:Q.bytesLen,secretKey:o}},getPublicKey:r=>{let E=C(r);return J(E.secretKey),E.publicKey},keygen:C,expandDecapsulationKey:t,realSeedLen:o}}function He(A,I,i,B,...g){if(A!==void 0&&YA(A,"realSeedLen"),I!==void 0&&YA(I,"realMsgLen"),typeof i!="function")throw new TypeError('"expandSeed" expected function, got type='+typeof i);if(typeof B!="function")throw new TypeError('"combiner" expected function, got type='+typeof B);let e=B,Q=g;if(Q.length===0)throw new RangeError("combineKEMS requires at least one KEM");for(let F=0;F<Q.length;F++)ye(Q[F],`kems[${F}]`);let o=Se(A,i,...Q),t=iI(Q,"cipherText"),C=iI(Q,"publicKey"),r=iI(Q,"msg"),E=YA(I===void 0?r.bytesLen:I,"realMsgLen"),s=Object.freeze({...o.info.lengths,msg:E,msgRand:r.bytesLen,cipherText:t.bytesLen}),f=(F,l,y)=>{let u=e(F,l,y);try{return gA(q(u,E,"sharedSecret"))}catch(D){if(lA(u)){let c=h=>u.buffer===h.buffer&&u.byteOffset<h.byteOffset+h.byteLength&&h.byteOffset<u.byteOffset+u.byteLength;F.some(c)||l.some(c)||J(u)}throw D}};return Object.freeze({lengths:s,getPublicKey:o.getPublicKey,keygen:o.keygen,encapsulate(F,l=rA(r.bytesLen)){let y=C.decode(F),u=r.decode(l),D=[],c=[];try{for(let h=0;h<Q.length;h++){let a=Q[h].encapsulate(y[h],u[h]);D.push(a.sharedSecret),c.push(a.cipherText)}let n=t.encode(c);return{sharedSecret:f(y,c,D),cipherText:n}}finally{J(D,c)}},decapsulate(F,l){let y=t.decode(F),{publicKey:u,secretKey:D}=o.expandDecapsulationKey(l),c=[];try{for(let n=0;n<Q.length;n++)c.push(Q[n].decapsulate(y[n],D[n]));return f(u,y,c)}finally{J(D,c)}}})}var Ue=ke(GI);var xg=He(32,32,Ge(RA),(A,I,i)=>HI(jI(i[0],i[1],I[1],A[1],Wi("\\.//^\\"))),JI,Ue);function NA(A,I,i,B){function g(e){return e instanceof i?e:new i(function(Q){Q(e)})}return new(i||(i=Promise))(function(e,Q){function o(r){try{C(B.next(r))}catch(E){Q(E)}}function t(r){try{C(B.throw(r))}catch(E){Q(E)}}function C(r){r.done?e(r.value):g(r.value).then(o,t)}C((B=B.apply(A,I||[])).next())})}var M=class{constructor(){this.mutex=Promise.resolve()}lock(){let I=()=>{};return this.mutex=this.mutex.then(()=>new Promise(I)),new Promise(i=>{I=i})}dispatch(I){return NA(this,void 0,void 0,function*(){let i=yield this.lock();try{return yield Promise.resolve(I())}finally{i()}})}},ni;function Ne(){return typeof globalThis<"u"?globalThis:typeof self<"u"?self:typeof window<"u"?window:global}var Ei=Ne(),ri=(ni=Ei.Buffer)!==null&&ni!==void 0?ni:null,qe=Ei.TextEncoder?new Ei.TextEncoder:null;function Xg(A,I){return(A&15)+(A>>6|A>>3&8)<<4|(I&15)+(I>>6|I>>3&8)}function Og(A,I){let i=I.length>>1;for(let B=0;B<i;B++){let g=B<<1;A[B]=Xg(I.charCodeAt(g),I.charCodeAt(g+1))}}function Je(A,I){if(A.length!==I.length*2)return!1;for(let i=0;i<I.length;i++){let B=i<<1;if(I[i]!==Xg(A.charCodeAt(B),A.charCodeAt(B+1)))return!1}return!0}var Rg=87,Yg=48;function si(A,I,i){let B=0;for(let g=0;g<i;g++){let e=I[g]>>>4;A[B++]=e>9?e+Rg:e+Yg,e=I[g]&15,A[B++]=e>9?e+Rg:e+Yg}return String.fromCharCode.apply(null,A)}var cA=ri!==null?A=>{if(typeof A=="string"){let I=ri.from(A,"utf8");return new Uint8Array(I.buffer,I.byteOffset,I.length)}if(ri.isBuffer(A))return new Uint8Array(A.buffer,A.byteOffset,A.length);if(ArrayBuffer.isView(A))return new Uint8Array(A.buffer,A.byteOffset,A.byteLength);throw new Error("Invalid data type!")}:A=>{if(typeof A=="string")return qe.encode(A);if(ArrayBuffer.isView(A))return new Uint8Array(A.buffer,A.byteOffset,A.byteLength);throw new Error("Invalid data type!")},IA="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",BI=new Uint8Array(256);for(let A=0;A<IA.length;A++)BI[IA.charCodeAt(A)]=A;function bg(A,I=!0){let i=A.length,B=i%3,g=[],e=i-B;for(let Q=0;Q<e;Q+=3){let o=(A[Q]<<16&16711680)+(A[Q+1]<<8&65280)+(A[Q+2]&255),t=IA.charAt(o>>18&63)+IA.charAt(o>>12&63)+IA.charAt(o>>6&63)+IA.charAt(o&63);g.push(t)}if(B===1){let Q=A[i-1],o=IA.charAt(Q>>2),t=IA.charAt(Q<<4&63);g.push(`${o}${t}`),I&&g.push("==")}else if(B===2){let Q=(A[i-2]<<8)+A[i-1],o=IA.charAt(Q>>10),t=IA.charAt(Q>>4&63),C=IA.charAt(Q<<2&63);g.push(`${o}${t}${C}`),I&&g.push("=")}return g.join("")}function me(A){let I=Math.floor(A.length*.75),i=A.length;return A[i-1]==="="&&(I-=1,A[i-2]==="="&&(I-=1)),I}function Ke(A){let I=me(A),i=A.length,B=new Uint8Array(I),g=0;for(let e=0;e<i;e+=4){let Q=BI[A.charCodeAt(e)],o=BI[A.charCodeAt(e+1)],t=BI[A.charCodeAt(e+2)],C=BI[A.charCodeAt(e+3)];B[g]=Q<<2|o>>4,g+=1,B[g]=(o&15)<<4|t>>2,g+=1,B[g]=(t&3)<<6|C&63,g+=1}return B}var KI=16*1024,gI=4,Me=new M,ai=new Map;function Zg(A,I){return NA(this,void 0,void 0,function*(){let i=null,B=null,g=!1;if(typeof WebAssembly>"u")throw new Error("WebAssembly is not supported in this environment!");let e=(a,d=0)=>{B.set(a,d)},Q=()=>B,o=()=>i.exports,t=a=>{i.exports.Hash_SetMemorySize(a);let d=i.exports.Hash_GetBuffer(),p=i.exports.memory.buffer;B=new Uint8Array(p,d,a)},C=()=>new DataView(i.exports.memory.buffer).getUint32(i.exports.STATE_SIZE,!0),r=Me.dispatch(()=>NA(this,void 0,void 0,function*(){if(!ai.has(A.name)){let d=Ke(A.data),p=WebAssembly.compile(d);ai.set(A.name,p)}let a=yield ai.get(A.name);i=yield WebAssembly.instantiate(a,{})})),E=()=>NA(this,void 0,void 0,function*(){i||(yield r);let a=i.exports.Hash_GetBuffer(),d=i.exports.memory.buffer;B=new Uint8Array(d,a,KI)}),s=(a=null)=>{g=!0,i.exports.Hash_Init(a)},f=a=>{let d=0;for(;d<a.length;){let p=a.subarray(d,d+KI);d+=p.length,B.set(p),i.exports.Hash_Update(p.length)}},F=a=>{if(!g)throw new Error("update() called before init()");let d=cA(a);f(d)},l=new Uint8Array(I*2),y=(a,d=null)=>{if(!g)throw new Error("digest() called before init()");return g=!1,i.exports.Hash_Final(d),a==="binary"?B.slice(0,I):si(l,B,I)},u=()=>{if(!g)throw new Error("save() can only be called after init() and before digest()");let a=i.exports.Hash_GetState(),d=C(),p=i.exports.memory.buffer,k=new Uint8Array(p,a,d),G=new Uint8Array(gI+d);return Og(G,A.hash),G.set(k,gI),G},D=a=>{if(!(a instanceof Uint8Array))throw new Error("load() expects an Uint8Array generated by save()");let d=i.exports.Hash_GetState(),p=C(),k=gI+p,G=i.exports.memory.buffer;if(a.length!==k)throw new Error(`Bad state length (expected ${k} bytes, got ${a.length})`);if(!Je(A.hash,a.subarray(0,gI)))throw new Error("This state was written by an incompatible hash implementation");let S=a.subarray(gI);new Uint8Array(G,d,p).set(S),g=!0},c=a=>typeof a=="string"?a.length<KI/4:a.byteLength<KI,n=c;switch(A.name){case"argon2":case"scrypt":n=()=>!0;break;case"blake2b":case"blake2s":n=(a,d)=>d<=512&&c(a);break;case"blake3":n=(a,d)=>d===0&&c(a);break;case"xxhash64":case"xxhash3":case"xxhash128":case"crc64":n=()=>!1;break}let h=(a,d=null,p=null)=>{if(!n(a,d))return s(d),F(a),y("hex",p);let k=cA(a);return B.set(k),i.exports.Hash_Calculate(k.length,d,p),si(l,B,I)};return yield E(),{getMemory:Q,writeMemory:e,getExports:o,setMemorySize:t,init:s,update:F,digest:y,save:u,load:D,calculate:h,hashLength:I}})}var ho=new M;var xe="argon2",Re="AGFzbQEAAAABKQVgAX8Bf2AAAX9gEH9/f39/f39/f39/f39/f38AYAR/f39/AGACf38AAwYFAAECAwQFBgEBAoCAAgYIAX8BQZCoBAsHQQQGbWVtb3J5AgASSGFzaF9TZXRNZW1vcnlTaXplAAAOSGFzaF9HZXRCdWZmZXIAAQ5IYXNoX0NhbGN1bGF0ZQAECvEyBVgBAn9BACEBAkAgAEEAKAKICCICRg0AAkAgACACayIAQRB2IABBgIB8cSAASWoiAEAAQX9HDQBB/wHADwtBACEBQQBBACkDiAggAEEQdK18NwOICAsgAcALcAECfwJAQQAoAoAIIgANAEEAPwBBEHQiADYCgAhBACgCiAgiAUGAgCBGDQACQEGAgCAgAWsiAEEQdiAAQYCAfHEgAElqIgBAAEF/Rw0AQQAPC0EAQQApA4gIIABBEHStfDcDiAhBACgCgAghAAsgAAvcDgECfiAAIAQpAwAiECAAKQMAIhF8IBFCAYZC/v///x+DIBBC/////w+DfnwiEDcDACAMIBAgDCkDAIVCIIkiEDcDACAIIBAgCCkDACIRfCARQgGGQv7///8fgyAQQv////8Pg358IhA3AwAgBCAQIAQpAwCFQiiJIhA3AwAgACAQIAApAwAiEXwgEEL/////D4MgEUIBhkL+////H4N+fCIQNwMAIAwgECAMKQMAhUIwiSIQNwMAIAggECAIKQMAIhF8IBBC/////w+DIBFCAYZC/v///x+DfnwiEDcDACAEIBAgBCkDAIVCAYk3AwAgASAFKQMAIhAgASkDACIRfCARQgGGQv7///8fgyAQQv////8Pg358IhA3AwAgDSAQIA0pAwCFQiCJIhA3AwAgCSAQIAkpAwAiEXwgEUIBhkL+////H4MgEEL/////D4N+fCIQNwMAIAUgECAFKQMAhUIoiSIQNwMAIAEgECABKQMAIhF8IBBC/////w+DIBFCAYZC/v///x+DfnwiEDcDACANIBAgDSkDAIVCMIkiEDcDACAJIBAgCSkDACIRfCAQQv////8PgyARQgGGQv7///8fg358IhA3AwAgBSAQIAUpAwCFQgGJNwMAIAIgBikDACIQIAIpAwAiEXwgEUIBhkL+////H4MgEEL/////D4N+fCIQNwMAIA4gECAOKQMAhUIgiSIQNwMAIAogECAKKQMAIhF8IBFCAYZC/v///x+DIBBC/////w+DfnwiEDcDACAGIBAgBikDAIVCKIkiEDcDACACIBAgAikDACIRfCAQQv////8PgyARQgGGQv7///8fg358IhA3AwAgDiAQIA4pAwCFQjCJIhA3AwAgCiAQIAopAwAiEXwgEEL/////D4MgEUIBhkL+////H4N+fCIQNwMAIAYgECAGKQMAhUIBiTcDACADIAcpAwAiECADKQMAIhF8IBFCAYZC/v///x+DIBBC/////w+DfnwiEDcDACAPIBAgDykDAIVCIIkiEDcDACALIBAgCykDACIRfCARQgGGQv7///8fgyAQQv////8Pg358IhA3AwAgByAQIAcpAwCFQiiJIhA3AwAgAyAQIAMpAwAiEXwgEEL/////D4MgEUIBhkL+////H4N+fCIQNwMAIA8gECAPKQMAhUIwiSIQNwMAIAsgECALKQMAIhF8IBBC/////w+DIBFCAYZC/v///x+DfnwiEDcDACAHIBAgBykDAIVCAYk3AwAgACAFKQMAIhAgACkDACIRfCARQgGGQv7///8fgyAQQv////8Pg358IhA3AwAgDyAQIA8pAwCFQiCJIhA3AwAgCiAQIAopAwAiEXwgEUIBhkL+////H4MgEEL/////D4N+fCIQNwMAIAUgECAFKQMAhUIoiSIQNwMAIAAgECAAKQMAIhF8IBBC/////w+DIBFCAYZC/v///x+DfnwiEDcDACAPIBAgDykDAIVCMIkiEDcDACAKIBAgCikDACIRfCAQQv////8PgyARQgGGQv7///8fg358IhA3AwAgBSAQIAUpAwCFQgGJNwMAIAEgBikDACIQIAEpAwAiEXwgEUIBhkL+////H4MgEEL/////D4N+fCIQNwMAIAwgECAMKQMAhUIgiSIQNwMAIAsgECALKQMAIhF8IBFCAYZC/v///x+DIBBC/////w+DfnwiEDcDACAGIBAgBikDAIVCKIkiEDcDACABIBAgASkDACIRfCAQQv////8PgyARQgGGQv7///8fg358IhA3AwAgDCAQIAwpAwCFQjCJIhA3AwAgCyAQIAspAwAiEXwgEEL/////D4MgEUIBhkL+////H4N+fCIQNwMAIAYgECAGKQMAhUIBiTcDACACIAcpAwAiECACKQMAIhF8IBFCAYZC/v///x+DIBBC/////w+DfnwiEDcDACANIBAgDSkDAIVCIIkiEDcDACAIIBAgCCkDACIRfCARQgGGQv7///8fgyAQQv////8Pg358IhA3AwAgByAQIAcpAwCFQiiJIhA3AwAgAiAQIAIpAwAiEXwgEEL/////D4MgEUIBhkL+////H4N+fCIQNwMAIA0gECANKQMAhUIwiSIQNwMAIAggECAIKQMAIhF8IBBC/////w+DIBFCAYZC/v///x+DfnwiEDcDACAHIBAgBykDAIVCAYk3AwAgAyAEKQMAIhAgAykDACIRfCARQgGGQv7///8fgyAQQv////8Pg358IhA3AwAgDiAQIA4pAwCFQiCJIhA3AwAgCSAQIAkpAwAiEXwgEUIBhkL+////H4MgEEL/////D4N+fCIQNwMAIAQgECAEKQMAhUIoiSIQNwMAIAMgECADKQMAIhF8IBBC/////w+DIBFCAYZC/v///x+DfnwiEDcDACAOIBAgDikDAIVCMIkiEDcDACAJIBAgCSkDACIRfCAQQv////8PgyARQgGGQv7///8fg358IhA3AwAgBCAQIAQpAwCFQgGJNwMAC98aAQN/QQAhBEEAIAIpAwAgASkDAIU3A5AIQQAgAikDCCABKQMIhTcDmAhBACACKQMQIAEpAxCFNwOgCEEAIAIpAxggASkDGIU3A6gIQQAgAikDICABKQMghTcDsAhBACACKQMoIAEpAyiFNwO4CEEAIAIpAzAgASkDMIU3A8AIQQAgAikDOCABKQM4hTcDyAhBACACKQNAIAEpA0CFNwPQCEEAIAIpA0ggASkDSIU3A9gIQQAgAikDUCABKQNQhTcD4AhBACACKQNYIAEpA1iFNwPoCEEAIAIpA2AgASkDYIU3A/AIQQAgAikDaCABKQNohTcD+AhBACACKQNwIAEpA3CFNwOACUEAIAIpA3ggASkDeIU3A4gJQQAgAikDgAEgASkDgAGFNwOQCUEAIAIpA4gBIAEpA4gBhTcDmAlBACACKQOQASABKQOQAYU3A6AJQQAgAikDmAEgASkDmAGFNwOoCUEAIAIpA6ABIAEpA6ABhTcDsAlBACACKQOoASABKQOoAYU3A7gJQQAgAikDsAEgASkDsAGFNwPACUEAIAIpA7gBIAEpA7gBhTcDyAlBACACKQPAASABKQPAAYU3A9AJQQAgAikDyAEgASkD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",Ye="e4cdc523",be={name:xe,data:Re,hash:Ye},ze="blake2b",Le="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",Xe="c6f286e6",Oe={name:ze,data:Le,hash:Xe},fo=new M;function zg(A){return!Number.isInteger(A)||A<8||A>512||A%8!==0?new Error("Invalid variant! Valid values: 8, 16, ..., 512"):null}function Ze(A,I){return A|I<<16}function hi(A=512,I=null){if(zg(A))return Promise.reject(zg(A));let i=null,B=A;if(I!==null){if(i=cA(I),i.length>64)return Promise.reject(new Error("Max key length is 64 bytes"));B=Ze(A,i.length)}let g=A/8;return Zg(Oe,g).then(e=>{B>512&&e.writeMemory(i),e.init(B);let Q={init:B>512?()=>(e.writeMemory(i),e.init(B),Q):()=>(e.init(B),Q),update:o=>(e.update(o),Q),digest:o=>e.digest(o),save:()=>e.save(),load:o=>(e.load(o),Q),blockSize:128,digestSize:g};return Q})}function Ve(A,I,i){let B=[`m=${I.memorySize}`,`t=${I.iterations}`,`p=${I.parallelism}`].join(",");return`$argon2${I.hashType}$v=19$${B}$${bg(A,!1)}$${bg(i,!1)}`}var Lg=new DataView(new ArrayBuffer(4));function aA(A){return Lg.setInt32(0,A,!0),new Uint8Array(Lg.buffer)}function ci(A,I,i){return NA(this,void 0,void 0,function*(){if(i<=64){let t=yield hi(i*8);return t.update(aA(i)),t.update(I),t.digest("binary")}let B=Math.ceil(i/32)-2,g=new Uint8Array(i);A.init(),A.update(aA(i)),A.update(I);let e=A.digest("binary");g.set(e.subarray(0,32),0);for(let t=1;t<B;t++)A.init(),A.update(e),e=A.digest("binary"),g.set(e.subarray(0,32),t*32);let Q=i-32*B,o;return Q===64?(o=A,o.init()):o=yield hi(Q*8),o.update(e),e=o.digest("binary"),g.set(e.subarray(0,Q),B*32),g})}function ve(A){switch(A){case"d":return 0;case"i":return 1;default:return 2}}function We(A){return NA(this,void 0,void 0,function*(){var I;let{parallelism:i,iterations:B,hashLength:g}=A,e=cA(A.password),Q=cA(A.salt),o=19,t=ve(A.hashType),{memorySize:C}=A,r=cA((I=A.secret)!==null&&I!==void 0?I:""),[E,s]=yield Promise.all([Zg(be,1024),hi(512)]);E.setMemorySize(C*1024+1024);let f=new Uint8Array(24),F=new DataView(f.buffer);F.setInt32(0,i,!0),F.setInt32(4,g,!0),F.setInt32(8,C,!0),F.setInt32(12,B,!0),F.setInt32(16,o,!0),F.setInt32(20,t,!0),E.writeMemory(f,C*1024),s.init(),s.update(f),s.update(aA(e.length)),s.update(e),s.update(aA(Q.length)),s.update(Q),s.update(aA(r.length)),s.update(r),s.update(aA(0));let y=Math.floor(C/(i*4))*4,u=new Uint8Array(72),D=s.digest("binary");u.set(D);for(let h=0;h<i;h++){u.set(aA(0),64),u.set(aA(h),68);let a=h*y,d=yield ci(s,u,1024);E.writeMemory(d,a*1024),a+=1,u.set(aA(1),64),d=yield ci(s,u,1024),E.writeMemory(d,a*1024)}let c=new Uint8Array(1024);Og(c,E.calculate(new Uint8Array([]),C));let n=yield ci(s,c,g);if(A.outputType==="hex"){let h=new Uint8Array(g*2);return si(h,n,g)}return A.outputType==="encoded"?Ve(Q,A,n):n})}var Pe=A=>{var I;if(!A||typeof A!="object")throw new Error("Invalid options parameter. It requires an object.");if(!A.password)throw new Error("Password must be specified");if(A.password=cA(A.password),A.password.length<1)throw new Error("Password must be specified");if(!A.salt)throw new Error("Salt must be specified");if(A.salt=cA(A.salt),A.salt.length<8)throw new Error("Salt should be at least 8 bytes long");if(A.secret=cA((I=A.secret)!==null&&I!==void 0?I:""),!Number.isInteger(A.iterations)||A.iterations<1)throw new Error("Iterations should be a positive number");if(!Number.isInteger(A.parallelism)||A.parallelism<1)throw new Error("Parallelism should be a positive number");if(!Number.isInteger(A.hashLength)||A.hashLength<4)throw new Error("Hash length should be at least 4 bytes.");if(!Number.isInteger(A.memorySize))throw new Error("Memory size should be specified.");if(A.memorySize<8*A.parallelism)throw new Error("Memory size should be at least 8 * parallelism.");if(A.outputType===void 0&&(A.outputType="hex"),!["hex","binary","encoded"].includes(A.outputType))throw new Error(`Insupported output type ${A.outputType}. Valid values: ['hex', 'binary', 'encoded']`)};function Vg(A){return NA(this,void 0,void 0,function*(){return Pe(A),We(Object.assign(Object.assign({},A),{hashType:"id"}))})}var Fo=new M;var Do=new M;var wo=new M;var lo=new M;var uo=new Uint8Array(8);var yo=new M;var po=new M;var ko=new M;var Go=new M;var So=new M;var Ho=new M;var Uo=new M;var No=new M;var qo=new M;var Jo=new M;var mo=new M;var Ko=new Uint8Array(8);var Mo=new M;var xo=new Uint8Array(8);var Ro=new M;var Yo=new Uint8Array(8);var bo=new M;var zo=new M;var Lo=new M;var vg=Object.freeze(`abacate
+abaixo
+abalar
+abater
+abduzir
+abelha
+aberto
+abismo
+abotoar
+abranger
+abreviar
+abrigar
+abrupto
+absinto
+absoluto
+absurdo
+abutre
+acabado
+acalmar
+acampar
+acanhar
+acaso
+aceitar
+acelerar
+acenar
+acervo
+acessar
+acetona
+achatar
+acidez
+acima
+acionado
+acirrar
+aclamar
+aclive
+acolhida
+acomodar
+acoplar
+acordar
+acumular
+acusador
+adaptar
+adega
+adentro
+adepto
+adequar
+aderente
+adesivo
+adeus
+adiante
+aditivo
+adjetivo
+adjunto
+admirar
+adorar
+adquirir
+adubo
+adverso
+advogado
+aeronave
+afastar
+aferir
+afetivo
+afinador
+afivelar
+aflito
+afluente
+afrontar
+agachar
+agarrar
+agasalho
+agenciar
+agilizar
+agiota
+agitado
+agora
+agradar
+agreste
+agrupar
+aguardar
+agulha
+ajoelhar
+ajudar
+ajustar
+alameda
+alarme
+alastrar
+alavanca
+albergue
+albino
+alcatra
+aldeia
+alecrim
+alegria
+alertar
+alface
+alfinete
+algum
+alheio
+aliar
+alicate
+alienar
+alinhar
+aliviar
+almofada
+alocar
+alpiste
+alterar
+altitude
+alucinar
+alugar
+aluno
+alusivo
+alvo
+amaciar
+amador
+amarelo
+amassar
+ambas
+ambiente
+ameixa
+amenizar
+amido
+amistoso
+amizade
+amolador
+amontoar
+amoroso
+amostra
+amparar
+ampliar
+ampola
+anagrama
+analisar
+anarquia
+anatomia
+andaime
+anel
+anexo
+angular
+animar
+anjo
+anomalia
+anotado
+ansioso
+anterior
+anuidade
+anunciar
+anzol
+apagador
+apalpar
+apanhado
+apego
+apelido
+apertada
+apesar
+apetite
+apito
+aplauso
+aplicada
+apoio
+apontar
+aposta
+aprendiz
+aprovar
+aquecer
+arame
+aranha
+arara
+arcada
+ardente
+areia
+arejar
+arenito
+aresta
+argiloso
+argola
+arma
+arquivo
+arraial
+arrebate
+arriscar
+arroba
+arrumar
+arsenal
+arterial
+artigo
+arvoredo
+asfaltar
+asilado
+aspirar
+assador
+assinar
+assoalho
+assunto
+astral
+atacado
+atadura
+atalho
+atarefar
+atear
+atender
+aterro
+ateu
+atingir
+atirador
+ativo
+atoleiro
+atracar
+atrevido
+atriz
+atual
+atum
+auditor
+aumentar
+aura
+aurora
+autismo
+autoria
+autuar
+avaliar
+avante
+avaria
+avental
+avesso
+aviador
+avisar
+avulso
+axila
+azarar
+azedo
+azeite
+azulejo
+babar
+babosa
+bacalhau
+bacharel
+bacia
+bagagem
+baiano
+bailar
+baioneta
+bairro
+baixista
+bajular
+baleia
+baliza
+balsa
+banal
+bandeira
+banho
+banir
+banquete
+barato
+barbado
+baronesa
+barraca
+barulho
+baseado
+bastante
+batata
+batedor
+batida
+batom
+batucar
+baunilha
+beber
+beijo
+beirada
+beisebol
+beldade
+beleza
+belga
+beliscar
+bendito
+bengala
+benzer
+berimbau
+berlinda
+berro
+besouro
+bexiga
+bezerro
+bico
+bicudo
+bienal
+bifocal
+bifurcar
+bigorna
+bilhete
+bimestre
+bimotor
+biologia
+biombo
+biosfera
+bipolar
+birrento
+biscoito
+bisneto
+bispo
+bissexto
+bitola
+bizarro
+blindado
+bloco
+bloquear
+boato
+bobagem
+bocado
+bocejo
+bochecha
+boicotar
+bolada
+boletim
+bolha
+bolo
+bombeiro
+bonde
+boneco
+bonita
+borbulha
+borda
+boreal
+borracha
+bovino
+boxeador
+branco
+brasa
+braveza
+breu
+briga
+brilho
+brincar
+broa
+brochura
+bronzear
+broto
+bruxo
+bucha
+budismo
+bufar
+bule
+buraco
+busca
+busto
+buzina
+cabana
+cabelo
+cabide
+cabo
+cabrito
+cacau
+cacetada
+cachorro
+cacique
+cadastro
+cadeado
+cafezal
+caiaque
+caipira
+caixote
+cajado
+caju
+calafrio
+calcular
+caldeira
+calibrar
+calmante
+calota
+camada
+cambista
+camisa
+camomila
+campanha
+camuflar
+canavial
+cancelar
+caneta
+canguru
+canhoto
+canivete
+canoa
+cansado
+cantar
+canudo
+capacho
+capela
+capinar
+capotar
+capricho
+captador
+capuz
+caracol
+carbono
+cardeal
+careca
+carimbar
+carneiro
+carpete
+carreira
+cartaz
+carvalho
+casaco
+casca
+casebre
+castelo
+casulo
+catarata
+cativar
+caule
+causador
+cautelar
+cavalo
+caverna
+cebola
+cedilha
+cegonha
+celebrar
+celular
+cenoura
+censo
+centeio
+cercar
+cerrado
+certeiro
+cerveja
+cetim
+cevada
+chacota
+chaleira
+chamado
+chapada
+charme
+chatice
+chave
+chefe
+chegada
+cheiro
+cheque
+chicote
+chifre
+chinelo
+chocalho
+chover
+chumbo
+chutar
+chuva
+cicatriz
+ciclone
+cidade
+cidreira
+ciente
+cigana
+cimento
+cinto
+cinza
+ciranda
+circuito
+cirurgia
+citar
+clareza
+clero
+clicar
+clone
+clube
+coado
+coagir
+cobaia
+cobertor
+cobrar
+cocada
+coelho
+coentro
+coeso
+cogumelo
+coibir
+coifa
+coiote
+colar
+coleira
+colher
+colidir
+colmeia
+colono
+coluna
+comando
+combinar
+comentar
+comitiva
+comover
+complexo
+comum
+concha
+condor
+conectar
+confuso
+congelar
+conhecer
+conjugar
+consumir
+contrato
+convite
+cooperar
+copeiro
+copiador
+copo
+coquetel
+coragem
+cordial
+corneta
+coronha
+corporal
+correio
+cortejo
+coruja
+corvo
+cosseno
+costela
+cotonete
+couro
+couve
+covil
+cozinha
+cratera
+cravo
+creche
+credor
+creme
+crer
+crespo
+criada
+criminal
+crioulo
+crise
+criticar
+crosta
+crua
+cruzeiro
+cubano
+cueca
+cuidado
+cujo
+culatra
+culminar
+culpar
+cultura
+cumprir
+cunhado
+cupido
+curativo
+curral
+cursar
+curto
+cuspir
+custear
+cutelo
+damasco
+datar
+debater
+debitar
+deboche
+debulhar
+decalque
+decimal
+declive
+decote
+decretar
+dedal
+dedicado
+deduzir
+defesa
+defumar
+degelo
+degrau
+degustar
+deitado
+deixar
+delator
+delegado
+delinear
+delonga
+demanda
+demitir
+demolido
+dentista
+depenado
+depilar
+depois
+depressa
+depurar
+deriva
+derramar
+desafio
+desbotar
+descanso
+desenho
+desfiado
+desgaste
+desigual
+deslize
+desmamar
+desova
+despesa
+destaque
+desviar
+detalhar
+detentor
+detonar
+detrito
+deusa
+dever
+devido
+devotado
+dezena
+diagrama
+dialeto
+didata
+difuso
+digitar
+dilatado
+diluente
+diminuir
+dinastia
+dinheiro
+diocese
+direto
+discreta
+disfarce
+disparo
+disquete
+dissipar
+distante
+ditador
+diurno
+diverso
+divisor
+divulgar
+dizer
+dobrador
+dolorido
+domador
+dominado
+donativo
+donzela
+dormente
+dorsal
+dosagem
+dourado
+doutor
+drenagem
+drible
+drogaria
+duelar
+duende
+dueto
+duplo
+duquesa
+durante
+duvidoso
+eclodir
+ecoar
+ecologia
+edificar
+edital
+educado
+efeito
+efetivar
+ejetar
+elaborar
+eleger
+eleitor
+elenco
+elevador
+eliminar
+elogiar
+embargo
+embolado
+embrulho
+embutido
+emenda
+emergir
+emissor
+empatia
+empenho
+empinado
+empolgar
+emprego
+empurrar
+emulador
+encaixe
+encenado
+enchente
+encontro
+endeusar
+endossar
+enfaixar
+enfeite
+enfim
+engajado
+engenho
+englobar
+engomado
+engraxar
+enguia
+enjoar
+enlatar
+enquanto
+enraizar
+enrolado
+enrugar
+ensaio
+enseada
+ensino
+ensopado
+entanto
+enteado
+entidade
+entortar
+entrada
+entulho
+envergar
+enviado
+envolver
+enxame
+enxerto
+enxofre
+enxuto
+epiderme
+equipar
+ereto
+erguido
+errata
+erva
+ervilha
+esbanjar
+esbelto
+escama
+escola
+escrita
+escuta
+esfinge
+esfolar
+esfregar
+esfumado
+esgrima
+esmalte
+espanto
+espelho
+espiga
+esponja
+espreita
+espumar
+esquerda
+estaca
+esteira
+esticar
+estofado
+estrela
+estudo
+esvaziar
+etanol
+etiqueta
+euforia
+europeu
+evacuar
+evaporar
+evasivo
+eventual
+evidente
+evoluir
+exagero
+exalar
+examinar
+exato
+exausto
+excesso
+excitar
+exclamar
+executar
+exemplo
+exibir
+exigente
+exonerar
+expandir
+expelir
+expirar
+explanar
+exposto
+expresso
+expulsar
+externo
+extinto
+extrato
+fabricar
+fabuloso
+faceta
+facial
+fada
+fadiga
+faixa
+falar
+falta
+familiar
+fandango
+fanfarra
+fantoche
+fardado
+farelo
+farinha
+farofa
+farpa
+fartura
+fatia
+fator
+favorita
+faxina
+fazenda
+fechado
+feijoada
+feirante
+felino
+feminino
+fenda
+feno
+fera
+feriado
+ferrugem
+ferver
+festejar
+fetal
+feudal
+fiapo
+fibrose
+ficar
+ficheiro
+figurado
+fileira
+filho
+filme
+filtrar
+firmeza
+fisgada
+fissura
+fita
+fivela
+fixador
+fixo
+flacidez
+flamingo
+flanela
+flechada
+flora
+flutuar
+fluxo
+focal
+focinho
+fofocar
+fogo
+foguete
+foice
+folgado
+folheto
+forjar
+formiga
+forno
+forte
+fosco
+fossa
+fragata
+fralda
+frango
+frasco
+fraterno
+freira
+frente
+fretar
+frieza
+friso
+fritura
+fronha
+frustrar
+fruteira
+fugir
+fulano
+fuligem
+fundar
+fungo
+funil
+furador
+furioso
+futebol
+gabarito
+gabinete
+gado
+gaiato
+gaiola
+gaivota
+galega
+galho
+galinha
+galocha
+ganhar
+garagem
+garfo
+gargalo
+garimpo
+garoupa
+garrafa
+gasoduto
+gasto
+gata
+gatilho
+gaveta
+gazela
+gelado
+geleia
+gelo
+gemada
+gemer
+gemido
+generoso
+gengiva
+genial
+genoma
+genro
+geologia
+gerador
+germinar
+gesso
+gestor
+ginasta
+gincana
+gingado
+girafa
+girino
+glacial
+glicose
+global
+glorioso
+goela
+goiaba
+golfe
+golpear
+gordura
+gorjeta
+gorro
+gostoso
+goteira
+governar
+gracejo
+gradual
+grafite
+gralha
+grampo
+granada
+gratuito
+graveto
+graxa
+grego
+grelhar
+greve
+grilo
+grisalho
+gritaria
+grosso
+grotesco
+grudado
+grunhido
+gruta
+guache
+guarani
+guaxinim
+guerrear
+guiar
+guincho
+guisado
+gula
+guloso
+guru
+habitar
+harmonia
+haste
+haver
+hectare
+herdar
+heresia
+hesitar
+hiato
+hibernar
+hidratar
+hiena
+hino
+hipismo
+hipnose
+hipoteca
+hoje
+holofote
+homem
+honesto
+honrado
+hormonal
+hospedar
+humorado
+iate
+ideia
+idoso
+ignorado
+igreja
+iguana
+ileso
+ilha
+iludido
+iluminar
+ilustrar
+imagem
+imediato
+imenso
+imersivo
+iminente
+imitador
+imortal
+impacto
+impedir
+implante
+impor
+imprensa
+impune
+imunizar
+inalador
+inapto
+inativo
+incenso
+inchar
+incidir
+incluir
+incolor
+indeciso
+indireto
+indutor
+ineficaz
+inerente
+infantil
+infestar
+infinito
+inflamar
+informal
+infrator
+ingerir
+inibido
+inicial
+inimigo
+injetar
+inocente
+inodoro
+inovador
+inox
+inquieto
+inscrito
+inseto
+insistir
+inspetor
+instalar
+insulto
+intacto
+integral
+intimar
+intocado
+intriga
+invasor
+inverno
+invicto
+invocar
+iogurte
+iraniano
+ironizar
+irreal
+irritado
+isca
+isento
+isolado
+isqueiro
+italiano
+janeiro
+jangada
+janta
+jararaca
+jardim
+jarro
+jasmim
+jato
+javali
+jazida
+jejum
+joaninha
+joelhada
+jogador
+joia
+jornal
+jorrar
+jovem
+juba
+judeu
+judoca
+juiz
+julgador
+julho
+jurado
+jurista
+juro
+justa
+labareda
+laboral
+lacre
+lactante
+ladrilho
+lagarta
+lagoa
+laje
+lamber
+lamentar
+laminar
+lampejo
+lanche
+lapidar
+lapso
+laranja
+lareira
+largura
+lasanha
+lastro
+lateral
+latido
+lavanda
+lavoura
+lavrador
+laxante
+lazer
+lealdade
+lebre
+legado
+legendar
+legista
+leigo
+leiloar
+leitura
+lembrete
+leme
+lenhador
+lentilha
+leoa
+lesma
+leste
+letivo
+letreiro
+levar
+leveza
+levitar
+liberal
+libido
+liderar
+ligar
+ligeiro
+limitar
+limoeiro
+limpador
+linda
+linear
+linhagem
+liquidez
+listagem
+lisura
+litoral
+livro
+lixa
+lixeira
+locador
+locutor
+lojista
+lombo
+lona
+longe
+lontra
+lorde
+lotado
+loteria
+loucura
+lousa
+louvar
+luar
+lucidez
+lucro
+luneta
+lustre
+lutador
+luva
+macaco
+macete
+machado
+macio
+madeira
+madrinha
+magnata
+magreza
+maior
+mais
+malandro
+malha
+malote
+maluco
+mamilo
+mamoeiro
+mamute
+manada
+mancha
+mandato
+manequim
+manhoso
+manivela
+manobrar
+mansa
+manter
+manusear
+mapeado
+maquinar
+marcador
+maresia
+marfim
+margem
+marinho
+marmita
+maroto
+marquise
+marreco
+martelo
+marujo
+mascote
+masmorra
+massagem
+mastigar
+matagal
+materno
+matinal
+matutar
+maxilar
+medalha
+medida
+medusa
+megafone
+meiga
+melancia
+melhor
+membro
+memorial
+menino
+menos
+mensagem
+mental
+merecer
+mergulho
+mesada
+mesclar
+mesmo
+mesquita
+mestre
+metade
+meteoro
+metragem
+mexer
+mexicano
+micro
+migalha
+migrar
+milagre
+milenar
+milhar
+mimado
+minerar
+minhoca
+ministro
+minoria
+miolo
+mirante
+mirtilo
+misturar
+mocidade
+moderno
+modular
+moeda
+moer
+moinho
+moita
+moldura
+moleza
+molho
+molinete
+molusco
+montanha
+moqueca
+morango
+morcego
+mordomo
+morena
+mosaico
+mosquete
+mostarda
+motel
+motim
+moto
+motriz
+muda
+muito
+mulata
+mulher
+multar
+mundial
+munido
+muralha
+murcho
+muscular
+museu
+musical
+nacional
+nadador
+naja
+namoro
+narina
+narrado
+nascer
+nativa
+natureza
+navalha
+navegar
+navio
+neblina
+nebuloso
+negativa
+negociar
+negrito
+nervoso
+neta
+neural
+nevasca
+nevoeiro
+ninar
+ninho
+nitidez
+nivelar
+nobreza
+noite
+noiva
+nomear
+nominal
+nordeste
+nortear
+notar
+noticiar
+noturno
+novelo
+novilho
+novo
+nublado
+nudez
+numeral
+nupcial
+nutrir
+nuvem
+obcecado
+obedecer
+objetivo
+obrigado
+obscuro
+obstetra
+obter
+obturar
+ocidente
+ocioso
+ocorrer
+oculista
+ocupado
+ofegante
+ofensiva
+oferenda
+oficina
+ofuscado
+ogiva
+olaria
+oleoso
+olhar
+oliveira
+ombro
+omelete
+omisso
+omitir
+ondulado
+oneroso
+ontem
+opcional
+operador
+oponente
+oportuno
+oposto
+orar
+orbitar
+ordem
+ordinal
+orfanato
+orgasmo
+orgulho
+oriental
+origem
+oriundo
+orla
+ortodoxo
+orvalho
+oscilar
+ossada
+osso
+ostentar
+otimismo
+ousadia
+outono
+outubro
+ouvido
+ovelha
+ovular
+oxidar
+oxigenar
+pacato
+paciente
+pacote
+pactuar
+padaria
+padrinho
+pagar
+pagode
+painel
+pairar
+paisagem
+palavra
+palestra
+palheta
+palito
+palmada
+palpitar
+pancada
+panela
+panfleto
+panqueca
+pantanal
+papagaio
+papelada
+papiro
+parafina
+parcial
+pardal
+parede
+partida
+pasmo
+passado
+pastel
+patamar
+patente
+patinar
+patrono
+paulada
+pausar
+peculiar
+pedalar
+pedestre
+pediatra
+pedra
+pegada
+peitoral
+peixe
+pele
+pelicano
+penca
+pendurar
+peneira
+penhasco
+pensador
+pente
+perceber
+perfeito
+pergunta
+perito
+permitir
+perna
+perplexo
+persiana
+pertence
+peruca
+pescado
+pesquisa
+pessoa
+petiscar
+piada
+picado
+piedade
+pigmento
+pilastra
+pilhado
+pilotar
+pimenta
+pincel
+pinguim
+pinha
+pinote
+pintar
+pioneiro
+pipoca
+piquete
+piranha
+pires
+pirueta
+piscar
+pistola
+pitanga
+pivete
+planta
+plaqueta
+platina
+plebeu
+plumagem
+pluvial
+pneu
+poda
+poeira
+poetisa
+polegada
+policiar
+poluente
+polvilho
+pomar
+pomba
+ponderar
+pontaria
+populoso
+porta
+possuir
+postal
+pote
+poupar
+pouso
+povoar
+praia
+prancha
+prato
+praxe
+prece
+predador
+prefeito
+premiar
+prensar
+preparar
+presilha
+pretexto
+prevenir
+prezar
+primata
+princesa
+prisma
+privado
+processo
+produto
+profeta
+proibido
+projeto
+prometer
+propagar
+prosa
+protetor
+provador
+publicar
+pudim
+pular
+pulmonar
+pulseira
+punhal
+punir
+pupilo
+pureza
+puxador
+quadra
+quantia
+quarto
+quase
+quebrar
+queda
+queijo
+quente
+querido
+quimono
+quina
+quiosque
+rabanada
+rabisco
+rachar
+racionar
+radial
+raiar
+rainha
+raio
+raiva
+rajada
+ralado
+ramal
+ranger
+ranhura
+rapadura
+rapel
+rapidez
+raposa
+raquete
+raridade
+rasante
+rascunho
+rasgar
+raspador
+rasteira
+rasurar
+ratazana
+ratoeira
+realeza
+reanimar
+reaver
+rebaixar
+rebelde
+rebolar
+recado
+recente
+recheio
+recibo
+recordar
+recrutar
+recuar
+rede
+redimir
+redonda
+reduzida
+reenvio
+refinar
+refletir
+refogar
+refresco
+refugiar
+regalia
+regime
+regra
+reinado
+reitor
+rejeitar
+relativo
+remador
+remendo
+remorso
+renovado
+reparo
+repelir
+repleto
+repolho
+represa
+repudiar
+requerer
+resenha
+resfriar
+resgatar
+residir
+resolver
+respeito
+ressaca
+restante
+resumir
+retalho
+reter
+retirar
+retomada
+retratar
+revelar
+revisor
+revolta
+riacho
+rica
+rigidez
+rigoroso
+rimar
+ringue
+risada
+risco
+risonho
+robalo
+rochedo
+rodada
+rodeio
+rodovia
+roedor
+roleta
+romano
+roncar
+rosado
+roseira
+rosto
+rota
+roteiro
+rotina
+rotular
+rouco
+roupa
+roxo
+rubro
+rugido
+rugoso
+ruivo
+rumo
+rupestre
+russo
+sabor
+saciar
+sacola
+sacudir
+sadio
+safira
+saga
+sagrada
+saibro
+salada
+saleiro
+salgado
+saliva
+salpicar
+salsicha
+saltar
+salvador
+sambar
+samurai
+sanar
+sanfona
+sangue
+sanidade
+sapato
+sarda
+sargento
+sarjeta
+saturar
+saudade
+saxofone
+sazonal
+secar
+secular
+seda
+sedento
+sediado
+sedoso
+sedutor
+segmento
+segredo
+segundo
+seiva
+seleto
+selvagem
+semanal
+semente
+senador
+senhor
+sensual
+sentado
+separado
+sereia
+seringa
+serra
+servo
+setembro
+setor
+sigilo
+silhueta
+silicone
+simetria
+simpatia
+simular
+sinal
+sincero
+singular
+sinopse
+sintonia
+sirene
+siri
+situado
+soberano
+sobra
+socorro
+sogro
+soja
+solda
+soletrar
+solteiro
+sombrio
+sonata
+sondar
+sonegar
+sonhador
+sono
+soprano
+soquete
+sorrir
+sorteio
+sossego
+sotaque
+soterrar
+sovado
+sozinho
+suavizar
+subida
+submerso
+subsolo
+subtrair
+sucata
+sucesso
+suco
+sudeste
+sufixo
+sugador
+sugerir
+sujeito
+sulfato
+sumir
+suor
+superior
+suplicar
+suposto
+suprimir
+surdina
+surfista
+surpresa
+surreal
+surtir
+suspiro
+sustento
+tabela
+tablete
+tabuada
+tacho
+tagarela
+talher
+talo
+talvez
+tamanho
+tamborim
+tampa
+tangente
+tanto
+tapar
+tapioca
+tardio
+tarefa
+tarja
+tarraxa
+tatuagem
+taurino
+taxativo
+taxista
+teatral
+tecer
+tecido
+teclado
+tedioso
+teia
+teimar
+telefone
+telhado
+tempero
+tenente
+tensor
+tentar
+termal
+terno
+terreno
+tese
+tesoura
+testado
+teto
+textura
+texugo
+tiara
+tigela
+tijolo
+timbrar
+timidez
+tingido
+tinteiro
+tiragem
+titular
+toalha
+tocha
+tolerar
+tolice
+tomada
+tomilho
+tonel
+tontura
+topete
+tora
+torcido
+torneio
+torque
+torrada
+torto
+tostar
+touca
+toupeira
+toxina
+trabalho
+tracejar
+tradutor
+trafegar
+trajeto
+trama
+trancar
+trapo
+traseiro
+tratador
+travar
+treino
+tremer
+trepidar
+trevo
+triagem
+tribo
+triciclo
+tridente
+trilogia
+trindade
+triplo
+triturar
+triunfal
+trocar
+trombeta
+trova
+trunfo
+truque
+tubular
+tucano
+tudo
+tulipa
+tupi
+turbo
+turma
+turquesa
+tutelar
+tutorial
+uivar
+umbigo
+unha
+unidade
+uniforme
+urologia
+urso
+urtiga
+urubu
+usado
+usina
+usufruir
+vacina
+vadiar
+vagaroso
+vaidoso
+vala
+valente
+validade
+valores
+vantagem
+vaqueiro
+varanda
+vareta
+varrer
+vascular
+vasilha
+vassoura
+vazar
+vazio
+veado
+vedar
+vegetar
+veicular
+veleiro
+velhice
+veludo
+vencedor
+vendaval
+venerar
+ventre
+verbal
+verdade
+vereador
+vergonha
+vermelho
+verniz
+versar
+vertente
+vespa
+vestido
+vetorial
+viaduto
+viagem
+viajar
+viatura
+vibrador
+videira
+vidraria
+viela
+viga
+vigente
+vigiar
+vigorar
+vilarejo
+vinco
+vinheta
+vinil
+violeta
+virada
+virtude
+visitar
+visto
+vitral
+viveiro
+vizinho
+voador
+voar
+vogal
+volante
+voleibol
+voltagem
+volumoso
+vontade
+vulto
+vuvuzela
+xadrez
+xarope
+xeque
+xeretar
+xerife
+xingar
+zangado
+zarpar
+zebu
+zelador
+zombar
+zoologia
+zumbido`.split(`
+`));return gB(Te);})();</script>
+<script>
+// qrcode-generator 1.4.4 · Copyright (c) 2009 Kazuhiko Arase · licença MIT · https://github.com/kazuhikoarase/qrcode-generator
+// Copyright (c) 2009 Kazuhiko Arase
+// Licensed under the MIT license:
+var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,(function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1}))},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(n*r,o*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(t,r){var e=n("友");if(2!=e.length||38726!=(e[0]<<8|e[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}((function(){return qrcode}));
+</script>
+<script>
+// ENCRYPT-CORE-BEGIN
+// Núcleo do Lucent Encrypt (spec/ENCRYPT.md, LucentEncrypt/1). Sem DOM.
+const LE = (() => {
+  const { x25519, ml_kem768, ml_kem768_x25519: xwing, sha256, sha512, hmac, hkdf, argon2id, wordlist } = LELIB;
+  const te = new TextEncoder(), VERSION = "LucentEncrypt/1";
+  const MODES = ["x25519", "mlkem768", "xwing"], MODE_ID = { x25519: 1, mlkem768: 2, xwing: 3 };
+  const PK_LEN = { x25519: 32, mlkem768: 1184, xwing: 1216 }, CT_LEN = { x25519: 32, mlkem768: 1088, xwing: 1120 };
+  const MAX_CHARS = 2000, MAX_BYTES = 6000, ID_MAX = 128, PHRASE_WORDS = 7;
+  const cat = (...a) => { const o = new Uint8Array(a.reduce((n, x) => n + x.length, 0)); let i = 0; for (const x of a) { o.set(x, i); i += x.length; } return o; };
+  const eq = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+  const rand = (n) => crypto.getRandomValues(new Uint8Array(n));
+  const b64u = (b) => { let s = ""; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode(...b.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+  const unb64u = (s) => { const t = s.replace(/-/g, "+").replace(/_/g, "/"); return Uint8Array.from(atob(t + "===".slice((t.length + 3) % 4)), (c) => c.charCodeAt(0)); };
+  const CROCK = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+  const crock = (bytes) => { let x = 0n; for (const v of bytes) x = (x << 8n) | BigInt(v); const n = Math.ceil(bytes.length * 8 / 5); x <<= BigInt(n * 5 - bytes.length * 8); let s = ""; for (let i = 0; i < n; i++) { s = CROCK[Number(x & 31n)] + s; x >>= 5n; } return s.match(/.{1,4}/g).join("-"); };
+
+  // ---- frase (seção 2)
+  const BY4 = new Map(wordlist.map((w) => [w.slice(0, 4), w]));
+  const fold = (s) => String(s).normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  function parsePhrase(text) {
+    const tokens = fold(text).split(/[^a-z]+/).filter(Boolean);
+    const words = tokens.map((t) => { const w = t.length >= 4 ? BY4.get(t.slice(0, 4)) : null; return { typed: t, word: w && w.startsWith(t) ? w : null }; });
+    const ok = words.length === PHRASE_WORDS && words.every((x) => x.word);
+    return { words, ok, canonical: ok ? words.map((x) => x.word).join(" ") : null };
+  }
+  function newPhrase() { const r = new Uint16Array(PHRASE_WORDS); crypto.getRandomValues(r); return Array.from(r, (v) => wordlist[v & 2047]); }
+
+  // ---- identificador (seção 2)
+  function normId(raw) {
+    const s = String(raw || "").trim(); if (!s) return null;
+    let kind, value;
+    if (s.includes("@")) { kind = "e-mail"; value = s.replace(/\s+/g, "").toLowerCase(); }
+    else if (/^[\d\s+().-]+$/.test(s) && s.replace(/\D/g, "").length >= 10) { const d = s.replace(/\D/g, ""); kind = "celular"; value = d.length <= 11 ? "55" + d : d; }
+    else { kind = "nome"; value = s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/\s+/g, " ").trim(); }
+    if (!value || te.encode(value).length > ID_MAX) return null;
+    return { kind, value };
+  }
+
+  // ---- derivação (seção 3): Argon2id uma vez, depois uma semente por modo
+  async function master(canonical, id) {
+    const salt = sha256(cat(te.encode(VERSION + "/salt"), new Uint8Array([0]), te.encode(id)));
+    return argon2id({ password: canonical, salt, parallelism: 1, iterations: 3, memorySize: 65536, hashLength: 32, outputType: "binary" });
+  }
+  function keysFor(k, mode) {
+    const seed = hmac(sha256, k, te.encode(VERSION + "/" + mode));
+    if (mode === "x25519") return { pk: x25519.getPublicKey(seed), sk: seed };
+    if (mode === "mlkem768") { const kp = ml_kem768.keygen(sha512(seed)); return { pk: kp.publicKey, sk: kp.secretKey }; }
+    const kp = xwing.keygen(seed); return { pk: kp.publicKey, sk: kp.secretKey };
+  }
+
+  // ---- formatos (seção 4)
+  function encodePublic(mode, id, pk) { const ib = te.encode(id); return cat(new Uint8Array([1, MODE_ID[mode], ib.length]), ib, pk); }
+  function decodePublic(b) {
+    if (b.length < 4 || b[0] !== 1 || !MODES[b[1] - 1]) throw new Error("formato");
+    const mode = MODES[b[1] - 1], il = b[2], id = new TextDecoder("utf-8", { fatal: true }).decode(b.subarray(3, 3 + il)), pk = b.subarray(3 + il);
+    if (!il || pk.length !== PK_LEN[mode]) throw new Error("formato");
+    return { mode, id, pk };
+  }
+  const fp10 = (pubBytes) => sha256(pubBytes).subarray(0, 10);
+  const fingerprint = (pubBytes) => crock(fp10(pubBytes));
+  function decodeMessage(b) {
+    if (b.length < 4 || b[0] !== 1 || !MODES[b[1] - 1]) throw new Error("formato");
+    const mode = MODES[b[1] - 1], il = b[2], idEnd = 3 + il, fpEnd = idEnd + 10, ctEnd = fpEnd + CT_LEN[mode];
+    if (!il || b.length < ctEnd + 64 + 16) throw new Error("formato");
+    return { mode, id: new TextDecoder("utf-8", { fatal: true }).decode(b.subarray(3, idEnd)), fp: b.subarray(idEnd, fpEnd), kemct: b.subarray(fpEnd, ctEnd), header: b.subarray(0, ctEnd), aead: b.subarray(ctEnd) };
+  }
+  async function aeadKey(ss, header, usage) {
+    const okm = hkdf(sha256, ss, new Uint8Array(0), cat(te.encode(VERSION + "/aead"), sha256(header)), 44);
+    return { key: await crypto.subtle.importKey("raw", okm.subarray(0, 32), "AES-GCM", false, [usage]), iv: okm.subarray(32, 44) };
+  }
+  function checkText(text) {
+    const tb = te.encode(text);
+    if (!text.length) throw new Error("vazia");
+    if ([...text].length > MAX_CHARS || tb.length > MAX_BYTES) throw new Error("longa");
+    return tb;
+  }
+  async function encrypt(pubBytes, text) {
+    const { mode, id, pk } = decodePublic(pubBytes), tb = checkText(text);
+    let kemct, ss;
+    if (mode === "x25519") { const e = rand(32), E = x25519.getPublicKey(e); ss = sha256(cat(te.encode(VERSION + "/x25519"), x25519.getSharedSecret(e, pk), E, pk)); kemct = E; }
+    else { const r = (mode === "mlkem768" ? ml_kem768 : xwing).encapsulate(pk); kemct = r.cipherText; ss = r.sharedSecret; }
+    const ib = te.encode(id), header = cat(new Uint8Array([1, MODE_ID[mode], ib.length]), ib, fp10(pubBytes), kemct);
+    const padded = Math.ceil((2 + tb.length) / 64) * 64, pt = rand(padded); pt[0] = tb.length >> 8; pt[1] = tb.length & 255; pt.set(tb, 2);
+    const { key, iv } = await aeadKey(ss, header, "encrypt");
+    return cat(header, new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: header }, key, pt)));
+  }
+  // Abre com a chave já derivada (k = master(...)): lança "frase" ou "alterada".
+  async function openWith(k, msgBytes) {
+    const m = decodeMessage(msgBytes), keys = keysFor(k, m.mode);
+    if (!eq(fp10(encodePublic(m.mode, m.id, keys.pk)), m.fp)) throw new Error("frase");
+    let ss;
+    try {
+      if (m.mode === "x25519") ss = sha256(cat(te.encode(VERSION + "/x25519"), x25519.getSharedSecret(keys.sk, m.kemct), m.kemct, keys.pk));
+      else ss = (m.mode === "mlkem768" ? ml_kem768 : xwing).decapsulate(m.kemct, keys.sk);
+      const { key, iv } = await aeadKey(ss, m.header, "decrypt");
+      const pt = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv, additionalData: m.header }, key, m.aead));
+      const n = (pt[0] << 8) | pt[1];
+      if (n > pt.length - 2) throw new Error();
+      return new TextDecoder("utf-8", { fatal: true }).decode(pt.subarray(2, 2 + n));
+    } catch { throw new Error("alterada"); }
+  }
+  // Tamanhos (em caracteres de base64url) para a tabela de comparação.
+  const b64len = (n) => Math.ceil(n * 4 / 3);
+  const sizes = (id, textBytes = 100) => {
+    const il = te.encode(id || "MARIA SILVA").length;
+    return Object.fromEntries(MODES.map((m) => [m, { pub: b64len(3 + il + PK_LEN[m]), msg: b64len(3 + il + 10 + CT_LEN[m] + Math.ceil((2 + textBytes) / 64) * 64 + 16) }]));
+  };
+  return { VERSION, MODES, MAX_CHARS, MAX_BYTES, wordlist, parsePhrase, newPhrase, normId, master, keysFor, encodePublic, decodePublic, fingerprint, decodeMessage, encrypt, openWith, sizes, b64u, unb64u, crock };
+})();
+// ENCRYPT-CORE-END
+</script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const BASE = (location.protocol === "file:" ? "https://lucentcrypto.org" : location.origin) + "/en/encrypt/";
+  const MODE_NAME = { x25519: "classic mode (X25519)", mlkem768: "post-quantum mode (ML-KEM-768)", xwing: "hybrid mode (X25519 + ML-KEM-768)" };
+  const MODE_SHORT = { x25519: "Classic (X25519)", mlkem768: "Post-quantum (ML-KEM-768)", xwing: "Hybrid (X-Wing)" };
+  const te = new TextEncoder();
+
+  // ---- tema
+  const THEMES = ["auto", "light", "dark"], LABEL = { auto: "Theme: auto", light: "Theme: light", dark: "Theme: dark" };
+  let theme = "dark"; try { theme = localStorage.getItem("lucent-theme") || "dark"; } catch {} // Laboratório: escuro por padrão
+  if (!THEMES.includes(theme)) theme = "auto";
+  const applyTheme = (t) => { if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = t; $("themeBtn").textContent = LABEL[t]; };
+  $("themeBtn").addEventListener("click", () => { theme = THEMES[(THEMES.indexOf(theme) + 1) % 3]; try { localStorage.setItem("lucent-theme", theme); } catch {} applyTheme(theme); });
+  applyTheme(theme);
+  // ---- língua: o botão leva à outra versão com o mesmo link (a parte depois do #)
+  $("langBtn").addEventListener("click", (e) => { e.preventDefault(); location.href = $("langBtn").getAttribute("href") + location.hash; });
+
+  // ---- abas
+  const TABS = { tabCreate: "viewCreate", tabSend: "viewSend", tabOpen: "viewOpen" };
+  const show = (tab) => { for (const [t, v] of Object.entries(TABS)) { $(t).setAttribute("aria-selected", t === tab); $(v).hidden = t !== tab; } };
+  Object.keys(TABS).forEach((t) => $(t).addEventListener("click", () => show(t)));
+
+  // ---- compartilhar
+  async function copyText(text, note) {
+    try { await navigator.clipboard.writeText(text); note.textContent = "Copied."; } catch { note.textContent = "Could not copy; select and copy by hand."; }
+    setTimeout(() => { note.textContent = ""; }, 4000);
+  }
+  function showQr(text, title, note) {
+    $("qrTitle").textContent = title;
+    try { const q = qrcode(0, text.length > 1200 ? "L" : "M"); q.addData(text, "Byte"); q.make(); $("qrBox").innerHTML = q.createSvgTag({ cellSize: 4, margin: 4, scalable: true }); $("qrNote").textContent = note; }
+    catch { $("qrBox").innerHTML = ""; $("qrNote").textContent = "Too long for a QR code. Use the link."; }
+    $("qrDlg").showModal();
+  }
+  $("qrClose").addEventListener("click", () => { $("qrDlg").close(); $("qrBox").innerHTML = ""; });
+  function shareRow(box, link, subject, text, qrTitle) {
+    box.innerHTML = "";
+    const note = document.createElement("span"); note.className = "small muted";
+    const c = document.createElement("button"); c.className = "btn primary small"; c.type = "button"; c.textContent = "Copy link"; c.addEventListener("click", () => copyText(link, note));
+    const w = document.createElement("a"); w.className = "btn small"; w.target = "_blank"; w.rel = "noopener"; w.href = "https://wa.me/?text=" + encodeURIComponent(text + "\n" + link); w.textContent = "Send via WhatsApp";
+    const m = document.createElement("a"); m.className = "btn small"; m.href = "mailto:?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(text + "\n\n" + link); m.textContent = "Send by e-mail";
+    box.append(c, w, m);
+    if (link.length <= 2900) { const q = document.createElement("button"); q.className = "btn small"; q.type = "button"; q.textContent = "QR"; q.addEventListener("click", () => showQr(link, qrTitle, "Scan it with your phone camera.")); box.append(q); }
+    box.append(note);
+  }
+  const cmpTable = (table, sz0, key, current) => {
+    const pre = (BASE + (key === "pub" ? "#k=" : "#m=")).length; // o link inteiro, com o endereço
+    const sz = Object.fromEntries(Object.entries(sz0).map(([m, v]) => [m, { ...v, [key]: v[key] + pre }]));
+    const max = Math.max(...Object.values(sz).map((x) => x[key]));
+    table.innerHTML = `<tr><th>Mode</th><th></th><th style="text-align:right">characters</th></tr>` + LE.MODES.slice().reverse().map((m) =>
+      `<tr class="${m === current ? "on" : ""}"><td>${MODE_SHORT[m]}</td><td style="width:45%"><div class="bar" style="width:${(100 * sz[m][key] / max).toFixed(1)}%"></div></td><td class="n">${sz[m][key].toLocaleString("en-US")}</td></tr>`).join("");
+  };
+  const chips = (box, parsed) => {
+    box.innerHTML = parsed.words.map((w) => w.word ? `<span class="chip">${esc(w.word)}</span>` : `<span class="chip bad">“${esc(w.typed)}” is not on the list</span>`).join("") +
+      (parsed.words.length && parsed.words.length !== 7 ? `<span class="small muted">${parsed.words.length} of 7 words</span>` : "");
+  };
+  const err = (id, t) => { $(id).hidden = !t; $(id).textContent = t || ""; };
+
+  // ================= Criar =================
+  let phrase = LE.newPhrase(), haveOwn = false;
+  const curMode = () => document.querySelector('input[name="cMode"]:checked').value;
+  const renderWords = () => { $("cWords").innerHTML = phrase.map((w, i) => `<div class="word"><small>${i + 1}</small>${esc(w)}</div>`).join(""); };
+  const renderCreateCmp = () => {
+    const id = LE.normId($("cId").value);
+    $("cIdNorm").textContent = id ? "Identifier (" + ({ "e-mail": "e-mail", celular: "phone", nome: "name" }[id.kind] || id.kind) + "): " + id.value : "";
+    cmpTable($("cCmp"), LE.sizes(id?.value), "pub", curMode());
+    $("cCmp").querySelector("tr").cells[2].textContent = "public link, characters";
+  };
+  renderWords(); renderCreateCmp();
+  $("cId").addEventListener("input", () => { renderCreateCmp(); $("cOut").hidden = true; });
+  document.querySelectorAll('input[name="cMode"]').forEach((r) => r.addEventListener("change", () => { renderCreateCmp(); $("cOut").hidden = true; }));
+  $("cRegen").addEventListener("click", () => { phrase = LE.newPhrase(); renderWords(); $("cWrote").checked = false; $("cOut").hidden = true; });
+  $("cHave").addEventListener("click", () => { haveOwn = true; $("cNew").hidden = true; $("cOld").hidden = false; $("cOut").hidden = true; $("cPhrase").focus(); });
+  $("cBackNew").addEventListener("click", () => { haveOwn = false; $("cNew").hidden = false; $("cOld").hidden = true; $("cOut").hidden = true; });
+  $("cPhrase").addEventListener("input", () => { chips($("cChips"), LE.parsePhrase($("cPhrase").value)); $("cOut").hidden = true; });
+  let cache = null; // { canonical, id, k } — a derivação lenta só se repete se a frase ou o identificador mudarem
+  async function masterFor(canonical, id, busyEl) {
+    if (cache && cache.canonical === canonical && cache.id === id) return cache.k;
+    busyEl.textContent = "Deriving the key… this takes a few seconds on purpose, to slow down anyone trying to guess the phrase.";
+    await new Promise((r) => setTimeout(r, 30));
+    const t0 = performance.now(), k = await LE.master(canonical, id);
+    busyEl.textContent = "Key derived in " + ((performance.now() - t0) / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 }) + " s.";
+    cache = { canonical, id, k }; return k;
+  }
+  $("cGo").addEventListener("click", async () => {
+    err("cErr", "");
+    const id = LE.normId($("cId").value);
+    if (!id) { $("cId").focus(); return err("cErr", "Type your identifier: name, phone or e-mail (up to 128 bytes)."); }
+    let canonical;
+    if (haveOwn) { const p = LE.parsePhrase($("cPhrase").value); if (!p.ok) { $("cPhrase").focus(); return err("cErr", "The phrase needs 7 words from the list."); } canonical = p.canonical; }
+    else { if (!$("cWrote").checked) return err("cErr", "First write the phrase down and tick “I wrote the phrase down somewhere safe”."); canonical = phrase.join(" "); }
+    $("cGo").disabled = true;
+    try {
+      const mode = curMode(), k = await masterFor(canonical, id.value, $("cBusy")), keys = LE.keysFor(k, mode);
+      const pub = LE.encodePublic(mode, id.value, keys.pk), link = BASE + "#k=" + LE.b64u(pub);
+      $("cLink").textContent = link; $("cFp").textContent = LE.fingerprint(pub);
+      shareRow($("cShare"), link, "My public link (Lucent Encrypt)", "To send me an encrypted message, use this link (" + MODE_NAME[mode] + "). Fingerprint: " + LE.fingerprint(pub) + ".", "Your public link");
+      $("cOut").hidden = false; $("cOut").scrollIntoView({ block: "start", behavior: "smooth" });
+    } catch (e) { err("cErr", "Could not generate the key: " + e.message); }
+    $("cGo").disabled = false;
+  });
+
+  // ================= Cifrar =================
+  let target = null;
+  function setTarget(text) {
+    const m = String(text).match(/#?k=([A-Za-z0-9_-]+)/);
+    try {
+      if (!m) throw new Error();
+      const pub = LE.unb64u(m[1]), d = LE.decodePublic(pub);
+      target = { pub, ...d };
+      $("sWho").textContent = d.id; $("sMode").textContent = MODE_NAME[d.mode]; $("sFp").textContent = LE.fingerprint(pub);
+      $("sPaste").hidden = true; $("sTo").hidden = false; $("sOut").hidden = true; err("sPubErr", ""); renderSendCmp();
+      return true;
+    } catch { target = null; if (String(text).trim()) err("sPubErr", "This doesn’t look like a Lucent Encrypt public link (it starts with …/encrypt/#k=). Check that it was copied in full."); return false; }
+  }
+  const renderSendCmp = () => {
+    const n = te.encode($("sText").value).length;
+    $("sCount").textContent = [...$("sText").value].length + " of " + LE.MAX_CHARS + " characters";
+    if (target) { cmpTable($("sCmp"), LE.sizes(target.id, Math.max(1, n)), "msg", target.mode); $("sCmp").querySelector("tr").cells[2].textContent = "encrypted link, characters"; }
+  };
+  $("sPub").addEventListener("input", () => setTarget($("sPub").value));
+  $("sOther").addEventListener("click", () => { target = null; $("sPub").value = ""; $("sPaste").hidden = false; $("sTo").hidden = true; history.replaceState(null, "", location.pathname); });
+  $("sText").addEventListener("input", () => { renderSendCmp(); $("sOut").hidden = true; });
+  $("sGo").addEventListener("click", async () => {
+    err("sErr", "");
+    try {
+      const msg = await LE.encrypt(target.pub, $("sText").value), link = BASE + "#m=" + LE.b64u(msg);
+      $("sLink").textContent = link;
+      shareRow($("sShare"), link, "Encrypted message for " + target.id, "Encrypted message for " + target.id + " (Lucent Encrypt). Open the link and type your phrase:", "Encrypted message");
+      $("sOut").hidden = false;
+    } catch (e) { err("sErr", e.message === "vazia" ? "Write the message." : e.message === "longa" ? "Message too long: up to " + LE.MAX_CHARS + " characters." : "Could not encrypt: " + (e.message === "formato" ? "invalid public link" : e.message)); }
+  });
+
+  // ================= Abrir =================
+  let incoming = null;
+  function setMessage(text) {
+    const m = String(text).match(/#?m=([A-Za-z0-9_-]+)/);
+    try {
+      if (!m) throw new Error();
+      const bytes = LE.unb64u(m[1]), d = LE.decodeMessage(bytes);
+      incoming = bytes;
+      $("oWho").textContent = d.id; $("oMode").textContent = MODE_NAME[d.mode];
+      $("oPaste").hidden = true; $("oFor").hidden = false; err("oMsgErr", ""); return true;
+    } catch { incoming = null; if (String(text).trim()) err("oMsgErr", "This doesn’t look like a Lucent Encrypt message link (it starts with …/encrypt/#m=), or it is incomplete."); return false; }
+  }
+  $("oMsg").addEventListener("input", () => setMessage($("oMsg").value));
+  $("oPhrase").addEventListener("input", () => { chips($("oChips"), LE.parsePhrase($("oPhrase").value)); err("oErr", ""); });
+  $("oGo").addEventListener("click", async () => {
+    err("oErr", ""); $("oOut").hidden = true;
+    const p = LE.parsePhrase($("oPhrase").value);
+    if (!p.ok) { $("oPhrase").focus(); return err("oErr", p.words.some((w) => !w.word) ? "Some words are not on the list (in red above)." : "The phrase needs 7 words."); }
+    $("oGo").disabled = true;
+    try {
+      const d = LE.decodeMessage(incoming), k = await masterFor(p.canonical, d.id, $("oBusy"));
+      $("oText").textContent = await LE.openWith(k, incoming); $("oOut").hidden = false; $("oHide").textContent = "Hide";
+    } catch (e) { err("oErr", e.message === "frase" ? "Wrong phrase." : e.message === "alterada" ? "The message was altered or is incomplete." : "Could not open: " + (e.message === "formato" ? "invalid message link" : e.message)); }
+    $("oGo").disabled = false;
+  });
+  $("oCopy").addEventListener("click", () => copyText($("oText").textContent, $("oNote")));
+  $("oHide").addEventListener("click", () => { const h = !$("oText").hidden; $("oText").hidden = h; $("oHide").textContent = h ? "Show" : "Hide"; });
+
+  // ---- link de entrada
+  const route = () => {
+    const h = location.hash;
+    if (/^#k=/.test(h)) { show("tabSend"); setTarget(h); }
+    else if (/^#m=/.test(h)) { show("tabOpen"); setMessage(h); }
+  };
+  route(); window.addEventListener("hashchange", route);
+})();
+</script>
+</body>
+</html>

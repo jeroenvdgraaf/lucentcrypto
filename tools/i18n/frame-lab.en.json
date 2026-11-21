@@ -1,0 +1,16 @@
+{
+ "<a class=\"lcf-logo\" href=\"/pt/#laboratorio\">": "<a class=\"lcf-logo\" href=\"/#laboratorio\">",
+ "<nav class=\"lcf-nav\" aria-label=\"Laboratório\">": "<nav class=\"lcf-nav\" aria-label=\"Lab\">",
+ "href=\"/encrypt/\"": "href=\"/en/encrypt/\"",
+ "href=\"/segredo/\"": "href=\"/en/segredo/\"",
+ "href=\"/amigo-oculto/\"": "href=\"/en/amigo-oculto/\"",
+ ">Segredo</a>": ">Secret</a>",
+ ">Amigo Oculto</a>": ">Secret Santa</a>",
+ "<span class=\"lcf-tag\">Demonstração</span>": "<span class=\"lcf-tag\">Demo</span>",
+ "aria-label=\"Mais no Laboratório\"": "aria-label=\"More in the Lab\"",
+ "<p class=\"lcf-kick\">Mais no Laboratório</p>": "<p class=\"lcf-kick\">More in the Lab</p>",
+ "<p>Feito pela <a href=\"/pt/\">LucentCrypto</a>, que faz sorteios, publicações de dados e votações verificáveis para organizações.</p>": "<p>Made by <a href=\"/\">LucentCrypto</a>, which runs verifiable draws, data publications and elections for organizations.</p>",
+ "?<b>Encrypt</b><span>Cifra clássica e pós-quântica, lado a lado.</span>": "<b>Encrypt</b><span>Classic and post-quantum encryption, side by side.</span>",
+ "?<b>Segredo</b><span>Divida um segredo entre pessoas de confiança.</span>": "<b>Secret</b><span>Split a secret among people you trust.</span>",
+ "?<b>Amigo Oculto</b><span>Cada um recebe o seu amigo pelo próprio link.</span>": "<b>Secret Santa</b><span>Everyone gets their match through their own link.</span>"
+}

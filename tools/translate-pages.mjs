@@ -16,8 +16,11 @@ export const PAGES = [
   { src: "LucentSorteios.html", out: "en/sorteios/index.html", tables: ["tools/i18n/frame-sol.en.json", "sorteios/en.json"],
     blocks: [{ start: "const STR = {\n", end: "\n};\n", file: "sorteios/strings.en.js" }] },
   { src: "embaralhamento/index.html", out: "en/embaralhamento/index.html", tables: ["tools/i18n/frame-sol.en.json", "embaralhamento/en.json"] },
+  { src: "amigo-oculto/index.html", out: "en/amigo-oculto/index.html", tables: ["tools/i18n/frame-lab.en.json", "amigo-oculto/en.json"] },
+  { src: "encrypt/index.html", out: "en/encrypt/index.html", tables: ["tools/i18n/frame-lab.en.json", "encrypt/en.json"] },
+  { src: "segredo/index.html", out: "en/segredo/index.html", tables: ["tools/i18n/frame-lab.en.json", "segredo/en.json"] },
 ];
-const KEEP = /\/\/ I18N-KEEP-BEGIN[\s\S]*?\/\/ I18N-KEEP-END|<script>\n\/\/ qrcode-generator[\s\S]*?<\/script>/g;
+const KEEP = /\/\/ I18N-KEEP-BEGIN[\s\S]*?\/\/ I18N-KEEP-END|<script>\n\/\/ qrcode-generator[\s\S]*?<\/script>|<script id="lelib">[\s\S]*?<\/script>/g;
 
 // Um bloco inteiro trocado pelo conteúdo de um arquivo (do "const STR = {" até o "};" que fecha).
 export const blockText = (text, b) => {
@@ -35,10 +38,13 @@ export function translate(html, table, blocks = []) {
   html = html.replace(/\u0000BLOCK(\d+)\u0000/g, (m) => m.replace("BLOCK", "KEEP"));
   let s = html.replace(KEEP, (m) => { kept.push(m); return "\u0000KEEP" + (kept.length - 1) + "\u0000"; });
   const missing = [];
-  for (const k of Object.keys(table).sort((a, b) => b.length - a.length)) {
-    if (!s.includes(k)) { missing.push(k); continue; }
-    s = s.split(k).join(table[k]);
-  }
+  // Uma chave que começa com "?" é opcional (por exemplo, os cartões da moldura do Laboratório: cada página mostra só dois).
+  // Tudo é trocado numa passada só, a chave mais longa primeiro: um texto já traduzido não é traduzido de novo.
+  const keys = Object.keys(table).map((raw) => ({ raw, k: raw.replace(/^\?/, "") })).sort((a, b) => b.k.length - a.k.length);
+  for (const { raw, k } of keys) if (raw[0] !== "?" && !s.includes(k)) missing.push(k);
+  const byText = new Map(keys.map(({ raw, k }) => [k, table[raw]]));
+  const re = new RegExp(keys.map(({ k }) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "g");
+  if (keys.length) s = s.replace(re, (m) => byText.get(m));
   if (missing.length) throw new Error("Texto não encontrado na página:\n  " + missing.join("\n  "));
   return s.replace(/\u0000KEEP(\d+)\u0000/g, (_, i) => kept[+i]);
 }

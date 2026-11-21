@@ -22,9 +22,9 @@ test("translate: nenhum texto em português na versão em inglês", () => {
   for (const p of PAGES) {
     const s = readFileSync(join(ROOT, p.out), "utf8")
       .replace(/\/\/ I18N-KEEP-BEGIN[\s\S]*?\/\/ I18N-KEEP-END/g, "")
-      .replace(/<script>\n\/\/ qrcode-generator[\s\S]*?<\/script>/, "").replace(/<style>[\s\S]*?<\/style>/, "")
+      .replace(/<script>\n\/\/ qrcode-generator[\s\S]*?<\/script>/, "").replace(/<script id="lelib">[\s\S]*?<\/script>/, "").replace(/<style>[\s\S]*?<\/style>/, "")
       .replace(/<!--[\s\S]*?-->/g, "").replace(/^\s*\/\/.*$/gm, "").replace(/\s\/\/ [^"`]*$/gm, "")
-      .replace(/<option value="[^"]*">/g, "<option>").replace(/lang="pt-BR"[^>]*>Português/, "").replace(/Brasília/g, "")
+      .replace(/<option value="[^"]*">/g, "<option>").replace(/lang="pt-BR"[^>]*>Português/, "").replace(/Brasília|Dani Biró|guardi\[aã\]o/g, "")
       .replace(/\(\?:concurso\|draw no\\\.\)/, "");
     const bad = s.split("\n").filter((l) => /[ãõçáéíóúâêô]|\b(não|votação|reunião|cédula|participantes)\b/i.test(l));
     assert.deepEqual(bad.map((l) => l.trim().slice(0, 120)), [], p.out);

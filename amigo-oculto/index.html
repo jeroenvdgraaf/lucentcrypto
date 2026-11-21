@@ -8,6 +8,8 @@
 <title>Lucent Amigo Oculto · sorteio de amigo secreto online</title>
 <meta name="description" content="Sorteie o amigo secreto (amigo oculto) online: cada pessoa recebe o seu amigo pelo próprio link, no WhatsApp, sem papelzinho. Grátis, no navegador, sem cadastro.">
 <link rel="canonical" href="https://lucentcrypto.org/amigo-oculto/">
+<link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/amigo-oculto/">
+<link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/amigo-oculto/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23a85d08'/%3E%3Cpath d='M22 14h8v28h16v8H22z' fill='%23fff'/%3E%3C/svg%3E">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
@@ -54,7 +56,9 @@ body {
   padding-block: max(20px, env(safe-area-inset-top, 0px)) 48px;
 }
 .wrap { max-width: 680px; margin: 0 auto; display: grid; gap: 18px; min-width: 0; }
-header .fam { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+header .fam { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+header .fam a.lang { text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 600; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+header .fam > span { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 h1 { margin: 2px 0 0; font-size: clamp(28px, 6vw, 38px); line-height: 1.1; letter-spacing: -0.02em; text-wrap: balance; }
 h1 span { color: var(--berry); }
 header p { margin: 6px 0 0; color: var(--muted); max-width: 52ch; }
@@ -190,7 +194,7 @@ footer { color: var(--muted); font-size: 13px; }
 <!-- /FRAME-BAR -->
 <div class="wrap">
   <header>
-    <div class="fam">LucentCrypto</div>
+    <div class="fam"><span>LucentCrypto</span><a class="lang" id="langBtn" href="/en/amigo-oculto/" hreflang="en" lang="en">English</a></div>
     <h1>Lucent <span>Amigo Oculto</span></h1>
     <p id="tagline">Sorteie o amigo oculto da família pelo WhatsApp. Cada pessoa recebe o próprio link e só vê quem ela tirou.</p>
   </header>
@@ -507,6 +511,8 @@ const list = (xs) => xs.length <= 1 ? xs.join("") : xs.slice(0, -1).join(", ") +
 
 // A link opened in a tab that already shows this page only changes the hash: reload to route it.
 window.addEventListener("hashchange", () => location.reload());
+// Língua: o botão leva à outra versão com o mesmo link (a parte depois do #).
+$("langBtn").addEventListener("click", (e) => { e.preventDefault(); location.href = $("langBtn").getAttribute("href") + location.hash; });
 const hash = location.hash.slice(1);
 
 // ================= RECOVERY =================
@@ -732,7 +738,7 @@ function parseList(text) {
   if (sep[1] < Math.ceil(sample.length / 2)) return parseFree(text);
   let table = lines.map((l) => splitRow(l, sep[0])), nameCol = -1, contactCols = [];
   const head = table[0].map(fold), hn = head.findIndex((h) => /^(nome|name|participante|pessoa)/.test(h));
-  if (hn >= 0) { nameCol = hn; contactCols = head.map((h, i) => (/(contato|celular|telefone|fone|whats|e-?mail|email)/.test(h) ? i : -1)).filter((i) => i >= 0); table = table.slice(1); }
+  if (hn >= 0) { nameCol = hn; contactCols = head.map((h, i) => (/(contato|contact|celular|phone|telefone|fone|whats|e-?mail|email)/.test(h) ? i : -1)).filter((i) => i >= 0); table = table.slice(1); }
   else { const first = table[0]; nameCol = first.findIndex((c) => c && !/^\d+$/.test(c) && !looksContact(c)); contactCols = first.map((c, i) => (looksContact(c) ? i : -1)).filter((i) => i >= 0); }
   if (nameCol < 0) return parseFree(text);
   return table.map((r) => ({ name: norm(r[nameCol] || ""), contact: (contactCols.map((i) => r[i]).find((c) => c && looksContact(c)) || "").trim() })).filter((x) => x.name);
@@ -844,7 +850,7 @@ const base = () => location.href.split("#")[0];
 // Celular → WhatsApp direto (55 + DDD quando faltar); e-mail → mailto.
 function contactOf(c) {
   c = String(c || "").trim(); const isMail = /@/.test(c), digits = c.replace(/\D/g, "");
-  return { mail: isMail ? c : "", phone: !isMail && digits.length >= 10 ? (digits.length <= 11 ? "55" + digits : digits) : "" };
+  return { mail: isMail ? c : "", phone: !isMail && digits.length >= 10 ? (c.startsWith("+") || digits.length > 11 ? digits : "55" + digits) : "" };
 }
 function messageFor(item) {
   const g = draw.g.g || "o amigo oculto";

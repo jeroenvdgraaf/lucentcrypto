@@ -8,6 +8,8 @@
 <title>Lucent Encrypt · cifra com chave pública, clássica e pós-quântica</title>
 <meta name="description" content="Crie uma chave a partir de uma frase de 7 palavras, publique um link e receba mensagens que só você abre. Compare X25519, ML-KEM-768 (pós-quântico) e o híbrido X-Wing. Demonstração, sem servidor.">
 <link rel="canonical" href="https://lucentcrypto.org/encrypt/">
+<link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/encrypt/">
+<link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/encrypt/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:site_name" content="LucentCrypto">
@@ -56,7 +58,7 @@ p { margin: 0; }
 .muted { color: var(--muted); }
 .small { font-size: 13.5px; }
 .mono { font-family: var(--mono); }
-button.theme { font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+.theme { text-decoration: none; font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
 .danger { display: grid; grid-template-columns: auto 1fr; gap: 12px 16px; align-items: start; background: var(--warn-soft); border: 2px solid var(--warn); border-radius: 14px; padding: 14px 18px; }
 .danger svg { width: 40px; height: 40px; color: var(--warn); flex: none; }
 .danger b { font: 700 17px var(--display); color: var(--warn); display: block; margin-bottom: 2px; }
@@ -166,7 +168,7 @@ footer { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
     <h1>Lucent <span>Encrypt</span></h1>
     <p class="lead">Uma frase de 7 palavras vira a sua chave. Você publica um link, e qualquer pessoa pode usá-lo para cifrar uma mensagem que só você abre, com a frase. Nada é guardado em lugar nenhum: tudo acontece nesta página. Três modos, lado a lado: o clássico (X25519), o pós-quântico (ML-KEM-768) e o híbrido dos dois (X-Wing).</p>
   </div>
-  <button class="theme" id="themeBtn" type="button"></button>
+  <div class="row"><a class="theme" id="langBtn" href="/en/encrypt/" hreflang="en" lang="en">English</a><button class="theme" id="themeBtn" type="button"></button></div>
 </header>
 
 <div class="danger" role="note">
@@ -2496,6 +2498,8 @@ const LE = (() => {
   const applyTheme = (t) => { if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = t; $("themeBtn").textContent = LABEL[t]; };
   $("themeBtn").addEventListener("click", () => { theme = THEMES[(THEMES.indexOf(theme) + 1) % 3]; try { localStorage.setItem("lucent-theme", theme); } catch {} applyTheme(theme); });
   applyTheme(theme);
+  // ---- língua: o botão leva à outra versão com o mesmo link (a parte depois do #)
+  $("langBtn").addEventListener("click", (e) => { e.preventDefault(); location.href = $("langBtn").getAttribute("href") + location.hash; });
 
   // ---- abas
   const TABS = { tabCreate: "viewCreate", tabSend: "viewSend", tabOpen: "viewOpen" };
