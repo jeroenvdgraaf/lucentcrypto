@@ -19,6 +19,7 @@
 :root {
   --bg: #eef2f3; --surface: #ffffff; --sunk: #e3e9eb; --ink: #13232b; --muted: #50646d; --line: #cdd8dc;
   --accent: #1f5a44; --accent-ink: #ffffff; --accent-soft: #e2f0ea; --amber: #a85d08;
+  --band-a: #e6f0f7; --band-b: #f6efe1;
   --ok: #1d7a4e; --ok-soft: #dff2e8; --warn: #8a5100; --warn-soft: #fdf0d6; --bad: #b3261e; --bad-soft: #fbe3e1;
   --display: "Avenir Next", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
   --body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
@@ -29,7 +30,9 @@
   :root:not([data-theme="light"]) {
     --bg: #0d1417; --surface: #141f24; --sunk: #0f181c; --ink: #e2ebee; --muted: #98abb2; --line: #26363d;
     --accent: #4fb487; --accent-ink: #0b1712; --accent-soft: #12291f; --amber: #f0a443;
-    --ok: #5cc995; --ok-soft: #12291f; --warn: #f0b85a; --warn-soft: #2c2312; --bad: #f08a80; --bad-soft: #2e1715; color-scheme: dark;
+    --band-a: #142530; --band-b: #2a2416;
+    --band-a: #142530; --band-b: #2a2416;
+  --ok: #5cc995; --ok-soft: #12291f; --warn: #f0b85a; --warn-soft: #2c2312; --bad: #f08a80; --bad-soft: #2e1715; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
@@ -73,7 +76,8 @@ textarea { resize: vertical; min-height: 70px; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; }
+.missing { border-color: var(--bad) !important; box-shadow: 0 0 0 3px var(--bad-soft); }
 @media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
 table.g { width: 100%; border-collapse: collapse; }
 table.g th { text-align: left; font-size: 12.5px; color: var(--muted); font-weight: 600; padding: 0 6px 6px; }
@@ -124,7 +128,11 @@ details.scope summary { cursor: pointer; list-style: none; display: flex; gap: 1
 details.scope summary::-webkit-details-marker { display: none; }
 details.scope summary::before { content: "▸"; color: var(--accent); font-size: 18px; }
 details.scope[open] summary::before { content: "▾"; }
-.events li.mine { background: var(--accent-soft); border-radius: 6px; }
+.events li { padding-left: 8px; padding-right: 8px; }
+.events li.v-odd { background: var(--band-a); }
+.events li.v-even { background: var(--band-b); }
+.events li.vstart { border-top: 2px solid var(--muted); }
+.events li.mine { box-shadow: inset 4px 0 0 var(--ok); }
 .events li.target { outline: 2px solid var(--accent); border-radius: 6px; }
 .disclaimer { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 8px; font-size: 14px; }
 .disclaimer h3 { color: var(--warn); }
@@ -169,7 +177,7 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
 <section id="viewCreate" class="panel" hidden>
   <h2>Preparar a votação</h2>
   <div class="grid2">
-    <label class="f"><span>Nome da reunião <small>por exemplo “Assembleia do condomínio, novembro”</small></span><input type="text" id="cTitle" maxlength="128" autocomplete="off"></label>
+    <label class="f"><span>Nome da reunião <small>por exemplo “Assembleia do condomínio”</small></span><input type="text" id="cTitle" maxlength="128" autocomplete="off"></label>
     <label class="f"><span>Seu nome <small>quem conduz; aparece no quadro</small></span><input type="text" id="cBy" maxlength="128" autocomplete="off"></label>
   </div>
   <label class="f"><span>Seu celular ou e-mail <small>opcional: só para enviar a você mesmo o link do organizador</small></span><input type="text" id="cMe" maxlength="80" autocomplete="off" placeholder="(31) 99999-0000 ou nome@exemplo.com"></label>
@@ -583,12 +591,17 @@ function viewCreate() {
   });
   render();
   const err = (t) => { $("cErr").hidden = !t; $("cErr").textContent = t || ""; };
+  // Nome da reunião já preenchido com a data; o seu nome, lembrado neste aparelho.
+  $("cTitle").value = "Reunião de " + new Date().toLocaleDateString("pt-BR");
+  $("cBy").value = LSread().by || "";
+  const need = (id, msg) => { const el = $(id); el.classList.add("missing"); el.scrollIntoView({ block: "center", behavior: "smooth" }); el.focus(); el.addEventListener("input", () => el.classList.remove("missing"), { once: true }); return err(msg); };
   $("cGo").addEventListener("click", async () => {
     err("");
     const title = $("cTitle").value.trim(), by = $("cBy").value.trim();
     rows = rows.filter((r) => r.name.trim() || r.contact.trim()); render();
-    if (!title) return err("Dê um nome à reunião.");
-    if (!by) return err("Digite o seu nome.");
+    if (!title) return need("cTitle", "Dê um nome à reunião.");
+    if (!by) return need("cBy", "Digite o seu nome: ele aparece no quadro como quem conduz a reunião.");
+    LSwrite((d) => { d.by = by; });
     if ([title, by].some((x) => utf8Len(x) > V.MAX_TEXT)) return err("Nome longo demais (máximo de " + V.MAX_TEXT + " bytes).");
     const names = rows.map((r) => r.name.trim());
     if (!names.length) return err("Inclua pelo menos um participante.");
@@ -740,7 +753,7 @@ async function viewAdmin() {
       const p = privs[k], name = p?.name || v.name || "participante " + v.i, link = voterLink(sid, adm.voterSecret(v.i));
       const msg = "Olá, " + name + ". Este é o seu link pessoal para votar na reunião «" + S.title + "», conduzida por " + S.by + ". Ele vale para todas as votações da reunião. Não o encaminhe a ninguém:\n" + link;
       const el = document.createElement("div"); el.className = "voter" + (sent.has(v.f) ? " sent" : "");
-      el.innerHTML = `<span class="pill">${v.i}</span><span class="who">${esc(name)} ${p?.contact ? `<small>· ${esc(p.contact)}</small>` : ""} <small class="mono">· ${V.voterCode(v.f)}</small></span><div class="row"></div>`;
+      el.innerHTML = `<span class="pill">${v.i}</span><span class="who">${esc(name)} ${p?.contact ? `<small>· ${esc(p.contact)}</small>` : ""} ${S.display === "digitais" ? `<small class="mono">· ${V.voterCode(v.f)}</small>` : ""}</span><div class="row"></div>`;
       const row = el.querySelector(".row"), mark = () => { sent.add(v.f); el.classList.add("sent"); };
       row.append(sendButtons(p?.contact, "Seu link de votação: " + S.title, msg, mark));
       const c = document.createElement("button"); c.className = "btn small"; c.type = "button"; c.textContent = "Copiar link";
@@ -777,7 +790,7 @@ function viewVoter() {
     const S = st.session, meNow = st.roll.get(f);
     const everIn = board.events.find((e) => e.type === "eleitor-incluido" && e.f === f);
     $("vTitle").textContent = S.title;
-    $("vHello").innerHTML = everIn ? (meNow ? "Olá" + (meNow.name ? ", <b>" + esc(meNow.name) + "</b>" : "") + ". Este é o seu link pessoal; não o encaminhe." : "<b>Seu link foi excluído da lista de participantes.</b> Você não vota nas próximas votações.") + ` <span class="small muted">Seu código: <span class="mono">${V.voterCode(f)}</span></span>` : "<b>Este link não está na lista de participantes desta reunião.</b>";
+    $("vHello").innerHTML = everIn ? (meNow ? "Olá" + (meNow.name ? ", <b>" + esc(meNow.name) + "</b>" : "") + ". Este é o seu link pessoal; não o encaminhe." : "<b>Seu link foi excluído da lista de participantes.</b> Você não vota nas próximas votações.") + (S.display === "digitais" ? ` <span class="small muted">Seu código no quadro: <span class="mono">${V.voterCode(f)}</span></span>` : "") : "<b>Este link não está na lista de participantes desta reunião.</b>";
     $("vSecrecy").textContent = secrecyText(S);
     const [cls, txt] = checkText(); $("vCheck").textContent = txt; $("vCheck").style.color = cls === "bad" ? "var(--bad)" : "";
     const cur = $("vCurrent"), open = st.open ? st.items.get(st.open) : null;
@@ -794,7 +807,7 @@ function viewVoter() {
         const wasMe = mine()[open.n] === b.fp;
         cur.innerHTML = `<h2>Votação ${open.n}</h2><p class="question">${esc(open.spec.q)}</p>` + (wasMe
           ? `<div class="msg ok"><b>Sua cédula está no quadro</b> (às ${fmtHM(b.t)}). Número de acompanhamento da cédula: <span class="mono">${b.fp}</span>. Aguarde o encerramento.</div><div class="row"><a class="btn small" target="_blank" rel="noopener" href="${BASE}#s=${sid}&c=${b.fp}">Ver minha cédula no quadro</a></div>`
-          : `<div class="msg bad">Já há uma cédula com o seu link neste item, às ${fmtHM(b.t)}. Se não foi você, avise a mesa.</div>`) + `<p class="small muted">${open.ballots.length} de ${open.roll.size} votaram.</p>`;
+          : `<div class="msg warn">Já há uma cédula com o seu link nesta votação, às ${fmtHM(b.t)}, número <span class="mono">${b.fp}</span>. Se foi você, em outro aparelho, está tudo certo. Se não foi, avise a mesa.</div>`) + `<p class="small muted">${open.ballots.length} de ${open.roll.size} votaram.</p>`;
       } else {
         const opts = open.options.map((l, j) => [j + 1, l]).concat([[0, "Abstenção"]]);
         cur.innerHTML = `<h2>Votação ${open.n}</h2><p class="question">${esc(open.spec.q)}</p><div class="choices">` +
@@ -820,11 +833,11 @@ function viewVoter() {
 function viewBoard() {
   $("viewBoard").hidden = false;
   const describe = (e, st) => {
-    const who = (f) => { const ev = board.events.find((x) => x.type === "eleitor-incluido" && x.f === f); return ev?.name ? esc(ev.name) + ` <span class="mono muted">${V.voterCode(f)}</span>` : `<span class="mono">${V.voterCode(f)}</span>`; };
+    const who = (f) => { const ev = board.events.find((x) => x.type === "eleitor-incluido" && x.f === f); return ev?.name ? esc(ev.name) : `<span class="mono">${V.voterCode(f)}</span>`; };
     switch (e.type) {
       case "criada": return `Reunião criada por ${esc(e.by)} · chave ${e.keyMode === "dividida" ? "dividida entre o organizador e a LucentCrypto" : "com a LucentCrypto"}`;
-      case "eleitor-incluido": return `Eleitor ${e.i} incluído: ${who(e.f)}`;
-      case "eleitor-excluido": return `Eleitor ${e.i} excluído`;
+      case "eleitor-incluido": return `Participante ${e.i} incluído: ${who(e.f)}`;
+      case "eleitor-excluido": return `Participante ${e.i} excluído`;
       case "item-aberto": return `Votação ${e.item} aberta: «${esc(e.spec.q)}» · ${e.roll.length} aptos`;
       case "cedula": return `Cédula na votação ${e.item}: ${who(e.f)} · cédula <span class="mono">${V.ballotFingerprint(e.ballot)}</span>`;
       case "item-encerrado": return `Votação ${e.item} encerrada; decifração dos totais pela LucentCrypto, com prova`;
@@ -868,8 +881,11 @@ function viewBoard() {
     const [cls, txt] = checkText(); $("bCheck").className = "msg " + cls; $("bCheck").textContent = txt;
     $("bDelete").textContent = board.deleteAt ? deleteText(board.deleteAt) : "";
     const h = itemsHtml(st); $("bResults").hidden = !h; $("bResultsList").innerHTML = h;
-    $("bEvents").innerHTML = [...board.events].reverse().map((e) => {
-      const fp = e.type === "cedula" ? V.ballotFingerprint(e.ballot) : null, cls = [fp && myFps.has(fp) ? "mine" : "", fp && fp === target ? "target" : ""].filter(Boolean).join(" ");
+    const evs = [...board.events].reverse();
+    $("bEvents").innerHTML = evs.map((e, k) => {
+      const fp = e.type === "cedula" ? V.ballotFingerprint(e.ballot) : null;
+      const vn = e.item ?? null, prevVn = k ? evs[k - 1].item ?? null : null;
+      const cls = [vn ? (vn % 2 ? "v-odd" : "v-even") : "", k && vn !== prevVn ? "vstart" : "", fp && myFps.has(fp) ? "mine" : "", fp && fp === target ? "target" : ""].filter(Boolean).join(" ");
       return `<li${cls ? ` class="${cls}"` : ""}${fp ? ` data-fp="${fp}"` : ""}><span>${fmtTime(e.t)}</span><span>${describe(e, st)}${fp && myFps.has(fp) ? ` · <b>votada neste aparelho</b>` : ""}</span></li>`;
     }).join("");
     if (full) setFull(true);
