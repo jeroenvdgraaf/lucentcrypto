@@ -91,6 +91,7 @@
   "who.lattes": "",
   "contact.h2": "Contact us",
   "contact.p": "Tell us what you need to prove, and to whom.",
+  "contact.reply": "We reply within 3 working days.",
   "foot.github": "Open source on GitHub",
   "foot.spec": "Draw specification",
   "foot.verifier": "Python verifier"
