@@ -16,6 +16,7 @@ export const PAGES = [
   { src: "LucentSorteios.html", out: "en/sorteios/index.html", tables: ["tools/i18n/frame-sol.en.json", "sorteios/en.json"],
     blocks: [{ start: "const STR = {\n", end: "\n};\n", file: "sorteios/strings.en.js" }] },
   { src: "embaralhamento/index.html", out: "en/embaralhamento/index.html", tables: ["tools/i18n/frame-sol.en.json", "embaralhamento/en.json"] },
+  { src: "cruzamento/index.html", out: "en/cruzamento/index.html", tables: ["tools/i18n/frame-sol.en.json", "cruzamento/en.json"] },
   { src: "amigo-oculto/index.html", out: "en/amigo-oculto/index.html", tables: ["tools/i18n/frame-lab.en.json", "amigo-oculto/en.json"] },
   { src: "encrypt/index.html", out: "en/encrypt/index.html", tables: ["tools/i18n/frame-lab.en.json", "encrypt/en.json"] },
   { src: "segredo/index.html", out: "en/segredo/index.html", tables: ["tools/i18n/frame-lab.en.json", "segredo/en.json"] },

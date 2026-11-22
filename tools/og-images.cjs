@@ -55,6 +55,7 @@ const ballotMotif = ((yes = 'Sim', no = 'Não') => { let s = '';
   s += `<g transform="rotate(-8 180 90)"><rect x="135" y="30" width="90" height="120" rx="8" fill="#fff" stroke="#13232b" stroke-width="3"/><path d="M155 90 l16 18 l30 -40" fill="none" stroke="#a85d08" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>`;
   s += `<text x="180" y="240" text-anchor="middle" font-family="DejaVu Sans Mono" font-size="26" fill="#13232b">${yes} 12 · ${no} 7</text>`;
   return s; });
+const venn = `<circle cx="130" cy="165" r="105" fill="#d7e1e4" stroke="#13232b" stroke-width="3" fill-opacity=".9"/><circle cx="230" cy="165" r="105" fill="#d7e1e4" stroke="#13232b" stroke-width="3" fill-opacity=".6"/><path d="M180 76 A105 105 0 0 1 180 254 A105 105 0 0 1 180 76 Z" fill="#f2cf9e" stroke="#a85d08" stroke-width="3"/><text x="180" y="174" text-anchor="middle" font-family="DejaVu Sans Mono" font-size="30" fill="#13232b">A∩B</text>`;
 (async () => { const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1200, height: 630 } });
   for (const [f, w, l, m] of [
     ['sorteios.png', 'Sorteios', 'Sorteio online que qualquer pessoa pode conferir: vagas de garagem, listas, moeda, dados e cartas.', bars],
@@ -63,6 +64,7 @@ const ballotMotif = ((yes = 'Sim', no = 'Não') => { let s = '';
     ['segredo.png', 'Segredo', 'Divida um segredo entre pessoas de confiança: só o número combinado, juntos, recupera.', keyshare],
     ['encrypt.png', 'Encrypt', 'Uma frase de 7 palavras vira a sua chave. Clássico, pós-quântico e híbrido, lado a lado.', sizesMotif],
     ['votacao.png', 'Votação', 'Votações secretas numa reunião: cada pessoa vota pelo celular, só os totais são abertos.', ballotMotif()],
+    ['cruzamento.png', 'Cruzamento <span>de listas</span>', 'Descubra o que duas listas têm em comum sem entregar nenhuma delas.', venn],
     ['embaralhamento.png', 'Embaralhamento <span>verificável</span>', 'Prove que a lista publicada corresponde aos dados lacrados, sem revelar quem é quem.', shuffle],
     // inglês (páginas em /en/) e a página inicial em espanhol e holandês
     ['en/sorteios.png', 'Draw', 'Online draws anyone can check: parking spaces, lists, coins, dice and cards.', bars],
@@ -73,6 +75,7 @@ const ballotMotif = ((yes = 'Sim', no = 'Não') => { let s = '';
     ['en/segredo.png', 'Secret', 'Split a secret among people you trust: only the agreed number, together, can recover it.', keyshare],
     ['en/encrypt.png', 'Encrypt', 'A 7-word phrase becomes your key. Classic, post-quantum and hybrid, side by side.', sizesMotif],
     ['en/votacao.png', 'Vote', 'Secret votes in a meeting: everyone votes on their phone, only the totals are opened.', ballotMotif('Yes', 'No')],
+    ['en/cruzamento.png', 'Private list <span>matching</span>', 'Find out what two lists have in common without handing over either of them.', venn],
     ['en/embaralhamento.png', 'Verifiable <span>shuffle</span>', 'Prove that the published list matches the sealed data, without revealing who is who.', shuffle],
   ]) { require('fs').mkdirSync(path.dirname(OUT + f), { recursive: true }); await p.setContent(card(w, l, m)); await p.screenshot({ path: OUT + f }); }
   await b.close(); })();

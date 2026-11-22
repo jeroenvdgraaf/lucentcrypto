@@ -27,6 +27,7 @@ test("build.sh: home, /sorteios/, /amigo-oculto/, /embaralhamento/, /spec/, /ver
   same("en/votacao/index.html", "en/votacao/index.html");
   same("en/sorteios/index.html", "en/sorteios/index.html");
   same("en/embaralhamento/index.html", "en/embaralhamento/index.html");
+  same("cruzamento/index.html", "cruzamento/index.html"); same("cruzamento/core.mjs", "cruzamento/core.mjs"); same("en/cruzamento/index.html", "en/cruzamento/index.html");
   for (const t of ["amigo-oculto", "encrypt", "segredo"]) same("en/" + t + "/index.html", "en/" + t + "/index.html");
   for (const f of ["robots.txt", "sitemap.xml", "og/sorteios.png", "og/embaralhamento.png", "og/segredo.png", "og/encrypt.png", "og/votacao.png", "og/en/votacao.png", "og/en/sorteios.png", "og/en/lucentcrypto.png", "og/es/lucentcrypto.png", "og/nl/lucentcrypto.png"]) assert.ok(existsSync(join(out, f)), f);
   for (const f of ["spec/SPEC.md", "spec/lucentdraw3_vectors.json", "spec/LICENSE", "verifier/LICENSE"]) assert.ok(existsSync(join(out, f)), f);

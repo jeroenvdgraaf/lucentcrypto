@@ -16,12 +16,14 @@ mkdir -p "$OUT/sorteios" "$OUT/amigo-oculto" "$OUT/spec" "$OUT/verifier"
 cp site/index.html site/robots.txt site/sitemap.xml "$OUT/"
 for l in pt es nl; do mkdir -p "$OUT/$l" && cp "site/$l/index.html" "$OUT/$l/index.html"; done   # gerados por tools/build-home.mjs
 mkdir -p "$OUT/embaralhamento" && cp embaralhamento/index.html "$OUT/embaralhamento/index.html"
+mkdir -p "$OUT/cruzamento" && cp cruzamento/index.html cruzamento/core.mjs "$OUT/cruzamento/"
 mkdir -p "$OUT/segredo" && cp segredo/index.html "$OUT/segredo/index.html"
 mkdir -p "$OUT/encrypt" && cp encrypt/index.html "$OUT/encrypt/index.html"
 mkdir -p "$OUT/votacao/vendor" && cp votacao/index.html votacao/core.mjs votacao/verifica.mjs "$OUT/votacao/" && cp votacao/vendor/noble.mjs "$OUT/votacao/vendor/"
 mkdir -p "$OUT/en/votacao" && cp en/votacao/index.html "$OUT/en/votacao/index.html"
 mkdir -p "$OUT/en/sorteios" && cp en/sorteios/index.html "$OUT/en/sorteios/index.html"
 mkdir -p "$OUT/en/embaralhamento" && cp en/embaralhamento/index.html "$OUT/en/embaralhamento/index.html"
+mkdir -p "$OUT/en/cruzamento" && cp en/cruzamento/index.html "$OUT/en/cruzamento/index.html"
 for t in amigo-oculto encrypt segredo; do mkdir -p "$OUT/en/$t" && cp "en/$t/index.html" "$OUT/en/$t/index.html"; done
 mkdir -p "$OUT/og" && cp site/og/*.png "$OUT/og/" && for l in en es nl; do mkdir -p "$OUT/og/$l" && cp site/og/$l/*.png "$OUT/og/$l/"; done
 cp LucentSorteios.html "$OUT/sorteios/index.html"

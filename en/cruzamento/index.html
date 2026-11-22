@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<!-- Gerado por tools/translate-pages.mjs a partir de cruzamento/index.html; não edite à mão. -->
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<!-- Copyright (C) 2026 Jeroen van de Graaf -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Private list matching · LucentCrypto</title>
+<meta name="description" content="Two organizations find out which records they have in common without handing over their lists: private set intersection (PSI), computed in the browser. Demo.">
+<link rel="canonical" href="https://lucentcrypto.org/en/cruzamento/">
+<link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/cruzamento/">
+<link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/cruzamento/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23a85d08'/%3E%3Cpath d='M22 14h8v28h16v8H22z' fill='%23fff'/%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="LucentCrypto">
+<meta property="og:title" content="Private list matching · LucentCrypto">
+<meta property="og:description" content="Find out what two lists have in common without handing over either of them.">
+<meta property="og:url" content="https://lucentcrypto.org/en/cruzamento/">
+<meta property="og:image" content="https://lucentcrypto.org/og/en/cruzamento.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root {
+  --bg: #eef2f3; --surface: #ffffff; --sunk: #e3e9eb; --ink: #13232b; --muted: #50646d; --line: #cdd8dc;
+  --accent: #a85d08; --accent-ink: #ffffff; --accent-soft: #fbeedd;
+  --ok: #1d7a4e; --ok-soft: #dff2e8; --bad: #b3261e; --bad-soft: #fbe3e1;
+  --display: "Avenir Next", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1417; --surface: #141f24; --sunk: #0f181c; --ink: #e2ebee; --muted: #98abb2; --line: #26363d;
+    --accent: #f0a443; --accent-ink: #1a1206; --accent-soft: #2e2416;
+    --ok: #5cc995; --ok-soft: #12291f; --bad: #f08a80; --bad-soft: #2e1715; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1417; --surface: #141f24; --sunk: #0f181c; --ink: #e2ebee; --muted: #98abb2; --line: #26363d;
+  --accent: #f0a443; --accent-ink: #1a1206; --accent-soft: #2e2416;
+  --ok: #5cc995; --ok-soft: #12291f; --bad: #f08a80; --bad-soft: #2e1715; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding: 24px max(16px, env(safe-area-inset-left, 0px)) 48px; }
+[hidden] { display: none !important; }
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 18px; }
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
+.kicker { font: 500 12px var(--mono); letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+.kicker a { color: inherit; text-decoration: none; } .kicker a:hover { text-decoration: underline; }
+h1 { font: 800 clamp(28px, 5vw, 42px)/1.05 var(--display); letter-spacing: -.02em; margin: 4px 0 8px; }
+h1 span { color: var(--accent); }
+h2 { font: 700 20px var(--display); margin: 0; display: flex; gap: 10px; align-items: center; }
+h3 { margin: 0; }
+p { margin: 0; max-width: 72ch; }
+.muted { color: var(--muted); }
+.intro p { color: var(--muted); }
+.theme { text-decoration: none; font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+.n { display: inline-grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: 50%; border: 2px solid var(--accent); color: var(--accent); font: 700 14px var(--display); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.btn { font: 600 14px var(--body); border-radius: 10px; padding: 8px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+select { font: inherit; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+textarea { width: 100%; font: 12px/1.45 var(--mono); padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); resize: vertical; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.mono { font-family: var(--mono); font-size: 12.5px; }
+.banner { border: 1px solid var(--bad); background: var(--bad-soft); color: var(--bad); border-radius: 10px; padding: 8px 12px; font-size: 13.5px; }
+
+/* passos */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.step { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--bg); display: grid; gap: 6px; align-content: start; }
+.step.active { border-color: var(--accent); background: var(--accent-soft); }
+.step .who { font: 500 11px var(--mono); color: var(--muted); letter-spacing: .06em; }
+.step b { font: 700 15px var(--display); }
+.step p { font-size: 13.5px; color: var(--muted); }
+@media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
+
+/* diagrama: três colunas; os cabeçalhos dividem uma linha, para as linhas de dados ficarem alinhadas */
+.scroll { overflow-x: auto; }
+.diagram { position: relative; display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: auto auto; column-gap: 72px; min-width: 700px; }
+.diagram > .col { display: grid; grid-template-rows: subgrid; grid-row: span 2; position: relative; z-index: 1; min-width: 0; }
+.diagram svg.links { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 2; }
+.colhead { display: grid; gap: 4px; padding-bottom: 10px; align-content: start; }
+.colhead b { font: 700 15px var(--display); }
+.colhead > span { font-size: 12.5px; color: var(--muted); }
+.ctl { display: grid; gap: 8px; font-size: 13px; padding: 10px; border: 1px dashed var(--accent); border-radius: 10px; background: var(--accent-soft); margin-top: 4px; }
+.ctl label { display: inline-flex; gap: 6px; align-items: center; }
+.ctl .row { gap: 6px; flex-wrap: nowrap; }
+.ctl .btn { padding: 5px 10px; font-size: 13px; white-space: nowrap; }
+.ctl select { padding: 4px 6px; }
+.rows { display: grid; gap: 6px; align-content: start; }
+.item { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 36px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: 13.5px; transition: background .2s, border-color .2s; }
+.item .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.item .meta { display: flex; align-items: center; gap: 6px; flex: none; }
+.pub { font: 11.5px var(--mono); padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line); white-space: nowrap; }
+.priv { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; padding: 1px 6px; border-radius: 5px; border: 1px dashed var(--accent); color: var(--accent); white-space: nowrap; }
+.priv .v { display: none; font-family: var(--mono); }
+.priv:hover .h, .priv:focus-visible .h { display: none; }
+.priv:hover .v, .priv:focus-visible .v { display: inline; }
+.secret { font: 500 11.5px var(--mono); padding: 1px 6px; border-radius: 5px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.secret.fake, .priv.fake:hover { background: var(--bad-soft); color: var(--bad); border-color: var(--bad); }
+.box { border-style: dashed; border-color: var(--accent); background: var(--accent-soft); }
+.box.open { border-style: solid; background: var(--surface); }
+.val { font: 500 13.5px var(--mono); font-variant-numeric: tabular-nums; }
+.lock { width: 12px; height: 12px; flex: none; }
+.item.ok { border-color: var(--ok); background: var(--ok-soft); }
+.item.bad { border-color: var(--bad); background: var(--bad-soft); }
+.mark { font-weight: 700; width: 14px; text-align: center; }
+.mark.ok { color: var(--ok); } .mark.bad { color: var(--bad); }
+.dim .item { opacity: .45; }
+.placeholder { border: 1px dashed var(--line); border-radius: 8px; padding: 12px; color: var(--muted); font-size: 13.5px; }
+
+/* colar dados */
+.paste { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--bg); display: grid; gap: 10px; }
+.paste ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--bad); }
+
+/* veredito */
+.verdicts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.verdict { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--bg); display: grid; gap: 4px; }
+.verdict b { font: 700 15px var(--display); }
+.verdict p { font-size: 14px; }
+.verdict.ok { border-color: var(--ok); background: var(--ok-soft); }
+.verdict.bad { border-color: var(--bad); background: var(--bad-soft); }
+@media (max-width: 760px) { .verdicts { grid-template-columns: 1fr; } }
+
+/* faixa de rodadas */
+.strip { display: grid; grid-template-columns: repeat(20, minmax(20px, 1fr)); gap: 4px; }
+.cell { aspect-ratio: 1; border-radius: 4px; display: grid; place-items: center; font: 11px var(--mono); background: var(--bg); border: 1px solid var(--line); color: var(--muted); }
+.cell.ok { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+.cell.bad { background: var(--bad); border-color: var(--bad); color: #fff; }
+@media (max-width: 560px) { .strip { grid-template-columns: repeat(10, 1fr); } }
+
+details.panel > summary { cursor: pointer; list-style: none; }
+details.panel > summary::-webkit-details-marker { display: none; }
+details.panel > summary h2::after { content: "▸"; color: var(--accent); font-size: 16px; }
+details.panel[open] > summary h2::after { content: "▾"; }
+.fakerow { max-width: 560px; }
+.scope { border-left: 4px solid var(--accent); }
+footer { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
+footer a { color: inherit; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Cruzamento */
+.small { font-size: 13.5px; }
+.sides { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.side { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--bg); display: grid; gap: 10px; align-content: start; min-width: 0; }
+.side h3 { margin: 0; font: 700 16px var(--display); }
+.side .who { font: 500 11px var(--mono); color: var(--muted); letter-spacing: .06em; }
+.side textarea { min-height: 170px; }
+.pts { display: grid; gap: 3px; max-height: 260px; overflow: auto; }
+.pt { display: grid; grid-template-columns: 1fr auto; gap: 8px; font: 12px var(--mono); padding: 3px 8px; border-radius: 6px; background: var(--surface); border: 1px solid var(--line); }
+.pt.hit { border-color: var(--ok); background: var(--ok-soft); }
+.pt small { color: var(--muted); }
+.flow { display: grid; gap: 8px; }
+.flow .stepline { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; background: var(--bg); }
+.flow .stepline.done { border-color: var(--ok); }
+.flow .stepline.now { border-color: var(--accent); background: var(--accent-soft); }
+.flow .stepline.stop { border-color: var(--bad); background: var(--bad-soft); }
+.flow .stepline p { margin: 0; font-size: 14px; }
+.secretk { font: 12px var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+.errs { font-size: 13px; color: var(--bad); margin: 0; padding-left: 18px; }
+label.inline { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; }
+.crack { display: grid; gap: 8px; }
+.progress { height: 6px; border-radius: 3px; background: var(--sunk); overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: var(--accent); }
+@media (max-width: 760px) { .sides { grid-template-columns: 1fr; } }
+/* FRAME-BEGIN (moldura do site: Laboratório ou Soluções; mesma em todas as páginas) */
+.lcf-bar { margin: calc(-1 * 24px) calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 24px; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.lcf-in { max-width: 1120px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; }
+.lcf-logo { font: 800 20px "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; text-decoration: none; white-space: nowrap; }
+.lcf-logo span { color: #a85d08; }
+.lcf-nav { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 14.5px; font-weight: 500; }
+.lcf-nav a { text-decoration: none; padding-bottom: 2px; border-bottom: 2px solid transparent; }
+.lcf-tag { font: 600 11.5px ui-monospace, Menlo, monospace; letter-spacing: .1em; text-transform: uppercase; }
+.lcf-lab { background: #13232b; border-bottom: 1px solid #26363d; }
+.lcf-lab .lcf-logo { color: #ffffff; } .lcf-lab .lcf-logo span { color: #f0a443; }
+.lcf-lab .lcf-logo i { font: normal 600 12px ui-monospace, Menlo, monospace; letter-spacing: .14em; color: #f0a443; margin-left: 10px; }
+.lcf-lab .lcf-nav a { color: #98abb2; } .lcf-lab .lcf-nav a[aria-current="page"] { color: #ffffff; border-color: #f0a443; }
+.lcf-lab .lcf-tag { color: #f0a443; border: 1px solid #f0a443; border-radius: 99px; padding: 3px 10px; }
+.lcf-sol { background: var(--surface, #ffffff); border-bottom: 1px solid var(--line, #cdd8dc); }
+.lcf-sol .lcf-logo { color: var(--ink, #13232b); }
+.lcf-sol .lcf-nav a { color: var(--ink, #13232b); } .lcf-sol .lcf-nav a.lcf-muted { color: var(--muted, #50646d); }
+.lcf-sol .lcf-nav a[aria-current="page"] { border-color: currentColor; }
+.lcf-btn { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 16px; border-radius: 10px; font-weight: 600; font-size: 14.5px; text-decoration: none; background: #1f5a44; color: #ffffff; }
+.lcf-end { border-radius: 16px; padding: 26px; display: grid; gap: 16px; }
+.lcf-end h2 { margin: 0; font: 800 24px "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; }
+.lcf-end .lcf-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.lcf-labend { background: #13232b; color: #e2ebee; }
+.lcf-labend .lcf-kick { font: 600 12px ui-monospace, Menlo, monospace; letter-spacing: .14em; text-transform: uppercase; color: #f0a443; margin: 0; }
+.lcf-labend a.lcf-card { background: #1b2f38; border: 1px solid #26363d; border-radius: 14px; padding: 16px; text-decoration: none; color: #e2ebee; display: grid; gap: 4px; }
+.lcf-labend a.lcf-card:hover { border-color: #f0a443; }
+.lcf-labend a.lcf-card b { color: #ffffff; } .lcf-labend a.lcf-card span { color: #98abb2; font-size: 14px; }
+.lcf-labend p { margin: 0; color: #98abb2; font-size: 14px; } .lcf-labend p a { color: #f0a443; }
+.lcf-solend { background: var(--surface, #ffffff); border: 1px solid var(--line, #cdd8dc); grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: center; gap: 24px; }
+.lcf-solend ul { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
+.lcf-solend .lcf-box { background: var(--bg, #eef2f3); border: 1px solid var(--line, #cdd8dc); border-radius: 14px; padding: 20px; display: grid; gap: 12px; justify-items: start; }
+.lcf-solend .lcf-box p { margin: 0; }
+/* FRAME-END */
+</style>
+</head>
+<body>
+<!-- FRAME-BAR -->
+<div class="lcf-bar lcf-sol" id="lcfBar"><div class="lcf-in">
+  <a class="lcf-logo" href="/">Lucent<span>Crypto</span></a>
+  <nav class="lcf-nav" aria-label="Main"><a href="/#sorteios">Draws</a><a href="/#conformidade" aria-current="page">Compliance</a><a href="/#votacao">Voting</a><a href="/#servicos">Services</a><a class="lcf-muted" href="/#laboratorio">Lab</a></nav>
+  <a class="lcf-btn" href="/#contato">Contact us</a>
+</div></div>
+<!-- /FRAME-BAR -->
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <div class="kicker">Compliance without exposure · demo</div>
+    <h1>Private list <span>matching</span></h1>
+  </div>
+  <div class="row"><a class="theme" id="langBtn" href="/cruzamento/" hreflang="pt" lang="pt-BR">Português</a><button class="theme" id="themeBtn" type="button"></button></div>
+</header>
+<section class="intro">
+  <p>Two organizations want to know which customers, patients or suppliers they have in common, without handing their lists to each other. With private set intersection (PSI), each side learns only what is on both lists, and nothing about the rest of the other’s list.</p>
+</section>
+
+<section class="panel" aria-labelledby="hWhy">
+  <h2 id="hWhy"><span class="n">1</span>Why exchanging hashes of ID numbers is not enough</h2>
+  <p>The most common idea is for each side to send the SHA-256 of each ID number instead of the number itself. Here the ID is the CPF, Brazil’s 11-digit taxpayer number. It protects nothing: there are only about a billion valid CPFs, and whoever receives a hash tries them all until one gives the same result.</p>
+  <div class="crack">
+    <p class="small">This is the SHA-256 of a CPF that starts with <b class="mono" id="crPrefix"></b>: <span class="mono" id="crHash"></span></p>
+    <div class="row"><button class="btn primary" id="crGo" type="button">Find the CPF</button><span class="small muted" id="crNote"></span></div>
+    <div class="progress" id="crBar" hidden><i></i></div>
+    <p id="crOut" class="small"></p>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="hSim">
+  <h2 id="hSim"><span class="n">2</span>Simulation: two organizations, one page</h2>
+  <p class="muted">Here both sides are on the same page, so you can follow each step. The values on screen are the real points, abbreviated. In a demo with two organizations, each side would see only its own half.</p>
+  <div class="row">
+    <label class="inline">Identifier <select id="profile"><option value="cpf" selected>CPF (person)</option><option value="cnpj">CNPJ (company)</option><option value="email">e-mail</option><option value="telefone">phone</option><option value="nome">name</option></select></label>
+    <label class="inline">Result <select id="mode"><option value="inter" selected>the intersection</option><option value="count">only the size of the intersection</option></select></label>
+    <label class="inline"><input type="checkbox" id="showK"> show the secrets</label>
+  </div>
+  <p class="small muted" id="profileHint"></p>
+  <div class="sides">
+    <div class="side" id="sideA">
+      <span class="who">ORGANIZATION A</span><h3>Alpha Clinic</h3>
+      <textarea id="listA" spellcheck="false" aria-label="List of organization A"></textarea>
+      <p class="small muted" id="infoA"></p><ul class="errs" id="errA"></ul>
+      <p class="secretk" id="kA" hidden></p>
+      <div class="pts" id="ptsA"></div>
+    </div>
+    <div class="side" id="sideB">
+      <span class="who">ORGANIZATION B</span><h3>Beta Laboratory</h3>
+      <textarea id="listB" spellcheck="false" aria-label="List of organization B"></textarea>
+      <p class="small muted" id="infoB"></p><ul class="errs" id="errB"></ul>
+      <p class="secretk" id="kB" hidden></p>
+      <div class="pts" id="ptsB"></div>
+    </div>
+  </div>
+  <p class="small muted">One line per record: the identifier, or “label; identifier”. The label never leaves the side that typed it: only the identifier goes into the computation. Up to 500 lines on each side.</p>
+  <div class="flow" id="flow"></div>
+  <div class="row"><button class="btn primary" id="next" type="button">Next step</button><button class="btn" id="all" type="button">Run everything</button><button class="btn" id="reset" type="button">Start over</button><button class="btn" id="dict" type="button">Simulate a dictionary attack</button></div>
+  <div class="verdicts" id="result" hidden></div>
+</section>
+
+<section class="panel scope">
+  <h2>What this demo guarantees, and what it does not</h2>
+  <ul>
+    <li><b>Only the agreed result comes out:</b> the intersection, or only its size. The other side’s other records arrive as blinded points, which say nothing without that side’s secret.</li>
+    <li><b>The sizes are visible:</b> each side learns how many records the other has. That is on purpose: it is what lets you spot a dictionary attack.</li>
+    <li><b>Dictionary attack:</b> a side can put the identifiers it wants to test into its own list, and any PSI allows that. The defense is to agree on a maximum size beforehand, check the announced size and stop if it makes no sense.</li>
+    <li><b>Honest but curious sides:</b> the demo assumes each side follows the protocol. Against a side that deliberately deviates from it, stronger versions exist.</li>
+    <li><b>A demo, without guarantees</b> and without legal value. To match real lists, with hundreds of thousands of records, contact us.</li>
+  </ul>
+</section>
+<!-- FRAME-END -->
+<section class="lcf-end lcf-solend" id="lcfEnd" aria-label="For use in your organization">
+  <div><h2>For use in your organization</h2><ul><li>Verifiable publication of salary data</li><li>Matching lists without revealing who is on them (PSI)</li><li>Chain of custody for documents and evidence</li></ul></div>
+  <div class="lcf-box"><p>Tell us what you need to prove, and to whom. Let’s talk about a pilot.</p><a class="lcf-btn" href="mailto:info@lucentcrypto.org?subject=Pilot%3A%20compliance%20without%20exposure">info@lucentcrypto.org</a></div>
+</section>
+<!-- /FRAME-END -->
+
+<footer>
+  <p>Format LucentPSI/1 · ristretto255. Each identifier becomes a point H(x) through the RFC 9496 map (64 bytes of SHA-512 of “LucentPSI/1”, the session, the profile and the normalized identifier). A blinds with k<sub>A</sub>, B with k<sub>B</sub>; each side blinds again what it receives, and k<sub>A</sub>·k<sub>B</sub>·H(x) is the same on both sides. Security: decisional Diffie–Hellman, with the hash modelled as a random oracle. Specification: <a href="https://github.com/jeroenvdgraaf/lucentcrypto/blob/main/spec/CRUZAMENTO.md">spec/CRUZAMENTO.md</a>. Library: noble-curves, by Paul Miller (MIT license).</p>
+  <p><a href="/">LucentCrypto</a> · <a href="/en/embaralhamento/">Verifiable shuffle</a></p>
+</footer>
+</div>
+
+<script type="module">
+import * as C from "/cruzamento/core.mjs";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = (n) => Number(n).toLocaleString("en-US");
+const short = (h) => h.slice(0, 10) + "…" + h.slice(-6);
+const ERR = { vazio: "empty", cpf: "invalid CPF", cnpj: "invalid CNPJ", email: "invalid e-mail", telefone: "invalid phone", nome: "empty name", repetido: "repeated" };
+
+// ---- 1. por que não basta trocar hashes de CPF
+const PREFIX = "529", NINE = PREFIX + String(Math.floor(Math.random() * 1e6)).padStart(6, "0"), SECRET_CPF = C.cpfComplete(NINE), TARGET = C.cpfHash(SECRET_CPF);
+$("crPrefix").textContent = PREFIX; $("crHash").textContent = short(TARGET);
+$("crHash").title = TARGET;
+$("crGo").addEventListener("click", async () => {
+  $("crGo").disabled = true; $("crBar").hidden = false; $("crOut").textContent = "";
+  const bar = $("crBar").firstElementChild;
+  const r = await C.crackCpf(TARGET, PREFIX, (d, t) => { bar.style.width = (100 * d / t).toFixed(1) + "%"; $("crNote").textContent = fmt(d) + " of " + fmt(t) + " CPFs tried"; });
+  bar.style.width = "100%";
+  const rate = r.tried / (r.ms / 1000), all = 1e9 / rate;
+  const dur = (s) => s < 90 ? Math.round(s) + " s" : s < 5400 ? Math.round(s / 60) + " min" : (s / 3600).toLocaleString("en-US", { maximumFractionDigits: 1 }) + " h";
+  $("crNote").textContent = "";
+  $("crOut").innerHTML = `Found: <b class="mono">${C.fmtCpf(r.cpf)}</b>, after ${fmt(r.tried)} attempts, in ${(r.ms / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 })} s in this browser (${fmt(Math.round(rate))} hashes per second). Without knowing the start, the billion CPFs would take about ${dur(all)} here; an ordinary graphics card tries hundreds of millions of hashes per second and finds any CPF in a few seconds.`;
+  $("crGo").disabled = false; $("crGo").textContent = "Again";
+});
+
+// ---- 2. simulação
+const EX = {
+  cpf: [["Ana Souza", "529.982.247-25"], ["Ben Lima", ""], ["Clara Dias", ""], ["David Rocha", ""], ["Emma Prado", ""], ["Frank Nunes", ""], ["Grace Reis", ""], ["Henry Melo", ""], ["Isabel Costa", ""], ["Jack Pires", ""], ["Laura Gomes", ""], ["Mark Alves", ""], ["Nina Teixeira", ""], ["Oscar Barros", ""]],
+};
+// CPFs de exemplo, válidos e fixos (gerados a partir de números quaisquer)
+const exCpf = (i) => C.fmtCpf(C.cpfComplete(String(104729 * (i + 3) + 271828).padStart(9, "0").slice(-9)));
+const EXAMPLES = {
+  cpf: () => { const p = EX.cpf.map(([n, c], i) => [n, c || exCpf(i)]); return [p.slice(0, 9), p.slice(5)]; },
+  cnpj: () => { const mk = (b) => { const d = String(b).padStart(12, "0").split("").map(Number); for (const n of [12, 13]) { const w = n === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]; let s = 0; for (let i = 0; i < n; i++) s += d[i] * w[i]; const r = s % 11; d.push(r < 2 ? 0 : 11 - r); } return d.join("").replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5"); };
+    const p = ["Alpha Construction", "Beta Engineering", "Gamma Works", "Delta Builders", "Epsilon Engineering", "Zeta Works", "Omega Services", "Sigma Engineering", "Kappa Builders", "Lambda Works", "North Engineering", "South Services"].map((n, i) => [n, mk(112223330001 + i * 977)]); return [p.slice(0, 8), p.slice(4)]; },
+  email: () => { const p = ["ana.souza", "ben.lima", "clara.dias", "david.rocha", "emma.prado", "frank.nunes", "grace.reis", "henry.melo", "isabel.costa", "jack.pires"].map((u) => [u, u + "@example.com"]); return [p.slice(0, 7), p.slice(4).map(([u, e], i) => [u, i % 2 ? e.toUpperCase() : " " + e])]; },
+  telefone: () => { const p = ["Ana", "Ben", "Clara", "David", "Emma", "Frank", "Grace", "Henry", "Isabel", "Jack"].map((n, i) => [n, "(31) 9" + String(8812 + i * 37).padStart(4, "0") + "-" + String(1000 + i * 211).padStart(4, "0")]); return [p.slice(0, 7), p.slice(4).map(([n, t]) => [n, "+55 " + t.replace(/[()]/g, "")])]; },
+  nome: () => { const p = ["Ana Souza", "Ben Lima", "Clara Dias", "David Rocha", "Emma Prado", "Frank Nunes", "Grace Reis", "Henry Melo", "Isabel Costa", "Jack Pires"]; return [p.slice(0, 7).map((n) => [n, n]), p.slice(4).map((n) => [n, n.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")])]; },
+};
+const HINT = {
+  cpf: "CPF (Brazil’s personal taxpayer number): only the 11 digits count; dots and dash are ignored, and the check digits are verified.",
+  cnpj: "CNPJ (Brazil’s company number): only the 14 digits count, with the check digits verified.",
+  email: "E-mail: lowercase and no spaces, so that “Ana@Example.com” and “ana@example.com” match.",
+  telefone: "Phone: digits only; without +, a Brazilian number (55) is assumed.",
+  nome: "Name: no accents, lowercase and no punctuation. Equal names of different people also match: prefer a unique identifier.",
+};
+let S = null; // estado da simulação
+const sid = "demo-" + Math.random().toString(36).slice(2, 10);
+const fill = () => { const [a, b] = EXAMPLES[$("profile").value](); $("listA").value = a.map(([n, x]) => n + "; " + x).join("\n"); $("listB").value = b.map(([n, x]) => n + "; " + x).join("\n"); reset(); };
+const readSide = (id) => C.parseItems($("profile").value, $(id).value);
+function reset() {
+  S = { step: 0, kA: C.randScalar(), kB: C.randScalar(), dict: false };
+  $("profileHint").textContent = HINT[$("profile").value];
+  $("result").hidden = true; $("ptsA").innerHTML = $("ptsB").innerHTML = "";
+  $("next").disabled = $("all").disabled = false; $("next").textContent = "Next step";
+  showInfo(); renderFlow(); showK();
+}
+function showInfo() {
+  for (const [side, list] of [["A", "listA"], ["B", "listB"]]) {
+    const r = readSide(list), n = r.items.length;
+    $("info" + side).textContent = fmt(n) + (n === 1 ? " record" : " records") + (n > C.MAX_ITEMS ? " — above the limit of " + C.MAX_ITEMS : "");
+    $("err" + side).innerHTML = r.errors.slice(0, 5).map((e) => `<li>line ${e.line}: ${ERR[e.error] || e.error} (${esc(e.text.slice(0, 40))})</li>`).join("") + (r.errors.length > 5 ? `<li>… and ${r.errors.length - 5} more</li>` : "");
+  }
+}
+const showK = () => { const on = $("showK").checked; $("kA").hidden = $("kB").hidden = !on; $("kA").textContent = "secret k_A = " + S.kA.toString(16); $("kB").textContent = "secret k_B = " + S.kB.toString(16); };
+const STEPS = [
+  ["Agree on the profile", "Both sides agree on the identifier, the cleaning and the result (intersection or only its size). The maximum size agreed here is 500."],
+  ["Announce the sizes", "Each side says how many records it has. If the number makes no sense, the other side stops here."],
+  ["Blind and swap", "Each side turns each identifier into a point H(x), multiplies it by its secret, shuffles the order and sends it to the other."],
+  ["Blind again", "Each side multiplies what it received by its own secret and sends it back. Now each value carries both secrets: k_A·k_B·H(x)."],
+  ["Compare", "Values with both secrets are equal only for equal identifiers. Each side sees which of its records are on both lists."],
+];
+function renderFlow(stopAt = -1) {
+  $("flow").innerHTML = STEPS.map(([t, d], i) => `<div class="stepline ${i === stopAt ? "stop" : i < S.step ? "done" : i === S.step ? "now" : ""}"><span class="n">${i + 1}</span><p><b>${t}.</b> ${d}</p><span class="small muted">${i < S.step ? "done" : ""}</span></div>`).join("");
+}
+const pts = (id, list, hits = null) => { $(id).innerHTML = list.map((x) => `<div class="pt${hits && hits.has(x.v) ? " hit" : ""}"><span>${short(x.v)}</span><small>${x.note || ""}</small></div>`).join(""); };
+const tick = () => new Promise((r) => setTimeout(r, 0));
+async function step() {
+  const profile = $("profile").value, onlyCount = $("mode").value === "count";
+  if (S.step === 0) {
+    S.A = readSide("listA"); S.B = readSide("listB");
+    if (S.dict) S.B = { items: Array.from({ length: 1000000 }, () => null), errors: [] };
+    S.step = 1; renderFlow(); return;
+  }
+  if (S.step === 1) {
+    const nA = S.A.items.length, nB = S.B.items.length;
+    if (nA > C.MAX_ITEMS || nB > C.MAX_ITEMS || nA === 0 || nB === 0) {
+      renderFlow(1); $("next").disabled = $("all").disabled = true;
+      $("result").hidden = false;
+      $("result").innerHTML = nB > C.MAX_ITEMS && S.dict
+        ? `<div class="verdict bad"><b>Stopped at step 2</b><p>B announced ${fmt(nB)} records, but the agreed maximum was ${C.MAX_ITEMS}. A list that big is how you test CPFs in bulk: A stops before blinding anything, and nothing leaks.</p></div><div class="verdict"><b>Why this works</b><p>In a PSI, each record of the attacker costs the other side a computation, and the size shows up first. Agreeing on and checking the size is part of the protocol, not a detail.</p></div>`
+        : `<div class="verdict bad"><b>Stopped at step 2</b><p>Each side needs 1 to ${C.MAX_ITEMS} valid records.</p></div>`;
+      return;
+    }
+    $("infoA").textContent = fmt(nA) + " records · B announced " + fmt(nB); $("infoB").textContent = fmt(nB) + " records · A announced " + fmt(nA);
+    S.step = 2; renderFlow(); return;
+  }
+  if (S.step === 2) {
+    $("next").disabled = true; await tick();
+    S.a1 = C.firstPass(sid, profile, S.kA, S.A.items); S.b1 = C.firstPass(sid, profile, S.kB, S.B.items);
+    pts("ptsA", S.b1.map((x) => ({ v: x.v, note: "from B: k_B·H(?)" }))); pts("ptsB", S.a1.map((x) => ({ v: x.v, note: "from A: k_A·H(?)" })));
+    $("next").disabled = false; S.step = 3; renderFlow(); return;
+  }
+  if (S.step === 3) {
+    $("next").disabled = true; await tick();
+    S.a2 = C.secondPass(S.kB, S.a1.map((x) => x.v), { keepOrder: !onlyCount }); S.b2 = C.secondPass(S.kA, S.b1.map((x) => x.v), { keepOrder: !onlyCount });
+    pts("ptsA", S.a2.map((v, j) => ({ v, note: onlyCount ? "returned by B, shuffled" : "mine: " + esc(S.A.items[S.a1[j].i].label) })));
+    pts("ptsB", S.b2.map((v, j) => ({ v, note: onlyCount ? "returned by A, shuffled" : "mine: " + esc(S.B.items[S.b1[j].i].label) })));
+    $("next").disabled = false; S.step = 4; renderFlow(); return;
+  }
+  if (S.step === 4) {
+    const rA = C.compare(S.a1, S.a2, S.b2, { onlyCount }), rB = C.compare(S.b1, S.b2, S.a2, { onlyCount });
+    const common = new Set(S.a2.filter((v) => new Set(S.b2).has(v)));
+    pts("ptsA", S.a2.map((v, j) => ({ v, note: onlyCount ? "" : "mine: " + esc(S.A.items[S.a1[j].i].label) })), common);
+    pts("ptsB", S.b2.map((v, j) => ({ v, note: onlyCount ? "" : "mine: " + esc(S.B.items[S.b1[j].i].label) })), common);
+    const list = (side, r) => r.hits.map((i) => esc(side.items[i].label)).join(", ") || "none";
+    $("result").hidden = false;
+    $("result").innerHTML = onlyCount
+      ? `<div class="verdict ok"><b>A and B learn: ${rA.count} in common</b><p>Since each side shuffled what it returned, nobody knows which ones. Each side also knows the size of the other’s list, and nothing else.</p></div><div class="verdict"><b>What nobody learned</b><p>Any record of the other side, not even those on both lists.</p></div>`
+      : `<div class="verdict ok"><b>A learns: ${rA.count} in common</b><p>${list(S.A, rA)}</p></div><div class="verdict ok"><b>B learns: ${rB.count} in common</b><p>${list(S.B, rB)}</p></div><div class="verdict"><b>What each side did not learn</b><p>B’s other ${S.B.items.length - rA.count} records, for A, and A’s other ${S.A.items.length - rB.count}, for B: they only arrived as blinded points. The labels never left each side.</p></div>`;
+    S.step = 5; renderFlow(); $("next").disabled = $("all").disabled = true; $("next").textContent = "Done";
+  }
+}
+$("next").addEventListener("click", step);
+$("all").addEventListener("click", async () => { while (S.step < 5 && !$("all").disabled) { await step(); await tick(); } });
+$("reset").addEventListener("click", reset);
+$("dict").addEventListener("click", async () => { reset(); S.dict = true; await step(); await step(); });
+$("profile").addEventListener("change", fill);
+$("mode").addEventListener("change", reset);
+["listA", "listB"].forEach((id) => $(id).addEventListener("input", () => { if (S.step > 0) reset(); else showInfo(); }));
+$("showK").addEventListener("change", showK);
+
+// ---- tema e língua
+const LS = { get(k, d) { try { const v = localStorage.getItem("lucent-psi-" + k); return v === null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem("lucent-psi-" + k, v); } catch (e) {} } };
+const THEMES = ["auto", "light", "dark"], THEME_LABEL = { auto: "Theme: auto", light: "Theme: light", dark: "Theme: dark" };
+let theme = LS.get("theme", "auto"); if (!THEMES.includes(theme)) theme = "auto";
+function applyTheme(t) { if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = t; $("themeBtn").textContent = THEME_LABEL[t]; }
+$("themeBtn").addEventListener("click", () => { theme = THEMES[(THEMES.indexOf(theme) + 1) % 3]; LS.set("theme", theme); applyTheme(theme); });
+applyTheme(theme);
+$("langBtn").addEventListener("click", (e) => { e.preventDefault(); location.href = $("langBtn").getAttribute("href") + location.hash; });
+fill();
+</script>
+</body>
+</html>
