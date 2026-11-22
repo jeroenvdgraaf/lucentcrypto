@@ -13,6 +13,10 @@ import { RistrettoPoint as P, ed25519, sha256, sha512, hmac } from "./vendor/nob
 export const VERSION = "LucentVote/1";
 // Demonstração: até 20 participantes; com um código de liberação, até 100.
 export const FREE_LIMIT = 20, MAX_LIMIT = 100, MAX_ITEMS = 100, MAX_QUESTION = 300, MAX_TEXT = 128;
+// Inscrição pelo grupo (seção 2.2): quem entrou aprovado por padrão a menos de JOIN_GRACE ms da abertura
+// de uma votação, sem o organizador ter conferido, fica fora dela (vota a partir da próxima).
+export const JOIN_GRACE = 5000, JOIN_MODES = ["organizador", "grupo-aprovado", "grupo-pendente"];
+export const maxPending = (limit) => 2 * limit;
 export const L = ed25519.CURVE.n;
 const B = P.BASE, ZERO = P.ZERO;
 const te = new TextEncoder();
@@ -57,6 +61,7 @@ export function deriveAdmin(mHex) {
     a, t, th: sha256hex(t),
     kr: hmac(sha256, m, lab("rol")),
     voterSecret: (i) => hex(hmac(sha256, m, lab("eleitor/" + i)).subarray(0, 16)),
+    g: hex(hmac(sha256, m, lab("inscricao")).subarray(0, 16)), // token do link do grupo (seção 2.2)
   };
 }
 export const fingerprint = (sHexStr) => hex(sha256(cat(te.encode(VERSION + "/eleitor"), unhex(sHexStr)))).slice(0, 32);
@@ -246,7 +251,7 @@ export function deletionTime(t) {
 // (o Worker e as páginas ao vivo usam applyEvent, para não reconferir tudo a cada cédula).
 // cache (opcional): Map chave → resultado das provas já conferidas (por exemplo, num Web Worker).
 export function newBoardState() {
-  return { ok: true, problems: [], session: null, roll: new Map(), items: new Map(), order: [], open: null, head: ZERO_HASH, count: 0, ended: false, last: 0 };
+  return { ok: true, problems: [], session: null, roll: new Map(), reqs: new Map(), nums: new Set(), joinClosed: false, items: new Map(), order: [], open: null, head: ZERO_HASH, count: 0, ended: false, last: 0 };
 }
 // strict (Worker): um evento inválido lança e o estado não muda.
 // não strict (páginas): um evento inválido é anotado em st.problems, e a conferência segue.
@@ -285,29 +290,72 @@ function apply(st, ev, cache) {
     const K = split ? pOf(ev.A).add(pOf(ev.W)) : pOf(ev.W);
     const limit = ev.limit ?? FREE_LIMIT;
     if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIMIT) throw new Error("limite de participantes");
-    st.session = { sid: ev.sid, title: ev.title, by: ev.by, display: ev.display, keyMode: ev.keyMode, A: ev.A, W: ev.W, K: pHex(K), th: ev.th, created: ev.t, limit };
+    const join = ev.inscricao ?? "organizador";
+    if (!JOIN_MODES.includes(join)) throw new Error("modo de inscrição");
+    if (join !== "organizador" && (ev.display !== "nomes" || !/^[0-9a-f]{64}$/.test(ev.gh || ""))) throw new Error("inscrição pelo grupo exige nomes no quadro e o hash do token");
+    st.session = { sid: ev.sid, title: ev.title, by: ev.by, display: ev.display, keyMode: ev.keyMode, A: ev.A, W: ev.W, K: pHex(K), th: ev.th, created: ev.t, limit,
+      join, gh: ev.gh, showReqs: !!ev.verPedidos };
     return;
   }
   if (!S) throw new Error("sem criação");
   if (st.ended && ev.type !== "reuniao-encerrada") throw new Error("depois do fim da reunião");
   switch (ev.type) {
     case "eleitor-incluido": {
-      if (!Number.isInteger(ev.i) || ev.i < 1 || [...st.roll.values()].some((v) => v.i === ev.i)) throw new Error("número de eleitor");
-      if (!/^[0-9a-f]{32}$/.test(ev.f) || st.roll.has(ev.f)) throw new Error("impressão digital");
+      if (!Number.isInteger(ev.i) || ev.i < 1 || st.nums.has(ev.i)) throw new Error("número de eleitor");
+      if (!/^[0-9a-f]{32}$/.test(ev.f) || st.roll.has(ev.f) || knownF(st, ev.f)) throw new Error("impressão digital");
       if (st.roll.size >= S.limit) throw new Error("mais de " + S.limit + " participantes (o limite desta reunião)");
-      st.roll.set(ev.f, { i: ev.i, f: ev.f, name: ev.name || null, priv: ev.priv || null, added: ev.t });
+      st.nums.add(ev.i);
+      st.roll.set(ev.f, { i: ev.i, f: ev.f, name: ev.name || null, priv: ev.priv || null, added: ev.t, via: "organizador", checked: true });
       return;
     }
     case "eleitor-excluido": {
       const e = [...st.roll.values()].find((v) => v.i === ev.i);
       if (!e) throw new Error("eleitor inexistente");
-      st.roll.delete(e.f); return;
+      st.roll.delete(e.f);
+      const r = st.reqs.get(ev.i); if (r) Object.assign(r, { status: "recusado", decided: ev.t });
+      return;
+    }
+    // Inscrição pelo grupo (seção 2.2). O pedido traz só o nome e a impressão digital: o segredo do
+    // eleitor foi gerado no aparelho dele, e o organizador não o conhece.
+    case "pedido": {
+      if (S.join === "organizador") throw new Error("esta reunião não aceita inscrição pelo grupo");
+      if (st.joinClosed) throw new Error("inscrições encerradas");
+      if (!Number.isInteger(ev.i) || ev.i < 1 || st.nums.has(ev.i)) throw new Error("número de eleitor");
+      if (!/^[0-9a-f]{32}$/.test(ev.f) || st.roll.has(ev.f) || knownF(st, ev.f)) throw new Error("impressão digital");
+      if (typeof ev.name !== "string" || !ev.name.trim() || ev.name !== ev.name.trim() || te.encode(ev.name).length > MAX_TEXT) throw new Error("nome");
+      if ([...st.reqs.values()].filter((r) => r.status === "pendente").length >= maxPending(S.limit)) throw new Error("pedidos pendentes demais");
+      st.nums.add(ev.i);
+      const r = { i: ev.i, f: ev.f, name: ev.name, t: ev.t, status: "pendente", checked: false };
+      st.reqs.set(ev.i, r);
+      // aprovado por padrão: entra na lista na hora, se houver vaga; senão fica pendente
+      if (S.join === "grupo-aprovado" && st.roll.size < S.limit) admit(st, r, ev.t, false);
+      return;
+    }
+    case "decisao": {
+      const ap = ev.aprovar || [], rc = ev.recusar || [];
+      if (!Array.isArray(ap) || !Array.isArray(rc) || !ap.length && !rc.length) throw new Error("decisão vazia");
+      const all = ap.concat(rc);
+      if (new Set(all).size !== all.length || all.some((i) => !st.reqs.has(i))) throw new Error("pedido inexistente ou repetido");
+      for (const i of rc) { const r = st.reqs.get(i); st.roll.delete(r.f); Object.assign(r, { status: "recusado", decided: ev.t, checked: true }); }
+      for (const i of ap) {
+        const r = st.reqs.get(i);
+        if (r.status === "aprovado") { r.checked = true; const e = st.roll.get(r.f); if (e) e.checked = true; continue; }
+        if (st.roll.size >= S.limit) throw new Error("mais de " + S.limit + " participantes (o limite desta reunião)");
+        admit(st, r, ev.t, true);
+      }
+      return;
+    }
+    case "inscricoes-encerradas": {
+      if (S.join === "organizador" || st.joinClosed) throw new Error("não há inscrições abertas");
+      st.joinClosed = true; st.joinClosedAt = ev.t; return;
     }
     case "item-aberto": {
       if (st.open) throw new Error("já há um item aberto");
       if (st.items.has(ev.item) || ev.item !== st.order.length + 1) throw new Error("número do item");
       const err = checkItem(ev.spec); if (err) throw new Error("item inválido (" + err + ")");
-      const roll = [...st.roll.keys()].sort();
+      // Rol congelado: todos da lista, menos quem entrou aprovado por padrão há menos de JOIN_GRACE ms
+      // sem ter sido conferido pelo organizador (corrida entre o pedido e a abertura).
+      const roll = [...st.roll.values()].filter((v) => v.checked || ev.t - v.added >= JOIN_GRACE).map((v) => v.f).sort();
       if (canon(roll) !== canon(ev.roll)) throw new Error("o rol congelado não é o rol atual");
       st.items.set(ev.item, { n: ev.item, spec: ev.spec, options: optionLabels(ev.spec), roll: new Set(roll), state: "aberto", ballots: [], opened: ev.t });
       st.order.push(ev.item); st.open = ev.item; return;
@@ -316,6 +364,7 @@ function apply(st, ev, cache) {
       const it = st.items.get(ev.item);
       if (!it || it.state !== "aberto") throw new Error("item não está aberto");
       if (!it.roll.has(ev.f)) throw new Error("eleitor fora do rol deste item");
+      if (!st.roll.has(ev.f)) throw new Error("eleitor excluído da lista"); // excluído durante a votação: não vota mais
       if (it.ballots.some((b) => b.f === ev.f)) throw new Error("segunda cédula do mesmo eleitor");
       const key = "c:" + ev.h;
       const ok = cache.get(key) ?? verifyBallot(S.sid, S.K, ev.item, it.spec.m, ev.f, ev.ballot);
@@ -361,6 +410,13 @@ function apply(st, ev, cache) {
     default: throw new Error("tipo desconhecido");
   }
 }
+function knownF(st, f) { for (const r of st.reqs.values()) if (r.f === f) return true; return false; }
+function admit(st, r, t, checked) {
+  Object.assign(r, { status: "aprovado", decided: t, checked });
+  st.roll.set(r.f, { i: r.i, f: r.f, name: r.name, priv: null, added: t, via: "grupo", checked, req: r.t });
+}
+// O rol que o Worker deve publicar ao abrir uma votação no instante t (mesma regra de "item-aberto").
+export function rollAt(st, t) { return [...st.roll.values()].filter((v) => v.checked || t - v.added >= JOIN_GRACE).map((v) => v.f).sort(); }
 function resultOf(it, T, partials) {
   const n = it.ballots.length, c = counts(T, partials, n), sum = c.reduce((a, b) => a + b, 0);
   if (sum > n) throw new Error("contagem maior que o número de cédulas");

@@ -11,6 +11,7 @@ The interface exists in Portuguese (`/votacao/`) and English (`/en/votacao/`); t
 | Role | Link | Can |
 |---|---|---|
 | Admin | `/votacao/#s=<sessão>&a=<segredo do admin>` | add or remove voters, open, close and cancel items, end the session; holds half of the key |
+| Group (*inscrição*) | `/votacao/#s=<sessão>&g=<token do grupo>` | ask to be on the roll (section 2.2); only when the session allows it |
 | Voter | `/votacao/#s=<sessão>&v=<segredo do eleitor>` | vote once on each open item for which they are on the frozen roll; see results |
 | Board (*quadro*) | `/votacao/#s=<sessão>` | read only: at the top, large, the current item and how many have voted (or the latest result); below, all results, everything on the board, verified in the browser; download the *ata*. *Tela cheia* shows only the top block, for projecting (`&tela` opens it that way) |
 
@@ -22,7 +23,8 @@ The interface exists in Portuguese (`/votacao/`) and English (`/en/votacao/`); t
 - `a` = the admin's half of the decryption key (reduced mod ℓ, section 3);
 - `t` = the control token sent to the Worker to authorize admin actions (the Worker stores only SHA-256(`t`));
 - `s_i` = the secret of voter number *i* (so the admin can resend any voter's link after a reload);
-- `kr` = an AES-GCM key for the parts of the roll kept private (section 5).
+- `kr` = an AES-GCM key for the parts of the roll kept private (section 5);
+- `g` = the token of the group link (16 bytes, label `inscricao`; the Worker stores only SHA-256(`g`)).
 
 The page MUST say plainly: *Guarde uma cópia deste link. Ele conduz a reunião e guarda metade da chave: sem ele, os resultados não podem ser apurados; com ele, qualquer pessoa conduz a reunião.* (In the opt-out mode of section 3.1, without *e guarda metade da chave*.)
 
@@ -53,7 +55,31 @@ Keeping the admin link should need no understanding of cryptography:
 - **Importing participants** (when preparing): *Colar uma lista* or *Importar arquivo (.csv)*. Fields may be separated by comma, semicolon or tab, quoted or not. A header line is used to find the name and contact columns when present. Names already on the list (case-insensitive) are skipped, and the preview says how many.
 - **Exporting** (organizer page): *Exportar planilha (CSV)*, UTF-8 with BOM, `;`-separated, with columns `nº;nome;contato;código;link`. The same file can be imported when preparing another meeting.
 
+### 2.2 Self-registration by group link
 
+An alternative to typing the roll, for a meeting whose participants share a WhatsApp group. Chosen at creation, fixed for the session (*Como montar a lista*):
+
+- `organizador` (default): only the admin adds voters, as above.
+- `grupo-aprovado`: anyone with the group link asks to join and is **on the roll at once**; the admin can reject (remove) them, or confirm them.
+- `grupo-pendente`: a request waits until the admin approves it.
+
+In both group modes the admin can still add voters by hand, and the board MUST show names (*impressões digitais* mode is not offered): the point is that everyone sees who is on the roll.
+
+1. **Group link.** The admin posts `#s=<sessão>&g=<g>` in the group (*Mandar no WhatsApp*, *Copiar link*, *QR*).
+2. **Request.** The person types their name. **Their page generates the voter secret `s` (16 random bytes) on their own device**, stores it, and sends only the name and `f = fingerprint(s)` with `g`. The page then becomes their voter page (`&v=<s>`) and offers *Copiar meu link*. Reopening the group link on the same device goes straight to it. The admin never knows `s`, so, unlike a voter added by hand, **the admin cannot vote in a self-registered voter's place.**
+3. **Decisions.** The admin page lists the requests, most recent first, with name, time and the participant code, and flags a repeated name. Checkboxes, *Selecionar todos os pendentes* (in `grupo-aprovado`: also those not yet confirmed), *Aprovar selecionados*, *Recusar selecionados*. One batch is one event. Approving a rejected request later is allowed; rejecting an approved one removes it from the roll.
+4. **Closing.** *Encerrar inscrições* (a button only; opening a vote does not close registration). The group link then says registration is closed.
+5. **Who sees requests.** Requests and decisions are events on the public board, always. The session option `verPedidos` decides whether voter pages also list them.
+
+Rules (MUST, in the Worker and in every verifying page):
+
+- **Race at opening (`grupo-aprovado`).** The frozen roll of an item is the current roll **minus voters who entered by default less than 5 s (`JOIN_GRACE`) before the item opened and were not confirmed by the admin**. They vote from the next item, and their page says *Você entrou logo antes desta votação abrir; vota a partir da próxima.* The rule is checkable from the event times (server clock).
+- **Unconfirmed voters in an open item.** The admin page warns: *Esta votação abriu com N pessoas não conferidas: …*. Rejecting such a person stops them from voting from then on; a ballot they already cast stays counted, because nobody can tell which ballot is whose without breaking secrecy.
+- **Removed during an item.** A voter removed (by hand or by rejection) while an item is open cannot cast a ballot in it any more. This holds for voters added by hand too.
+- **Limits.** The session limit (section 2.1) counts voters on the roll. In `grupo-aprovado`, a request that arrives when the roll is full stays pending. At most 2 × limit requests may be pending at a time; further requests are refused (not logged). A fingerprint can request only once; a rejected person may ask again from another device or after clearing the page, which is a new request.
+- **Numbers.** Request numbers and voter numbers share one sequence; the Worker assigns the number of a request.
+
+## 3. Cryptography
 
 **Group:** ristretto255 (prime order ℓ, canonical 32-byte encodings, generator `B`). Points and scalars are written as lowercase hex in JSON. Implementation: `@noble/curves` (MIT), pinned version, inline in the page and imported by the Worker.
 
@@ -106,9 +132,12 @@ The board is an append-only list of **events**. Each event has a sequence number
 
 | Event | Content |
 |---|---|
-| `criada` | title, admin's name, display mode (names or fingerprints), key mode (section 3.1), `A` and its proof (split mode only), `W` and its proof, SHA-256(`t`) |
+| `criada` | title, admin's name, display mode (names or fingerprints), key mode (section 3.1), `A` and its proof (split mode only), `W` and its proof, SHA-256(`t`); in the group modes also `inscricao`, SHA-256(`g`) as `gh`, and `verPedidos` |
 | `eleitor-incluido` | voter number *i*, fingerprint `f_i`, name (only in names mode), `privado`: AES-GCM under `kr` of {name, contact} |
 | `eleitor-excluido` | voter number *i* |
+| `pedido` | number *i* (assigned by the Worker), fingerprint `f`, name (section 2.2) |
+| `decisao` | `aprovar`: list of request numbers; `recusar`: list of request numbers |
+| `inscricoes-encerradas` | — |
 | `item-aberto` | item number, type, question, label, numbering, m, the frozen roll (list of fingerprints) |
 | `cedula` | item number, fingerprint, the ciphertexts and the proof |
 | `item-encerrado` | item number, the totals `T_j`, `D^W` with proof |
@@ -155,7 +184,8 @@ The Durable Object deletes everything, including `w`, at **the first midnight (A
 - **Secret vote.** Split mode: *Sigilo: a chave é dividida entre o organizador e a LucentCrypto; nenhum dos dois, sozinho, consegue ler uma cédula. Só os totais são abertos.* Worker-only mode: *Sigilo: a chave fica com a LucentCrypto, que abre só os totais. Tudo é apagado um dia após a reunião.* These sentences appear on the voter page under the item, and on the board.
 - **Counted as cast:** each voter sees their ballot on the board; anyone can check that the published result is the decryption of the sum of exactly the accepted ballots.
 - **Who voted is visible** (by name or fingerprint, with the time); how they voted is not.
-- **The admin controls the roll.** Every inclusion and exclusion is public, so participants can notice an unknown name, but only in names mode.
+- **The admin controls the roll.** Every inclusion and exclusion is public, so participants can notice an unknown name, but only in names mode. With the group link, every request and decision is public as well, and the board says how each voter entered (by hand or by the group).
+- **Who can vote in someone's place.** The admin can derive the secret of every voter added by hand; a self-registered voter's secret exists only on their device and in their link.
 - **Not protected:** a voter who votes under someone's eyes, or who shares their link; malware on a phone; a lost admin link (in split mode the open items can never be tallied; in either mode the meeting can no longer be run).
 - **No legal value:** *Esta é uma demonstração. Nenhum valor jurídico pode ser atribuído a estas votações.* Plus the same *sem garantias* notice as Segredo.
 

@@ -192,3 +192,105 @@ test("applyEvent: incremental igual à conferência completa; evento inválido n
   assert.equal(JSON.stringify([st3.count, st3.head, st3.items.get(1).state]), before);
   V.applyEvent(st3, evs.at(-1)); assert.equal(st3.items.get(1).state, "apurado");
 });
+
+// ---- inscrição pelo grupo (seção 2.2)
+function groupSetup(join, nVoters = 1, extra = {}) {
+  const sid = "Z3J1cG8tZGUtdGVzdGVfXw", m = V.hex(V.randBytes(32)), adm = V.deriveAdmin(m);
+  const w = V.randScalar(), W = B.multiply(w), A = B.multiply(adm.a);
+  const bd = board();
+  bd.push({ type: "criada", sid, title: "Assembleia", by: "Ana", display: "nomes", keyMode: "dividida", inscricao: join, gh: V.sha256hex(adm.g), verPedidos: true,
+    A: V.pHex(A), pokA: V.provePok(sid, adm.a, A), W: V.pHex(W), pokW: V.provePok(sid, w, W), th: adm.th, ...extra });
+  for (let i = 1; i <= nVoters; i++) bd.push({ type: "eleitor-incluido", i, f: V.fingerprint(adm.voterSecret(i)), name: "Eleitor " + i });
+  return { sid, adm, w, W: V.pHex(W), A: V.pHex(A), K: V.pHex(A.add(W)), bd };
+}
+const selfVoter = () => { const s = V.hex(V.randBytes(16)); return { s, f: V.fingerprint(s) }; };
+const at = (bd, t, ev) => { const e = { n: bd.events.length + 1, t, ...ev }; e.h = V.eventHash(bd.events.at(-1)?.h || V.ZERO_HASH, e); bd.events.push(e); return e; };
+
+test("inscrição pelo grupo: exige nomes no quadro e o hash do token", () => {
+  for (const extra of [{ display: "digitais" }, { gh: undefined }, { inscricao: "qualquer" }]) {
+    const st = V.verifyBoard(groupSetup("grupo-aprovado", 0, extra).bd.events);
+    assert.ok(!st.ok, JSON.stringify(extra));
+  }
+  assert.ok(V.verifyBoard(groupSetup("grupo-pendente", 0).bd.events).ok);
+  const S = setup("dividida", 1), v = selfVoter();
+  S.bd.push({ type: "pedido", i: 2, f: v.f, name: "Bruno" });
+  assert.match(V.verifyBoard(S.bd.events).problems[0], /não aceita inscrição/);
+});
+
+test("aprovado por padrão: entra na hora, mas quem entrou a menos de 5 s da abertura fica fora dessa votação", () => {
+  const S = groupSetup("grupo-aprovado", 1), b = selfVoter(), c = selfVoter(), sp = { type: "simnao", q: "Item 1", m: 2 };
+  const t0 = S.bd.events.at(-1).t;
+  at(S.bd, t0 + 1000, { type: "pedido", i: 2, f: b.f, name: "Bruno" });
+  at(S.bd, t0 + 9000, { type: "pedido", i: 3, f: c.f, name: "Carla" });
+  let st = V.verifyBoard(S.bd.events);
+  assert.ok(st.ok && st.roll.size === 3 && st.roll.get(b.f).via === "grupo" && !st.roll.get(b.f).checked);
+  const T = t0 + 12000, roll = V.rollAt(st, T);
+  assert.ok(roll.includes(b.f) && !roll.includes(c.f), "Bruno entrou 11 s antes; Carla, 3 s antes");
+  at(S.bd, T, { type: "item-aberto", item: 1, spec: sp, roll });
+  st = V.verifyBoard(S.bd.events); assert.ok(st.ok);
+  // publicar Carla no rol não confere
+  const bad = groupSetup("grupo-aprovado", 0); bad.bd.events.length = 0;
+  const evs = S.bd.events.slice(0, -1).map((e) => ({ ...e })); let h = V.ZERO_HASH;
+  for (const e of evs) { e.h = V.eventHash(h, e); h = e.h; }
+  const fake = { n: evs.length + 1, t: T, type: "item-aberto", item: 1, spec: sp, roll: [...st.roll.keys()].sort() }; fake.h = V.eventHash(h, fake);
+  assert.match(V.verifyBoard(evs.concat(fake)).problems[0], /rol congelado/);
+  // Carla vota a partir da próxima; Bruno vota nesta
+  at(S.bd, T + 1000, { type: "cedula", item: 1, f: b.f, ballot: V.makeBallot(S.sid, S.K, 1, 2, b.f, 1) });
+  assert.ok(V.verifyBoard(S.bd.events).ok);
+  at(S.bd, T + 2000, { type: "cedula", item: 1, f: c.f, ballot: V.makeBallot(S.sid, S.K, 1, 2, c.f, 1) });
+  assert.match(V.verifyBoard(S.bd.events).problems[0], /fora do rol/);
+});
+
+test("conferido pelo organizador entra mesmo logo antes da abertura; pendente só com aprovação", () => {
+  const S = groupSetup("grupo-pendente", 1), b = selfVoter(), c = selfVoter();
+  const t0 = S.bd.events.at(-1).t;
+  at(S.bd, t0 + 1000, { type: "pedido", i: 2, f: b.f, name: "Bruno" });
+  at(S.bd, t0 + 1500, { type: "pedido", i: 3, f: c.f, name: "Bruno" }); // nome repetido: o organizador decide
+  let st = V.verifyBoard(S.bd.events);
+  assert.ok(st.ok && st.roll.size === 1 && st.reqs.get(2).status === "pendente");
+  at(S.bd, t0 + 2000, { type: "decisao", aprovar: [2], recusar: [3] });
+  st = V.verifyBoard(S.bd.events);
+  assert.ok(st.ok && st.roll.has(b.f) && !st.roll.has(c.f) && st.reqs.get(3).status === "recusado");
+  assert.ok(V.rollAt(st, t0 + 2500).includes(b.f), "aprovado à mão entra mesmo 0,5 s antes");
+  // recusado pode ser aprovado depois
+  at(S.bd, t0 + 3000, { type: "decisao", aprovar: [3] });
+  assert.ok(V.verifyBoard(S.bd.events).roll.has(c.f));
+  // decisão sobre um número que não é pedido não confere
+  at(S.bd, t0 + 4000, { type: "decisao", recusar: [1] });
+  assert.match(V.verifyBoard(S.bd.events).problems[0], /pedido inexistente/);
+});
+
+test("recusado durante a votação não vota mais; as cédulas já dadas continuam", () => {
+  const S = groupSetup("grupo-aprovado", 1), b = selfVoter(), c = selfVoter(), sp = { type: "simnao", q: "Item 1", m: 2 };
+  const t0 = S.bd.events.at(-1).t;
+  at(S.bd, t0 + 1000, { type: "pedido", i: 2, f: b.f, name: "Bruno" });
+  at(S.bd, t0 + 1100, { type: "pedido", i: 3, f: c.f, name: "Carla" });
+  const T = t0 + 10000; at(S.bd, T, { type: "item-aberto", item: 1, spec: sp, roll: V.rollAt(V.verifyBoard(S.bd.events), T) });
+  at(S.bd, T + 1000, { type: "cedula", item: 1, f: b.f, ballot: V.makeBallot(S.sid, S.K, 1, 2, b.f, 1) });
+  at(S.bd, T + 2000, { type: "decisao", recusar: [2, 3] });
+  let st = V.verifyBoard(S.bd.events); assert.ok(st.ok && st.items.get(1).ballots.length === 1);
+  at(S.bd, T + 3000, { type: "cedula", item: 1, f: c.f, ballot: V.makeBallot(S.sid, S.K, 1, 2, c.f, 1) });
+  assert.match(V.verifyBoard(S.bd.events).problems[0], /excluído da lista/);
+});
+
+test("inscrições encerradas, impressão digital repetida e excesso de pedidos pendentes", () => {
+  const S = groupSetup("grupo-pendente", 0, { limit: 2 }), t0 = S.bd.events.at(-1).t;
+  const vs = [1, 2, 3, 4, 5].map(selfVoter);
+  vs.slice(0, 4).forEach((v, k) => at(S.bd, t0 + 1000 * (k + 1), { type: "pedido", i: k + 1, f: v.f, name: "P" + k }));
+  assert.ok(V.verifyBoard(S.bd.events).ok, "4 pendentes = 2 × limite");
+  at(S.bd, t0 + 6000, { type: "pedido", i: 5, f: vs[4].f, name: "P4" });
+  assert.match(V.verifyBoard(S.bd.events).problems[0], /pendentes demais/);
+  S.bd.events.pop();
+  at(S.bd, t0 + 6000, { type: "pedido", i: 5, f: vs[0].f, name: "Outro" });
+  assert.match(V.verifyBoard(S.bd.events).problems[0], /impressão digital/);
+  S.bd.events.pop();
+  at(S.bd, t0 + 6000, { type: "inscricoes-encerradas" });
+  at(S.bd, t0 + 7000, { type: "pedido", i: 5, f: vs[4].f, name: "P4" });
+  assert.match(V.verifyBoard(S.bd.events).problems[0], /inscrições encerradas/);
+});
+
+test("inscrito pelo grupo: o segredo é do eleitor; o organizador não consegue derivá-lo", () => {
+  const S = groupSetup("grupo-aprovado", 0), b = selfVoter();
+  const derived = new Set(Array.from({ length: 300 }, (_, k) => V.fingerprint(S.adm.voterSecret(k + 1))));
+  assert.ok(!derived.has(b.f));
+});

@@ -109,6 +109,11 @@ label.check small { color: var(--muted); }
 .voter .who small { font-weight: 400; color: var(--muted); }
 .voter .row { grid-column: 1 / -1; }
 .voter.sent { border-color: var(--ok); }
+.reqs { display: grid; gap: 4px; margin: 8px 0; }
+.req { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 10px; align-items: center; border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; font-size: 14px; }
+.req small { color: var(--muted); }
+.req.dup { border-color: var(--warn); }
+.req.st-recusado { opacity: .6; }
 .question { font: 700 22px/1.3 var(--display); }
 .choices { display: grid; gap: 8px; }
 .choice { font: 700 18px var(--display); padding: 14px 16px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); text-align: left; cursor: pointer; }
@@ -226,6 +231,15 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
   </div>
   <label class="f"><span>Your phone or e-mail <small>optional: only to send yourself the organizer link</small></span><input type="text" id="cMe" maxlength="80" autocomplete="off" placeholder="+1 555 010 0000 or name@example.com"></label>
   <h3>Participants</h3>
+  <div class="f"><span>How to build the list</span>
+    <div class="radios" id="cJoinBox">
+      <label><input type="radio" name="cJoin" value="organizador" checked> I type in the participants</label>
+      <label><input type="radio" name="cJoin" value="grupo-aprovado"> group link: everyone signs up and is in at once; I can reject</label>
+      <label><input type="radio" name="cJoin" value="grupo-pendente"> group link: everyone signs up and waits for my approval</label>
+    </div>
+    <small class="muted" id="cJoinHint">With the group link, each person creates their own voting key on their own phone: not even you can vote in their place. The requests and your decisions are on the public board, with names. You can type in participants too.</small>
+  </div>
+  <label class="check" id="cShowReqsBox" hidden><input type="checkbox" id="cShowReqs" checked><span>Participants see the list of requests on their own page <small>(on the board, requests always appear)</small></span></label>
   <p class="small muted">Up to 20 in the demo (up to 100 with a release code). Each one gets a personal link to vote throughout the meeting. You can add and remove people later, also during the meeting.</p>
   <table class="g"><thead><tr><th></th><th>Name</th><th>Phone or e-mail <small>(optional, for sending)</small></th><th></th></tr></thead><tbody id="cRows"></tbody></table>
   <div class="row"><button class="btn small" id="cAdd" type="button">+ Participant</button><button class="btn small" id="cImportOpen" type="button">Paste a list</button><button class="btn small" id="cFileBtn" type="button">Import file (.csv)</button><input type="file" id="cFile" accept=".csv,.txt,.tsv,text/csv,text/plain" hidden></div>
@@ -240,7 +254,7 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
     <div class="row"><button class="btn small primary" id="cImportUse" type="button" disabled>Use this list</button><button class="btn small" id="cImportCancel" type="button">Cancel</button></div>
   </div>
   <div class="f"><span>On the public board, show</span>
-    <div class="radios"><label><input type="radio" name="cDisplay" value="nomes" checked> the names of those who voted</label><label><input type="radio" name="cDisplay" value="digitais"> codes only (no names)</label></div>
+    <div class="radios"><label><input type="radio" name="cDisplay" value="nomes" checked> the names of those who voted</label><label id="cDigitaisBox"><input type="radio" name="cDisplay" value="digitais"> codes only (no names)</label></div>
     <small class="muted">With names, everyone can check that nobody unexpected is on the list. How each person voted never appears.</small>
   </div>
   <label class="check"><input type="checkbox" id="cSplit" checked><span>Keep half of the key myself (recommended) <small>— the key is split between you and LucentCrypto; neither of you alone can read a ballot.</small></span></label>
@@ -291,6 +305,21 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
         <p class="small muted" id="nPreview"></p>
         <div class="row"><button class="btn primary" id="nGo" type="button">Open the vote</button><span class="small muted" id="nNote"></span></div>
       </section>
+      <section class="panel" id="aJoin" hidden>
+        <div class="row" style="justify-content:space-between"><h2>Sign-up by group link</h2><span class="pill" id="aJoinState"></span></div>
+        <p class="small muted" id="aJoinIntro">Post this link in the meeting’s WhatsApp group. Each person opens it, types their name and asks to sign up; their voting link is created on their own phone.</p>
+        <div class="linkbox mono" id="aJoinLink"></div>
+        <div class="row" id="aJoinBtns"></div>
+        <div class="msg warn" id="aJoinWarn" hidden></div>
+        <div class="reqs" id="aReqs"></div>
+        <div class="row" id="aReqBtns">
+          <button class="btn small" id="aReqAll" type="button">Select all pending</button>
+          <button class="btn small primary" id="aReqOk" type="button" disabled>Approve selected</button>
+          <button class="btn small danger-btn" id="aReqNo" type="button" disabled>Reject selected</button>
+          <span class="small muted" id="aReqNote"></span>
+        </div>
+        <div class="row"><button class="btn small" id="aJoinClose" type="button">Close sign-up</button></div>
+      </section>
       <section class="panel">
         <div class="row" style="justify-content:space-between"><h2>Participants</h2><span class="pill" id="aCount"></span></div>
         <p class="small muted" id="aSendIntro"></p>
@@ -312,14 +341,31 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
   </div>
 </section>
 
+<!-- ===== Inscrição pelo link do grupo ===== -->
+<section id="viewJoin" hidden>
+  <div class="wrap">
+    <section class="panel strong">
+      <p class="kicker">Sign-up</p>
+      <h2 id="jTitle"></h2>
+      <p class="small muted" id="jBy"></p>
+      <label class="f"><span>Your name <small>as the people in the meeting know you; shown on the board</small></span><input type="text" id="jName" maxlength="128" autocomplete="name"></label>
+      <div class="row"><button class="btn primary" id="jGo" type="button">Ask to sign up</button></div>
+      <div class="msg bad" id="jErr" hidden></div>
+      <p class="small muted">This device creates your voting key. It stays only here and in your personal link, which appears next: not even the organizer can vote in your place.</p>
+    </section>
+  </div>
+</section>
+
 <!-- ===== Eleitor ===== -->
 <section id="viewVoter" hidden>
   <div class="wrap" style="max-width:none">
     <section class="panel">
       <div class="row" style="justify-content:space-between"><h2 id="vTitle"></h2><a class="btn small" id="vBoard" target="_blank" rel="noopener">View the board</a></div>
       <p id="vHello"></p>
+      <div id="vSelf" hidden><p class="small">Keep your personal link (in your bookmarks, or send it to yourself). It was created on this device and nobody else has it: without it, you can’t vote from another device.</p><div class="row"><button class="btn small" id="vSelfCopy" type="button">Copy my link</button><span class="small muted" id="vSelfNote"></span></div></div>
       <p class="small muted" id="vSecrecy"></p>
     </section>
+    <section class="panel" id="vReqs" hidden><h2>Sign-up requests</h2><div class="reqs" id="vReqsList"></div></section>
     <section class="panel strong" id="vCurrent"></section>
     <section class="panel" id="vResults" hidden><h2>Results</h2><div class="items" id="vResultsList"></div></section>
     <p class="small muted" id="vCheck"></p>
@@ -348,6 +394,7 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
     <li><b>Counted as cast:</b> everyone sees their own ballot on the board, and anyone can check that the result is exactly the sum of the accepted ballots. The board has a hash chain: its history cannot be rewritten without the pages noticing.</li>
     <li><b>Who voted is shown</b> (by name or by a code, with the time); how they voted is not.</li>
     <li><b>The organizer controls the list.</b> Every addition and removal appears on the board. With names shown, everyone can spot an unexpected name.</li>
+      <li><b>Sign-up by group link:</b> whoever signs up through the group link creates their own key on their phone, and the organizer cannot vote in that person’s place. For people the organizer adds by hand, they could: the board shows how each person joined.</li>
     <li><b>Small groups:</b> when there are few participants, or when everyone votes the same way, the result can reveal how each person voted.</li>
     <li><b>Does not protect against:</b> someone voting while another person watches, or passing on their link; malware on the phone; losing the organizer link.</li>
     <li><b>Everything is deleted</b> 24 hours after the first midnight (Brasília time) following the end of the meeting. A downloaded record can still be checked.</li>
@@ -418,6 +465,14 @@ const ERR_EN = {
   "Já há uma cédula com o seu link neste item.": "There is already a ballot from your link in this vote.",
   "Pedido grande demais.": "Request too large.", "JSON inválido.": "Invalid JSON.",
   "Votação indisponível neste servidor.": "Voting is not available on this server.",
+  "Link do grupo inválido.": "Invalid group link.",
+  "Esta reunião já foi encerrada.": "This meeting has already ended.",
+  "As inscrições estão encerradas.": "Sign-up is closed.",
+  "Nome inválido.": "Invalid name.",
+  "Este aparelho já fez um pedido nesta reunião.": "This device has already sent a request for this meeting.",
+  "Há pedidos pendentes demais. Peça ao organizador para decidir os pedidos e tente de novo.": "There are too many pending requests. Ask the organizer to decide on them and try again.",
+  "Decisão inválida.": "Invalid decision.",
+  "Seu link foi excluído da lista de participantes.": "Your link has been removed from the participant list.",
 };
 const srvErr = (m) => (EN ? ERR_EN[m] || (/^A demonstração vai até (\d+) participantes/.exec(m) ? "The demo allows up to " + /\d+/.exec(m)[0] + " participants. For more, ask for a release code." : m) : m);
 // I18N-KEEP-END
@@ -547,9 +602,13 @@ function itemsHtml(st, { skipOpen = false } = {}) {
 
 // ---- parâmetros do link
 const H = new URLSearchParams(location.hash.slice(1));
-const sid = H.get("s"), adminM = H.get("a"), voterS = H.get("v"), isTela = H.has("tela");
+const sid = H.get("s"), adminM = H.get("a"), voterS = H.get("v"), groupG = H.get("g"), isTela = H.has("tela");
 const adminLink = (s, m) => BASE + "#s=" + s + "&a=" + m;
 const voterLink = (s, v) => BASE + "#s=" + s + "&v=" + v;
+const groupLink = (s, g) => BASE + "#s=" + s + "&g=" + g;
+// Nome de quem tem a impressão digital f (pedido ou inclusão), para o quadro e as páginas.
+const nameOf = (f) => board.events.find((x) => (x.type === "eleitor-incluido" || x.type === "pedido") && x.f === f)?.name || null;
+const reqName = (i) => board.st?.reqs.get(i)?.name || "no. " + i;
 
 // ---- quadro ao vivo
 const board = { events: [], st: null, cache: new Map(), deleteAt: null, ws: null, changed: null, missing: false };
@@ -649,7 +708,8 @@ function viewCreate() {
       tb.append(tr);
     });
     $("cAdd").disabled = rows.length >= V.MAX_LIMIT;
-    $("cLimit").hidden = rows.filter((r) => r.name.trim() || r.contact.trim()).length <= V.FREE_LIMIT;
+    const grp = document.querySelector('input[name="cJoin"]:checked')?.value !== "organizador";
+    $("cLimit").hidden = !grp && rows.filter((r) => r.name.trim() || r.contact.trim()).length <= V.FREE_LIMIT;
   };
   $("cAdd").addEventListener("click", () => { rows.push({ name: "", contact: "" }); render(); });
   const known = () => new Set(rows.filter((r) => r.name.trim()).map((r) => r.name.trim().toLowerCase()));
@@ -675,6 +735,16 @@ function viewCreate() {
     $("cImport").hidden = false; $("cImportText").value = text.replace(/^\uFEFF/, ""); preview(); $("cFile").value = "";
   });
   render();
+  const joinMode = () => document.querySelector('input[name="cJoin"]:checked').value;
+  const syncJoin = () => {
+    const g = joinMode() !== "organizador";
+    $("cShowReqsBox").hidden = !g;
+    const dig = document.querySelector('input[name="cDisplay"][value="digitais"]');
+    dig.disabled = g; $("cDigitaisBox").style.opacity = g ? ".5" : "";
+    if (g) document.querySelector('input[name="cDisplay"][value="nomes"]').checked = true;
+    render();
+  };
+  document.querySelectorAll('input[name="cJoin"]').forEach((x) => x.addEventListener("change", syncJoin)); syncJoin();
   const err = (t) => { $("cErr").hidden = !t; $("cErr").textContent = t || ""; };
   // Nome da reunião já preenchido com a data; o seu nome, lembrado neste aparelho.
   $("cTitle").value = "Meeting on " + new Date().toLocaleDateString("en-GB");
@@ -689,7 +759,8 @@ function viewCreate() {
     LSwrite((d) => { d.by = by; });
     if ([title, by].some((x) => utf8Len(x) > V.MAX_TEXT)) return err("Name too long (at most " + V.MAX_TEXT + " bytes).");
     const names = rows.map((r) => r.name.trim());
-    if (!names.length) return err("Add at least one participant.");
+    const join = joinMode();
+    if (!names.length && join === "organizador") return err("Add at least one participant.");
     const code = $("cCode").value.trim();
     if (names.length > V.FREE_LIMIT && !code) return err("The demo allows up to " + V.FREE_LIMIT + " participants. For more, enter a release code.");
     if (names.some((x) => !x)) return err("Give each participant a name (or remove the empty rows).");
@@ -702,7 +773,8 @@ function viewCreate() {
       const A = V.mulBase(adm.a);
       const voters = [];
       for (let i = 0; i < rows.length; i++) voters.push({ i: i + 1, f: V.fingerprint(adm.voterSecret(i + 1)), name: names[i], priv: await sealPriv(key, { name: names[i], contact: rows[i].contact.trim() }) });
-      const body = { title, by, display, keyMode: split ? "dividida" : "lucent", th: adm.th, voters, liberacao: names.length > V.FREE_LIMIT ? code : undefined, A: split ? V.pHex(A) : undefined, pokA: split ? V.provePok(s, adm.a, A) : undefined };
+      const body = { title, by, display, keyMode: split ? "dividida" : "lucent", th: adm.th, voters, liberacao: code || undefined, A: split ? V.pHex(A) : undefined, pokA: split ? V.provePok(s, adm.a, A) : undefined,
+        ...(join !== "organizador" ? { inscricao: join, gh: V.sha256hex(adm.g), verPedidos: $("cShowReqs").checked } : {}) };
       const r = await fetch(API + s + "/criar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error ? srvErr(j.error) : "The server refused to create the meeting.");
@@ -757,7 +829,7 @@ async function viewAdmin() {
     if (!name) { $("aVoterNote").textContent = "Type the name."; return; }
     if (utf8Len(name) > V.MAX_TEXT) { $("aVoterNote").textContent = "Name too long."; return; }
     if (st.roll.size >= st.session.limit) { $("aVoterNote").textContent = "This meeting allows up to " + st.session.limit + " participants" + (st.session.limit === V.FREE_LIMIT ? ". For more, create the meeting with a release code." : "."); return; }
-    const i = board.events.filter((e) => e.type === "eleitor-incluido").reduce((mx, e) => Math.max(mx, e.i), 0) + 1;
+    const i = Math.max(0, ...st.nums) + 1;
     const r = await post("admin", { t: adm.t, acao: "incluir", voter: { i, f: V.fingerprint(adm.voterSecret(i)), name, priv: await sealPriv(key, { name, contact }) } });
     $("aVoterNote").textContent = r.ok ? "Added: votes from the next vote opened." : r.error;
     if (r.ok) { $("aNewName").value = ""; $("aNewContact").value = ""; }
@@ -769,7 +841,7 @@ async function viewAdmin() {
     const lines = [["no", "name", "contact", "code", "link"].join(";")];
     for (const v of [...st.roll.values()].sort((a, b) => a.i - b.i)) {
       const p = await privOf(v.f, v.priv);
-      lines.push([v.i, p?.name || v.name || "", p?.contact || "", V.voterCode(v.f), voterLink(sid, adm.voterSecret(v.i))].map(q).join(";"));
+      lines.push([v.i, p?.name || v.name || "", p?.contact || "", V.voterCode(v.f), v.via === "grupo" ? "" : voterLink(sid, adm.voterSecret(v.i))].map(q).join(";"));
     }
     const blob = new Blob(["\uFEFF" + lines.join("\r\n") + "\r\n"], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
@@ -783,6 +855,72 @@ async function viewAdmin() {
   $("aForget").addEventListener("click", () => { LSwrite((d) => { if (d.sessions) delete d.sessions[sid]; delete d["head:" + sid]; }); location.href = BASE; });
   $("aBoard").href = BASE + "#s=" + sid;
   const alertMsg = (t) => { $("fatal").hidden = !t; $("fatal").textContent = t || ""; };
+
+  // inscrição pelo grupo: link, pedidos, decisões em lote, encerrar inscrições
+  const chosen = new Set();
+  let confirmJoinClose = false;
+  const gLink = groupLink(sid, adm.g);
+  $("aJoinLink").textContent = gLink;
+  {
+    const msgG = () => "Sign up to vote in the meeting “" + (board.st?.session?.title || local.title || "") + "”, organized by " + (board.st?.session?.by || "") + ". Open the link, type your name and ask to sign up:\n" + gLink;
+    const wa = document.createElement("a"); wa.className = "btn small primary"; wa.target = "_blank"; wa.rel = "noopener"; wa.textContent = "Post on WhatsApp";
+    wa.addEventListener("click", () => { wa.href = "https://wa.me/?text=" + encodeURIComponent(msgG()); });
+    const cg = document.createElement("button"); cg.className = "btn small"; cg.type = "button"; cg.textContent = "Copy link";
+    const ng = document.createElement("span"); ng.className = "small muted";
+    cg.addEventListener("click", () => copyText(gLink, ng));
+    const qg = document.createElement("button"); qg.className = "btn small"; qg.type = "button"; qg.textContent = "Show QR";
+    qg.addEventListener("click", () => showQr(gLink, "Sign-up link", "People in the room scan it with their phone camera."));
+    $("aJoinBtns").append(wa, cg, qg, ng);
+  }
+  const decide = async (ap) => {
+    const ids = [...chosen]; if (!ids.length) return;
+    $("aReqOk").disabled = $("aReqNo").disabled = true;
+    const r = await post("admin", { t: adm.t, ...(ap ? { acao: "decidir", aprovar: ids } : { acao: "decidir", recusar: ids }) });
+    $("aReqNote").textContent = r.ok ? "" : r.error; if (r.ok) chosen.clear(); render();
+  };
+  $("aReqOk").addEventListener("click", () => decide(true));
+  $("aReqNo").addEventListener("click", () => decide(false));
+  $("aReqAll").addEventListener("click", () => {
+    const st = board.st; if (!st) return;
+    for (const r of st.reqs.values()) if (r.status === "pendente" || r.status === "aprovado" && !r.checked) chosen.add(r.i);
+    render();
+  });
+  $("aJoinClose").addEventListener("click", async () => {
+    if (!confirmJoinClose) { confirmJoinClose = true; $("aJoinClose").textContent = "Confirm: close sign-up"; return; }
+    const r = await post("admin", { t: adm.t, acao: "fechar-inscricoes" }); if (!r.ok) alertMsg(r.error); render();
+  });
+  function renderJoin(st) {
+    const S = st.session, box = $("aJoin");
+    box.hidden = S.join === "organizador"; if (box.hidden) return;
+    $("aJoinState").textContent = st.joinClosed ? "sign-up closed" : "sign-up open";
+    $("aJoinIntro").hidden = $("aJoinLink").hidden = $("aJoinBtns").hidden = st.joinClosed;
+    $("aJoinClose").hidden = st.joinClosed || st.ended;
+    const reqs = [...st.reqs.values()].sort((a, b) => b.t - a.t);
+    const count = new Map(); for (const r of reqs) if (r.status !== "recusado") count.set(r.name.toLowerCase(), (count.get(r.name.toLowerCase()) || 0) + 1);
+    for (const v of st.roll.values()) if (v.via !== "grupo" && v.name) count.set(v.name.toLowerCase(), (count.get(v.name.toLowerCase()) || 0) + 1);
+    const label = (r) => r.status === "pendente" ? "pending" : r.status === "recusado" ? "rejected" : r.checked ? "approved" : "in, not checked";
+    const list = $("aReqs"); list.innerHTML = reqs.length ? "" : `<p class="small muted">No requests yet.</p>`;
+    for (const r of reqs) {
+      const dup = r.status !== "recusado" && count.get(r.name.toLowerCase()) > 1;
+      const el = document.createElement("label"); el.className = "req st-" + r.status + (dup ? " dup" : "");
+      el.innerHTML = `<input type="checkbox" ${chosen.has(r.i) ? "checked" : ""} ${st.ended ? "disabled" : ""}><span><b>${esc(r.name)}</b> <small>· ${fmtHM(r.t)} · code <span class="mono">${V.voterCode(r.f)}</span>${dup ? " · repeated name" : ""}</small></span><span class="pill${r.status === "aprovado" && r.checked ? " on" : ""}">${label(r)}</span>`;
+      el.querySelector("input").addEventListener("change", (e) => { if (e.target.checked) chosen.add(r.i); else chosen.delete(r.i); syncReqBtns(); });
+      list.append(el);
+    }
+    const syncReqBtns = () => { $("aReqOk").disabled = $("aReqNo").disabled = !chosen.size || st.ended; $("aReqNote").textContent = chosen.size ? chosen.size + " selected" : ""; };
+    for (const i of [...chosen]) if (!st.reqs.has(i)) chosen.delete(i);
+    syncReqBtns();
+    $("aReqBtns").hidden = !reqs.length;
+    $("aReqAll").textContent = S.join === "grupo-aprovado" ? "Select all pending and not checked" : "Select all pending";
+    // aviso: votação aberta com gente que entrou sem ser conferida
+    const open = st.open ? st.items.get(st.open) : null;
+    const unchecked = open ? [...open.roll].map((f) => st.roll.get(f)).filter((v) => v && v.via === "grupo" && !v.checked) : [];
+    const late = open ? [...st.roll.values()].filter((v) => !open.roll.has(v.f) && v.via === "grupo" && open.opened - v.added < V.JOIN_GRACE && open.opened >= v.added) : [];
+    const warn = [];
+    if (unchecked.length) warn.push("This vote opened with " + unchecked.length + (unchecked.length === 1 ? " person not checked: " : " people not checked: ") + listPt(unchecked.map((v) => v.name)) + ". To take someone out, select and reject them: they can’t vote any more, but a ballot they already cast stays counted, because nobody knows which ballot is whose.");
+    if (late.length) warn.push(listPt(late.map((v) => v.name)) + " joined less than 5 seconds before the vote opened and " + (late.length === 1 ? "votes" : "vote") + " from the next vote on.");
+    $("aJoinWarn").hidden = !warn.length; $("aJoinWarn").textContent = warn.join(" ");
+  }
 
   // apuração automática: se há item encerrado esperando a metade do organizador, este navegador a envia.
   async function autoTally() {
@@ -824,17 +962,27 @@ async function viewAdmin() {
     } else if (waiting) {
       cur.innerHTML = `<h2>Vote ${waiting.n}: counting…</h2><p class="small muted">This browser is sending your half of the decryption of the totals.</p>`;
     }
+    renderJoin(st);
     $("nGo").disabled = !!open || st.ended || !!waiting;
     $("aNew").hidden = st.ended;
     // eleitores
     const roll = [...st.roll.values()].sort((a, b) => a.i - b.i);
     $("aCount").textContent = roll.length + " on the list";
     const privs = await Promise.all(roll.map((v) => privOf(v.f, v.priv)));
-    const anyPhone = privs.some((p) => contactOf(p?.contact).phone), anyMail = privs.some((p) => contactOf(p?.contact).mail);
+    const anyPhone = privs.some((p) => contactOf(p?.contact).phone), anyMail = privs.some((p) => contactOf(p?.contact).mail), anyHand = roll.some((v) => v.via !== "grupo");
     const ways = [anyPhone && "via WhatsApp", anyMail && "by e-mail"].filter(Boolean);
+    $("aSendIntro").hidden = !anyHand;
     $("aSendIntro").textContent = "Each participant gets a personal link, valid for the whole meeting. " + (ways.length ? "Send it " + ways.join(" or ") + ", or copy the link" : "Copy the link") + " (for Signal, say), or show the QR code on screen. Never forward one person’s link to another.";
     const box = $("aVoters"); box.innerHTML = "";
     roll.forEach((v, k) => {
+      if (v.via === "grupo") {
+        const el = document.createElement("div"); el.className = "voter";
+        el.innerHTML = `<span class="pill">${v.i}</span><span class="who">${esc(v.name)} <small>· signed up by group link · code <span class="mono">${V.voterCode(v.f)}</span>${v.checked ? "" : " · not checked"}</small></span><div class="row"></div>`;
+        const d = document.createElement("button"); d.className = "btn small danger-btn"; d.type = "button"; d.textContent = confirmDel === v.i ? "Confirm removal" : "Remove";
+        d.disabled = st.ended;
+        d.addEventListener("click", async () => { if (confirmDel !== v.i) { confirmDel = v.i; render(); return; } confirmDel = null; const r = await post("admin", { t: adm.t, acao: "decidir", recusar: [v.i] }); if (!r.ok) alertMsg(r.error); render(); });
+        el.querySelector(".row").append(d); box.append(el); return;
+      }
       const p = privs[k], name = p?.name || v.name || "participant " + v.i, link = voterLink(sid, adm.voterSecret(v.i));
       const msg = "Hello " + name + ", this is your personal link to vote in the meeting “" + S.title + "”, organized by " + S.by + ". It is valid for all votes in the meeting. Do not forward it to anyone:\n" + link;
       const el = document.createElement("div"); el.className = "voter" + (sent.has(v.f) ? " sent" : "");
@@ -860,6 +1008,39 @@ async function viewAdmin() {
   live(render);
 }
 
+// ================= Inscrição pelo link do grupo =================
+function viewJoin() {
+  $("viewJoin").hidden = false;
+  const mineKey = "self:" + sid, saved = LSread()[mineKey];
+  if (saved) { location.hash = "s=" + sid + "&v=" + saved; return; } // este aparelho já pediu: vai direto para a página de voto
+  const err = (t) => { $("jErr").hidden = !t; $("jErr").textContent = t || ""; };
+  $("jName").value = LSread().myName || "";
+  let ready = false;
+  const render = () => {
+    const st = board.st;
+    if (board.missing) { err("Meeting not found: the link is wrong or the board has already been deleted."); $("jGo").disabled = true; return; }
+    if (!st?.session) return;
+    const S = st.session; ready = true;
+    $("jTitle").textContent = S.title; $("jBy").textContent = "Organized by " + S.by + ".";
+    if (S.join === "organizador") { err("This meeting does not accept sign-up by group link."); $("jGo").disabled = true; }
+    else if (st.joinClosed || st.ended) { err("Sign-up for this meeting is closed. Talk to the organizer."); $("jGo").disabled = true; }
+  };
+  $("jGo").addEventListener("click", async () => {
+    err(""); const name = $("jName").value.trim();
+    if (!ready) return;
+    if (!name) { err("Type your name."); $("jName").focus(); return; }
+    if (utf8Len(name) > V.MAX_TEXT) { err("Name too long."); return; }
+    $("jGo").disabled = true;
+    // a chave nasce aqui e é guardada antes de enviar: se a página recarregar, o pedido não se perde
+    const s = V.hex(V.randBytes(16)), f = V.fingerprint(s);
+    LSwrite((d) => { d[mineKey] = s; d.myName = name; });
+    const r = await post("inscrever", { g: groupG, f, name });
+    if (!r.ok) { LSwrite((d) => { delete d[mineKey]; }); err(r.error || "Could not send the sign-up request."); $("jGo").disabled = false; return; }
+    location.hash = "s=" + sid + "&v=" + s;
+  });
+  live(render);
+}
+
 // ================= Eleitor =================
 function viewVoter() {
   $("viewVoter").hidden = false;
@@ -867,15 +1048,22 @@ function viewVoter() {
   let chosen = null, busy = false, lastOpen = null, voteErr = "";
   const mine = () => (LSread()["mine:" + sid] || {})[f] || {};
   $("vBoard").href = BASE + "#s=" + sid;
+  $("vSelfCopy").addEventListener("click", () => copyText(voterLink(sid, voterS), $("vSelfNote")));
   async function render() {
     const st = board.st;
     if (!f) { $("fatal").hidden = false; $("fatal").textContent = "This voting link is incomplete. Ask the organizer for a new one."; return; }
     if (board.missing) { $("fatal").hidden = false; $("fatal").textContent = "Meeting not found: the link is wrong or the board has already been deleted."; return; }
     if (!st?.session) return;
     const S = st.session, meNow = st.roll.get(f);
-    const everIn = board.events.find((e) => e.type === "eleitor-incluido" && e.f === f);
+    const everIn = board.events.find((e) => (e.type === "eleitor-incluido" || e.type === "pedido") && e.f === f);
+    const req = [...st.reqs.values()].find((r) => r.f === f);
     $("vTitle").textContent = S.title;
-    $("vHello").innerHTML = everIn ? (meNow ? "Hello" + (meNow.name ? ", <b>" + esc(meNow.name) + "</b>" : "") + ". This is your personal link; do not forward it." : "<b>Your link has been removed from the participant list.</b> You will not vote in the next votes.") + (S.display === "digitais" ? ` <span class="small muted">Your code on the board: <span class="mono">${V.voterCode(f)}</span></span>` : "") : "<b>This link is not on the participant list of this meeting.</b>";
+    $("vSelf").hidden = !req;
+    $("vReqs").hidden = !S.showReqs || !st.reqs.size;
+    if (S.showReqs) $("vReqsList").innerHTML = [...st.reqs.values()].sort((a, b) => a.t - b.t).map((r) => `<div class="req st-${r.status}"><span class="pill">${r.i}</span><span><b>${esc(r.name)}</b> <small>· ${fmtHM(r.t)}</small></span><span class="pill">${r.status === "pendente" ? "pending" : r.status === "recusado" ? "rejected" : "approved"}</span></div>`).join("");
+    if (req && req.status === "pendente") { $("vHello").innerHTML = "Hello, <b>" + esc(req.name) + "</b>. <b>Your sign-up request is waiting for the organizer.</b> This page updates by itself."; }
+    else if (req && req.status === "recusado") { $("vHello").innerHTML = "<b>The organizer rejected your sign-up request.</b> If this is a mistake, talk to them."; }
+    else $("vHello").innerHTML = everIn ? (meNow ? "Hello" + (meNow.name ? ", <b>" + esc(meNow.name) + "</b>" : "") + ". This is your personal link; do not forward it." : "<b>Your link has been removed from the participant list.</b> You will not vote in the next votes.") + (S.display === "digitais" ? ` <span class="small muted">Your code on the board: <span class="mono">${V.voterCode(f)}</span></span>` : "") : "<b>This link is not on the participant list of this meeting.</b>";
     $("vSecrecy").textContent = secrecyText(S);
     const [cls, txt] = checkText(); $("vCheck").textContent = txt; $("vCheck").style.color = cls === "bad" ? "var(--bad)" : "";
     const cur = $("vCurrent"), open = st.open ? st.items.get(st.open) : null;
@@ -885,7 +1073,8 @@ function viewVoter() {
       const waiting = [...st.items.values()].find((it) => it.state === "encerrado");
       cur.innerHTML = waiting ? `<h2>Counting vote ${waiting.n}…</h2>` : `<h2>Waiting for the next vote</h2><p class="muted small">This page updates by itself. Keep it open.</p>`;
     } else if (!open.roll.has(f)) {
-      cur.innerHTML = `<h2>Vote ${open.n}</h2><p class="question">${esc(open.spec.q)}</p><div class="msg warn">${meNow ? "You were added after this vote opened: you vote from the next one." : "You are not on the list for this vote."}</div>`;
+      const late = meNow && meNow.via === "grupo" && open.opened >= meNow.added && open.opened - meNow.added < V.JOIN_GRACE;
+      cur.innerHTML = `<h2>Vote ${open.n}</h2><p class="question">${esc(open.spec.q)}</p><div class="msg warn">${late ? "You joined just before this vote opened: you vote from the next one." : meNow ? "You were added after this vote opened: you vote from the next one." : "You are not on the list for this vote."}</div>`;
     } else {
       const b = open.ballots.find((x) => x.f === f);
       if (b) {
@@ -918,7 +1107,7 @@ function viewVoter() {
 function viewBoard() {
   $("viewBoard").hidden = false;
   const describe = (e, st) => {
-    const who = (f) => { const ev = board.events.find((x) => x.type === "eleitor-incluido" && x.f === f); return ev?.name ? esc(ev.name) : `<span class="mono">${V.voterCode(f)}</span>`; };
+    const who = (f) => { const n = nameOf(f); return n ? esc(n) : `<span class="mono">${V.voterCode(f)}</span>`; };
     switch (e.type) {
       case "criada": return `Meeting created by ${esc(e.by)} · key ${e.keyMode === "dividida" ? "split between the organizer and LucentCrypto" : "held by LucentCrypto"}`;
       case "eleitor-incluido": return `Participant ${e.i} added: ${who(e.f)}`;
@@ -929,6 +1118,9 @@ function viewBoard() {
       case "item-apurado": return `Vote ${e.item} counted: organizer’s decryption, with proof`;
       case "item-cancelado": return `Vote ${e.item} canceled; ballots not opened`;
       case "reuniao-encerrada": return "Meeting ended";
+      case "pedido": return `Sign-up request ${e.i}: ${esc(e.name)} · code <span class="mono">${V.voterCode(e.f)}</span>` + (st.session.join === "grupo-aprovado" ? " · added to the list (approved by default)" : "");
+      case "decisao": return [e.aprovar?.length && "Approved by the organizer: " + e.aprovar.map((i) => esc(reqName(i))).join(", "), e.recusar?.length && "Rejected by the organizer: " + e.recusar.map((i) => esc(reqName(i))).join(", ")].filter(Boolean).join(" · ");
+      case "inscricoes-encerradas": return "Sign-up by group link closed";
     }
     return esc(e.type);
   };
@@ -984,6 +1176,7 @@ if (!sid) viewCreate();
 else if (!/^[A-Za-z0-9_-]{22}$/.test(sid)) { $("fatal").hidden = false; $("fatal").textContent = "Invalid link."; }
 else if (adminM && /^[0-9a-f]{64}$/.test(adminM)) { viewAdmin().catch((e) => { $("fatal").hidden = false; $("fatal").textContent = e.message; }); }
 else if (voterS !== null) viewVoter();
+else if (groupG !== null) viewJoin();
 else viewBoard();
 window.addEventListener("hashchange", () => location.reload());
 </script>
