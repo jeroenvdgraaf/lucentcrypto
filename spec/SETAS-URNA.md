@@ -10,7 +10,7 @@ An in-person voting machine for the arrow ballot that **never sees the arrows**.
 
 1. The voter receives a **preprinted arrow ballot** (the same sheet as by mail, SETAS.md section 3), picked at random from a pile.
 2. In the booth, the voter **scans the ballot's QR code** with the machine's scanner, follows the arrows on the paper, and **types the numbers of the boxes** of their candidates on a numeric keypad.
-3. The machine **prints the vote part** on a 80 mm thermal printer: the ballot code, the chosen box numbers, and a signature.
+3. The machine **prints the vote part** on an 80 mm thermal printer: the ballot code, the chosen box numbers, and a signature.
 4. The voter checks the printed part against the paper, **destroys the paper sheet** (shredder in the booth) and drops the printed part into a **sealed box**.
 
 What follows from this design, and MUST be kept:
