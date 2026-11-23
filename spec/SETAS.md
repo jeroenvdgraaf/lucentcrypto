@@ -67,7 +67,7 @@ The online and mail channels MUST close before in-person voting starts. The list
 
 - The poll worker checks the voter against the list; the voter **picks a ballot at random** from the pile. On request, a voter may take two and hand one back for audit (section 5).
 - In the booth the voter marks, separates the parts and destroys the left part (a small shredder or bin is in the booth). The identification block is not used in person; the list at the desk is the record.
-- **The scanning box:** a Raspberry Pi with a camera at the slot of a sealed box. It reads the code and the marks and MUST return the part to the voter if the code is not in the manifest, is already used, or the part has more than k marks. Otherwise it shows *Cédula K7F2-9QX recebida* and lets the paper drop into the box. It never sees the arrows, so not even a compromised box can reveal a vote.
+- **The scanning box:** a Raspberry Pi with a camera at the slot of a sealed box. It reads the code and the marks and MUST return the part to the voter if the code is not in the manifest, is already used, or the part has more than k marks. Otherwise it shows *Cédula K7F2-9QXM recebida* and lets the paper drop into the box. It never sees the arrows, so not even a compromised box can reveal a vote.
 - At closing the box prints and signs the list of codes received; the images and the list are exported. The paper stays sealed for a recount.
 - **Accessibility:** for a voter who cannot read the arrows, a Pi with a screen and headphones generates a ballot as the browser does (4.3). In that case the secrecy depends on that device's software.
 
