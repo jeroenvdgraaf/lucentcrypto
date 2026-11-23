@@ -37,7 +37,7 @@ ElGamal on ristretto255 (RFC 9496), the same group and library as `votacao/` and
 **One ballot** has:
 
 - a random **permutation** π of `1..n`: candidate `i` is joined by an arrow to box `π(i)`;
-- a **code**: 8 characters from an alphabet without look-alike characters (e.g. `K7F2-9QX`), chosen at random, unique;
+- a **code**: 8 characters from an alphabet without look-alike characters (e.g. `K7F2-9QXM`), chosen at random, unique;
 - the **encrypted arrows**: for each box `j`, the ElGamal encryption under `P` of the candidate behind it, `c_j = Enc(P, π⁻¹(j)·B)`. Candidates are small numbers, so a decryption is read by lookup.
 
 The code is printed; the encrypted arrows are **not**: they go into the **ballot manifest**, the list of `(code, c_1 … c_n)`, which MUST be published (or its hash, with the full list before the count) before the first ballot is handed out. A ballot with a code not in the manifest is invalid.
