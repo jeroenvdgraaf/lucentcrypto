@@ -4,7 +4,7 @@
 
 A module that answers one question for any voting system: **is this person an eligible member, and how sure are we?** It is independent of how the vote itself works, so Votação, the arrow ballot (SETAS.md) or a third-party system can plug it in.
 
-The member authenticates once, by methods the organization chooses, and receives a **título**: a credential that lasts from one election to the next, like the título de eleitor that every Brazilian knows. Each election then asks the título for a one-time credential. The name is a metaphor; the module has nothing to do with the TSE.
+The member proves who they are once, by methods the organization chooses, and from then on has a **título**: a record that lasts from one election to the next, like the título de eleitor that every Brazilian knows. The título lives with the organization, not on a phone; phones and cards are only the means of using it, and are replaced as people change phones. Each election then asks the título for a one-time credential. The name is a metaphor; the module has nothing to do with the TSE.
 
 Where this document says MUST, the behavior affects security or the protection of personal data.
 
@@ -27,13 +27,31 @@ Where this document says MUST, the behavior affects security or the protection o
 - **Changes to the roll** (members joining or leaving) MUST be signed by an administrator and logged; the committee can see each change.
 - Encryption is a security measure (LGPD art. 46). It does not make the data anonymous: while a key exists, the data is still personal data.
 
-## 3. The título
+## 3. The título and the devices
 
-- **Keys:** the título is an Ed25519 key pair generated **on the member's device**. The module stores only the public key, bound to the member's record. Authenticating is signing a fresh challenge; no secret is stored on the server.
-- **Where it lives:** on the phone (a page installed from the browser, as the voter secret in Votação) and, as a backup, on a **printed card** with a QR code holding the private key. Using the card requires a **PIN** of 6 digits, checked by the module with a limit on attempts, so that a lost card alone is not enough.
-- **Level:** each título carries the level of the methods that issued it (section 4): 1 low, 2 medium, 3 high.
-- **Validity:** until a set date (for example two years), renewable. It MUST be revoked when the member leaves the roll. A member who loses the phone and the card gets a new título by the methods of the policy; the old one is revoked.
+Members vote every year or two, and in between they change phones. So the module separates two things, as banks do (identity proofing and authentication, in the terms of NIST SP 800-63):
+
+**The título** is the result of identity proofing: *member 1234 was verified at level 3 by a gov.br-signed declaration on 10 March 2026*. It is a record kept with the roll, encrypted like the rest of it (section 2), and it does not depend on any device.
+
+- **Level:** the level of the methods that issued it (section 4): 1 low, 2 medium, 3 high.
+- **Validity:** until a set date (for example four years), renewable by proving identity again. It MUST be revoked when the member leaves the roll.
 - **One organization:** a título belongs to one organization's roll. A person in two unions has two títulos.
+
+**Devices** are what the member uses to show the título: replaceable, and more than one at a time.
+
+- **Passkey** (WebAuthn), the default: the phone or computer creates a key pair in its secure hardware, unlocked with the fingerprint, face or screen lock. The module stores only the public key. On Android and iPhone passkeys are usually backed up to the Google or Apple account, so they often survive a change of phone.
+- **Browser key**, where passkeys are not available: an Ed25519 key pair generated in the browser and kept in its storage. The module stores only the public key. It is lost when site data is cleared.
+- **Printed card**, for members without a smartphone: a QR code with a key pair's private key, used together with a 6-digit **PIN** that the module checks, with a limit on attempts.
+
+Authenticating is always signing a fresh challenge with a device the título has linked. No device secret is stored on the server.
+
+**Linking a new device** to an existing título (the member changed phone, lost the card, cleared the browser):
+
+- **Normally**, the methods in the policy's `link` rule (section 5), for example a code by WhatsApp or SMS to the number on the roll. The título keeps its level: linking does not prove identity again, it proves that the person who has the título's contacts is asking.
+- **Close to an election** (for example in the last 30 days), linking MUST require a method of level 3, or put the título on hold until a staff member approves. Otherwise whoever takes over a member's WhatsApp just before the vote takes over their título.
+- **Every link and unlink** MUST be notified to the member on all contacts on the roll (*Um novo aparelho foi ligado ao seu título. Se não foi você, avise o sindicato.*) and logged for the committee.
+
+**Keeping títulos alive between elections:** once a year the organization MAY send members a reminder to confirm their contacts and devices, so that the vote is not the first contact in two years.
 
 ## 4. Methods
 
@@ -48,14 +66,30 @@ Each method is a plug-in of its own, optional, and can be switched off.
 | `office` | A staff member checks an identity document in person | 3 | name, photo or document | Staff id and result |
 | `video` | A staff member checks the face against an identity document on a video call (Zoom or any other) | 3 | name, document | Staff id and result; **no recording** unless the member consents |
 | `face` | A selfie with liveness detection, compared with the roll photo or by a contracted service | 2–3 | photo | The result; the images and templates MUST be deleted at once |
-| `signature` | A registration form signed with a gov.br or ICP-Brasil signature | 3 | CPF | The signed form |
+| `signature` | A declaration generated by the module, signed with gov.br or an ICP-Brasil certificate (section 4.1) | 3 | CPF, name | The signed declaration |
 | `knowledge` | CPF, date of birth, member number | 0 | roll fields | The result |
 
 Rules for every code sent (email, SMS, WhatsApp, letter): 6 to 8 characters, single use, expiry of 10 minutes (letter: days), at most 5 attempts. The message is fixed and says that **nobody from the organization will ever ask for the code**, against the code scams common in Brazil.
 
 `knowledge` is never enough on its own: anyone with access to the roll knows these fields. `face` is off by default: biometric data is sensitive personal data (LGPD art. 11) and needs specific consent and a data protection impact assessment.
 
-The gov.br login itself is not available: its integration is limited to public administration and excluded for systems in competitive markets. The `signature` method reaches gov.br identity indirectly; whether its signatures can be verified automatically is an open point (section 10).
+The gov.br login itself is not available: its integration is limited to public administration and excluded for systems in competitive markets. The `signature` method reaches gov.br identity indirectly, and it is the only level-3 method that needs no staff, so it SHOULD be the default.
+
+### 4.1 The signed declaration
+
+1. The module generates a one-page PDF for the member: *Declaro que sou [NOME], CPF [CPF], membro nº [Nº] do [SINDICATO], e solicito meu título.* It carries a **one-time code** (8 characters, as the ballot codes in SETAS.md) and the date. The PDF MUST embed its fonts: the gov.br signing page did not show text set in non-embedded fonts.
+2. The member signs it at assinador.iti.br or in the gov.br app (free; as far as known, it requires a silver or gold gov.br account) and uploads the signed file.
+3. The module checks, automatically:
+   - the PDF signature is valid (detached PKCS#7, as gov.br produces) and covers the whole file;
+   - the signed file **begins with exactly the bytes of the PDF the module generated**: the signer added the signature after them and changed nothing;
+   - the certificate chains to the gov.br root, through *AC Intermediária do Governo Federal do Brasil v1* and *AC Final do Governo Federal do Brasil v1*, whose certificates the module ships (the signed file does not include them); or to the ICP-Brasil root, for members who sign with an ICP-Brasil certificate;
+   - the **CPF** in the certificate equals the CPF on the roll. It is in the subject alternative name, in the field with OID 2.16.76.1.3.1, characters 9 to 19 after the date of birth (the same layout as ICP-Brasil certificates); the name is the certificate's common name;
+   - the code is unused and the signing time is within the code's validity.
+4. If any check fails, the case goes to a staff member, who may also check the file on the official VALIDAR service (a web page, not an API).
+
+The signed declaration also contains the member's date of birth and the email of the gov.br account; it is stored encrypted with the roll and deleted when the título expires.
+
+Tested on 23 November 2026 with a real gov.br signature and the open-source library pyHanko: signature valid, whole file covered, original bytes intact, CPF and name present. The chain to the gov.br root was not yet checked, because the intermediate certificates were not at hand.
 
 ## 5. Policy
 
@@ -71,6 +105,10 @@ Each organization configures, for issuing títulos and for each election:
     ],
     "approval": "auto"
   },
+  "link": {
+    "anyOf": [["whatsapp"], ["sms"], ["email", "knowledge"], ["signature"], ["video"]],
+    "nearElection": { "days": 30, "anyOf": [["signature"], ["video"], ["office"]] }
+  },
   "selfRegistration": false,
   "election": {
     "minLevel": { "online": 2, "inPerson": 1 },
@@ -81,6 +119,7 @@ Each organization configures, for issuing títulos and for each election:
 
 - `anyOf`: any one of the listed combinations issues a título. The título's level is the highest level any satisfied combination gives (two different level-1 methods together: level 2).
 - `approval`: `auto`, or `manual`, in which case a staff member approves each título, with the decision logged.
+- `link`: the methods that link a new device to an existing título (section 3); `nearElection` replaces them in the given number of days before any election of the organization.
 - `selfRegistration`: whether someone not on the roll may ask to join, as the group link of Votação: the organization approves or rejects each request, all decisions logged.
 - `election.minLevel`: the lowest título level accepted per channel. In person a poll worker sees the member, so less may be enough.
 - `election.stepUp`: an extra method required at voting time (for example a code by SMS), against títulos handed to someone else.
@@ -91,7 +130,7 @@ The module offers voting systems a standard login: **OpenID Connect**. Any votin
 
 - **Pseudonyms.** For election `E` the module gives each member a pseudonym `p = HMAC(K_E, member number)`, with a key `K_E` per election. A voting system sees only `p`, so votes in different elections cannot be linked through the título. The module itself can link them, which is needed to answer for the roll.
 - **Online:** the voting system sends the member to the module; the member signs the challenge with the título (and does the step-up if required). The module returns a signed token: `{election: E, sub: p, level, channel, expiry, nonce}`. The voting system checks the signature against the module's published key.
-- **In person:** before the polls open, the polling place downloads a **signed list** of the election's pseudonyms, the título public keys and, if the policy allows it, names. The poll worker's device scans the member's título QR (phone or card), checks the signature offline, and shows the name. A member without a título is checked by document against the list, as today.
+- **In person:** before the polls open, the polling place downloads a **signed list** of the election's pseudonyms, the public keys of each título's devices and, if the policy allows it, names. The member's phone or card shows a QR code with a signature over a challenge from the poll worker's device; the device checks it offline and shows the name. A member without a working device is checked by document against the list, as today.
 - **Voted or not:** marking who has voted is the voting system's job. Optionally the module keeps, per election, the set of pseudonyms that have received a credential, so a member cannot get two across channels.
 
 ## 7. Records and transparency
@@ -116,18 +155,19 @@ Not legal advice; to be reviewed by a lawyer before the first contract.
 |---|---|
 | Code scams by phone or WhatsApp | Fixed message; single-use codes with short expiry; codes never needed for anything but entering them in our page |
 | SIM swap | SMS alone gives level 1; policies that need level 2 combine methods |
+| Taking over a título by linking a new device (a stolen WhatsApp account, a SIM swap) | Every link notified on all contacts; near an election, linking needs a level-3 method or staff approval |
 | A título handed to or bought by someone else | Inherent in remote voting; `stepUp` and `face` at voting time reduce it |
 | Staff approving false identities | Individual logins; every approval logged and visible to the committee; optionally two staff for each manual approval |
 | An administrator changing the roll before an election | Signed, logged changes; the committee sees the differences |
-| Compromise of LucentCrypto | The roll is readable only during campaign windows; títulos have no secret on the server; tokens are short-lived |
+| Compromise of LucentCrypto | The roll is readable only during campaign windows; tokens are short-lived. Devices have no secret on the server, so existing devices cannot be impersonated. But whoever controls the module can **issue a título or link a device** in a member's name: every issue and link is notified to the member and visible to the committee, and near an election they need level 3 or staff approval |
 | Loss of the organization's key | t-of-m passphrases; losing fewer than m − t + 1 of them loses nothing |
 
 ## 10. Open points
 
 - WhatsApp: which provider for the official business API, and its cost per message.
 - `face`: own comparison against the roll photo, or a contracted service such as Serpro's Datavalid; liveness detection.
-- `signature`: whether gov.br signatures can be checked automatically, and with what library.
+- `signature`: check the chain to the gov.br root with the intermediate certificates published by the ITI; check that unsigned additions after the signature are refused; whether silver is really the minimum gov.br level for signing; members whose name on the roll differs from the certificate (accents, abbreviations).
 - `video`: a plain call by staff, or integration with Zoom's API to schedule and log the calls.
-- How long a título lives on a phone browser (storage can be cleared), and how to prompt the member to keep the card.
+- Passkeys: how often they survive a change of phone in practice, for members who do not use a Google or Apple account backup.
 - In-person lists with names on the poll device: needed, or the pseudonym and a photo only?
 - Pricing: per member per year for the título, per election, per message.
