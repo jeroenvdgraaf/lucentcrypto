@@ -10,7 +10,7 @@ An in-person voting machine for the arrow ballot that **never sees the arrows**.
 
 1. The voter receives a **preprinted arrow ballot** (the same sheet as by mail, SETAS.md section 3), picked at random from a pile.
 2. In the booth, the voter **scans the ballot's QR code** with the machine's scanner, follows the arrows on the paper, and **types the numbers of the boxes** of their candidates on a numeric keypad.
-3. The machine **prints the vote part** on a 58 mm thermal printer: the ballot code, the chosen box numbers, and a signature.
+3. The machine **prints the vote part** on a 80 mm thermal printer: the ballot code, the chosen box numbers, and a signature.
 4. The voter checks the printed part against the paper, **destroys the paper sheet** (shredder in the booth) and drops the printed part into a **sealed box**.
 
 What follows from this design, and MUST be kept:
@@ -29,7 +29,7 @@ What follows from this design, and MUST be kept:
 | Storage | microSD, 32 GB, high-endurance | Two partitions: read-only system, journaled data |
 | Numeric keypad | USB, with Enter, Backspace, `*`, `/`, `-`, `+` | Relabel with stickers: CONFIRMA (Enter), CORRIGE (Backspace), BRANCO (`*`) |
 | Code scanner | USB 2D scanner (QR) in keyboard (HID) mode | Simpler and more reliable than a camera. Fallback: typing the code on the keypad |
-| Printer | 58 mm thermal, USB, ESC/POS, printing raster images | Confirm it works with `python-escpos` on Linux before buying in quantity |
+| Printer | 80 mm thermal, USB, ESC/POS, printing raster images, with an automatic cutter | Most print 576 dots per line (some 512): read the width from the printer and set it in the configuration. Confirm it works with `python-escpos` on Linux before buying in quantity |
 | Screen | 7" HDMI or USB-C, or the client's monitor | Faces only the voter; a privacy filter helps |
 | Poll worker key | A second small USB keypad, kept at the desk, or a QR card read by the scanner | Section 7.1 |
 | Export | USB stick | Formatted FAT32, used only at closing |
@@ -59,7 +59,7 @@ Python 3, one application, no network code. Suggested libraries (all in Debian o
 |---|---|
 | Keypad and scanner input | `evdev`, grabbing each device exclusively so keys never reach the console |
 | Screen | `pygame` with the KMS/DRM driver (no X, no Wayland), large fonts, Portuguese text |
-| Printing | `python-escpos`; render each printout as a 384-pixel-wide image with `Pillow` and print it as raster, so accents print correctly whatever the printer's code page |
+| Printing | `python-escpos`; render each printout as an image as wide as the printer's print line (576 pixels on most 80 mm printers) with `Pillow` and print it as raster, so accents print correctly whatever the printer's code page |
 | QR codes | `qrcode` (printing); the scanner decodes |
 | Signatures | `PyNaCl` (Ed25519) |
 | Hashing | `hashlib` (SHA-256) |
@@ -176,7 +176,7 @@ AGUARDANDO
 
 ### 7.3 The printed vote part
 
-Rendered as a 384-pixel-wide image:
+Rendered as an image as wide as the print line (576 pixels on most 80 mm printers), then cut:
 
 ```
    PARTE DE VOTO
