@@ -38,7 +38,7 @@ What follows from this design, and MUST be kept:
 |---|---|---|
 | Raspberry Pi | Pi 4 (2 GB or more) or Pi 5 | The Pi 5 has a real-time clock, which is not needed: the machine records no times |
 | Power | Official supply for the model | Optional UPS board, so a power cut does not stop the vote |
-| Storage | microSD, 32 GB, high-endurance | Two partitions: read-only system, journaled data |
+| Storage | Two microSD cards, 32 GB, high-endurance | The **voting card** (two partitions: read-only system, journaled data) and the **scanning card** for the count (section 7.7), each from its own published image |
 | Numeric keypad | USB, with Enter, Backspace, `*`, `/`, `-`, `+` | Relabel with stickers: CONFIRMA (Enter), CORRIGE (Backspace), BRANCO (`*`) |
 | Code scanner | USB 2D scanner (QR) in keyboard (HID) mode | Simpler and more reliable than a camera. Fallback: typing the code on the keypad |
 | Printer | 80 mm thermal, USB, ESC/POS, printing raster images, with an automatic cutter | Most print 576 dots per line (some 512): read the width from the printer and set it in the configuration. Confirm it works with `python-escpos` on Linux before buying in quantity |
@@ -49,14 +49,14 @@ What follows from this design, and MUST be kept:
 | Booth | Shredder or slotted bin, the sealed box beside or outside it | The screen and keypad face the voter only |
 | Slip box | Opaque, with a hand opening, at the desk | The voter draws a slip without the poll worker seeing which |
 | Slip printer | A **separate** printer, used only during preparation (section 6a) | Never connected to the voting machine |
-| Count camera | A **separate** Raspberry Pi with the Camera Module 3 on a fixed stand, used at the count (section 7.7); never the voting machine | The stand holds the camera at a fixed height over a matte black base with guides for the strip; diffuse light from the side avoids glare on the thermal paper. Same air-gapped image as the voting machine, with the reading software; a screen, no keypad, scanner or printer |
+| Count camera | The Camera Module 3 on the same Pi, on a fixed stand, used only at the count (section 7.7) | The stand holds the camera at a fixed height over a matte black base with guides for the strip; diffuse light from the side avoids glare on the thermal paper. During voting a numbered seal sticker covers the lens, and the voting image never loads the camera (section 2) |
 
 ## 2. Operating system and hardening
 
 Start from the air-gapped image used for DuraShare if it meets this list; otherwise build a new one.
 
 1. **Base:** Raspberry Pi OS Lite, 64-bit, current release. No desktop.
-2. **Radios off** in `/boot/firmware/config.txt`: `dtoverlay=disable-wifi` and `dtoverlay=disable-bt`. Verify after boot that no wireless interface exists (`ip link`, `rfkill list`).
+2. **Radios off** in `/boot/firmware/config.txt`: `dtoverlay=disable-wifi` and `dtoverlay=disable-bt`. Verify after boot that no wireless interface exists (`ip link`, `rfkill list`). **Camera off:** `camera_auto_detect=0`, and no camera software installed; verify that no camera device exists, even with a camera connected.
 3. **No network services:** remove or disable `ssh`, `avahi-daemon`, `NetworkManager` or `dhcpcd`, `bluetooth`, `ModemManager`. No Ethernet cable is ever connected; disable `eth0` as well.
 4. **Read-only system:** enable the overlay file system (`raspi-config nonint enable_overlayfs`) and make the boot partition read-only. The application writes only to the data partition. Do this **after** item 5: once the overlay is on, changes to the system, including the `/etc/fstab` line that mounts the data partition, are lost at the next reboot, and the log would silently go to RAM.
 5. **Data partition:** a separate ext4 partition, mounted at `/var/lib/urna` with `data=journal,sync`, owned by the application user.
@@ -64,7 +64,7 @@ Start from the air-gapped image used for DuraShare if it meets this list; otherw
 7. **USB storage** is not mounted automatically. The application mounts the export stick explicitly at closing (section 7.5), with `noexec,nosuid,nodev`.
 8. **Time:** the machine needs no clock and MUST NOT write times into records. Logs of the system itself go to RAM (`Storage=volatile` for journald).
 9. **Randomness:** the kernel's random generator (`getrandom`), which the Pi's hardware generator feeds; check that `/dev/hwrng` exists.
-10. **Reproducible image:** build with `pi-gen` from a public configuration, so that anyone can rebuild it and obtain the same hash. Publish the hash of the image file.
+10. **Reproducible image:** build with `pi-gen` from a public configuration, so that anyone can rebuild it and obtain the same hash. Publish the hash of each image file: the voting image and the scanning image.
 
 ## 3. Software
 
@@ -93,6 +93,7 @@ urna/
   printer.py       # renders and prints vote strips and reports
   export.py        # closing export to USB
   verify.py        # standalone checker, also runs on any computer
+count/             # scanning card only: camera, reading, display, export of images and readings
 tests/
 ```
 
@@ -140,16 +141,16 @@ No time, no voter data, no screen content beyond the boxes.
 
 **Casting order.** The chain on the data partition is in the order of voting, and the desk's list of who checked in could be in the same order. Together they would link the nth voter to the nth code. Therefore:
 
-- the **export** (section 7.5) MUST list the `vote` and `spoil` records **sorted by code**, as `(kind, code, boxes)` only, without `n` or `prev`, plus the SHA-256 of that list and the chain head, signed together by the machine. The ordered chain stays only on the sealed SD card, for disputes;
+- the **export** (section 7.5) MUST list the `vote` and `spoil` records **sorted by code**, as `(kind, code, boxes)` only, without `n` or `prev`, plus the SHA-256 of that list and the chain head, signed together by the machine. The ordered chain stays only on the sealed voting card, for disputes;
 - the desk's list of voters MUST record names only: no order numbers, no times.
 
 ## 6. Preparation (before election day, air-gapped)
 
-1. Flash the published image; compare its SHA-256 with the published hash.
+1. Flash the published voting image on the voting card and the published scanning image on the scanning card; compare each SHA-256 with its published hash.
 2. First boot: the machine generates its **machine key** (Ed25519) on the data partition and shows its fingerprint (first 16 hex characters of the public key's SHA-256).
 3. Insert the election package stick; the machine verifies `package.sig`, copies the package, and shows the election title, box count and number of codes.
 4. Print the **preparation report**: image hash, package hash, machine key fingerprint, number of valid codes. LucentCrypto keeps it; the public key goes to the bulletin board.
-5. Power off, seal the case, the SD slot and unused ports. Record the seal numbers on the report.
+5. Power off, seal the case, the SD slot, unused ports and the camera lens. Record the seal numbers on the report.
 
 ## 6a. Ballot slips
 
@@ -253,7 +254,7 @@ The poll worker enters ENCERRAR (poll worker keypad, or `ENCERRAR:<secret>`), th
 3. asks for the export stick, mounts it, writes the log's records **sorted by code** with the signed digest (section 5), the package, the closing report as text, and `SHA256SUMS`; unmounts; asks to remove it;
 4. powers off.
 
-The data partition keeps everything; the SD card stays sealed in the machine as a second copy.
+The voting card is then removed and sealed in an envelope with the minutes: it keeps everything, as a second copy and for disputes.
 
 ### 7.6 Power loss
 
@@ -261,18 +262,20 @@ On boot, `store.py` checks the chain from the start. If the last record is `pend
 
 ### 7.7 Counting the strips
 
-The sealed box is opened at the count, in public.
+The count takes place after closing, in public, on the same Pi rebooted with the **scanning card**: its own published image, with the camera and the reading software (`count/`) and no voting software. The lens seal is removed in front of the observers, and the sealed box is opened.
 
-1. **Photograph.** Every strip is photographed on the count camera's stand (section 1), one at a time. The reading software on that Pi (open source, OpenCV) straightens each image by its corner marks and reads it; the images and readings are written to a USB stick for publication. The reading is `(code, boxes)`: the boxes from the grid, checked against the box numbers in text, and the code from its printed characters. A strip whose parts disagree, or that cannot be read, is set aside, read by eye by the count committee, and noted in the minutes.
+1. **Photograph.** Every strip is photographed on the stand (section 1), one at a time. The reading software (open source, OpenCV) straightens each image by its corner marks and reads it, and the Pi **shows the image and its reading on screen while the strip is still on the stand**, so the observers compare the paper, the image and the reading. The images and readings are written to a USB stick for publication. The reading is `(code, boxes)`: the boxes from the grid, checked against the box numbers in text, and the code from its printed characters. A strip whose parts disagree, or that cannot be read, is set aside, read by eye by the count committee, and noted in the minutes.
 2. **Publish.** Each strip's image is published next to its reading (SETAS.md section 7), so anyone can check by eye that the reading matches the paper.
 3. **Check.** Every code is in `codes.txt` and appears once; no strip has more than `maxChoices` boxes; the number of strips equals the number of voters on the desk list minus the spoils; used, spoiled and unused slips add up (section 6a). These counts also catch forged strips.
 4. **Count.** The readings form this polling place's part of the cast table (SETAS.md section 6), alongside the scanned mail parts.
 5. **Observers.** Anyone may photograph the strips during the public count, and may run the same reading software on their own photos.
 6. **Cross-check, low profile.** The readings are compared with the machine's exported log. A difference is noted in the minutes and investigated; the strips decide.
 
+**The two cards are not equally sensitive.** The voting card holds the machine's key and the ordered log, and its software decides what is printed and which codes are refused: it gets the seals and the sealed envelope. The scanning card holds nothing secret (codes and boxes are published anyway), and its work is checked as it happens: a doctored reading, or a doctored image, would not match the paper on the stand, the published images, or the strips kept for a recount. Its image hash is still published, so it can be shown which software ran.
+
 ## 8. Checker
 
-`verify.py` runs on any computer with Python and checks an export: the package signature, the machine's signature over the sorted records and the chain head, that codes are valid and unique, that `vote` and `spoil` records obey the rules, and that the counts in `close` match. Given the strip readings (section 7.7), it also does the low-profile cross-check. In a dispute, it checks the full ordered chain read from the sealed SD card. It prints a summary; any failure is an error. The count itself uses the scanned strips, not this export.
+`verify.py` runs on any computer with Python and checks an export: the package signature, the machine's signature over the sorted records and the chain head, that codes are valid and unique, that `vote` and `spoil` records obey the rules, and that the counts in `close` match. Given the strip readings (section 7.7), it also does the low-profile cross-check. In a dispute, it checks the full ordered chain read from the sealed voting card. It prints a summary; any failure is an error. The count itself uses the scanned strips, not this export.
 
 ## 9. Tests
 
@@ -283,12 +286,13 @@ The sealed box is opened at the count, in public.
 | 500 votes | 500 scripted votes on real hardware; `verify.py` passes; time per vote is measured |
 | Power cut | The plug is pulled at random moments, 50 times; the machine always recovers by 7.6 and the chain verifies |
 | Printer | Accents; paper out (the machine waits and says so); paper jam |
-| Strip reading | All strips of the 500-vote test are photographed on the count camera's stand; every reading is correct, the grid and the printed numbers agree, and the readings match the log |
+| Strip reading | All strips of the 500-vote test are photographed on the stand with the scanning card; every reading is correct, the grid and the printed numbers agree, and the readings match the log |
 | No arrows (acceptance) | The image, the election package and the data partition contain no candidate name, permutation or encrypted arrow (search for the candidate names of a test election); every screen in a full test election shows only instructions and box numbers |
+| No camera during voting | With the voting card, no camera device exists even when a camera is connected; the lens seal is intact at closing |
 | Sorted export | The exported records are in code order; nothing in the export reveals the casting order |
 | Slip custody | A test election's used, spoiled and unused slips add up to the number printed |
 | No network | No network interface is up; no listening sockets (`ss -tlnp` empty) |
-| Seals | A tester tries to reach the SD card without breaking a seal |
+| Seals | A tester tries to reach the voting card without breaking a seal |
 
 ## 10. Open points
 
