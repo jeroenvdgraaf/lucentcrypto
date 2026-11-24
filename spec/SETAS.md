@@ -69,6 +69,8 @@ The online and mail channels MUST close before in-person voting starts. The list
 - In the booth the voter marks, separates the parts and destroys the left part (a small shredder or bin is in the booth). The identification block is not used in person; the list at the desk is the record.
 - **The scanning box:** a Raspberry Pi with a camera at the slot of a sealed box. It reads the code and the marks and MUST return the part to the voter if the code is not in the manifest, is already used, or the part has more than k marks. Otherwise it shows *Cédula K7F2-9QXM recebida* and lets the paper drop into the box. It never sees the arrows, so not even a compromised box can reveal a vote.
 - At closing the box prints and signs the list of codes received; the images and the list are exported. The paper stays sealed for a recount.
+- **Alternative: the arrow voting machine** (build brief: `SETAS-URNA.md`). The voter draws a **sealed 80 mm slip** with the names, the arrows and the code, scans the code at the machine, reads the arrows on the slip and types the **box numbers** on a keypad. The machine prints the vote part (code and boxes) for the sealed box; the slip is destroyed. Like the scanning box, the machine never knows the arrows, so it can neither read a vote nor favour a candidate; it also needs no reading of pen marks and refuses more than k boxes.
+- **Slips and sheets in person** are drawn by the voter out of the poll worker's sight, and nobody records which one a voter took. Sealed slips make photographing their arrows visible (`SETAS-URNA.md` section 6a).
 - **Accessibility:** for a voter who cannot read the arrows, a Pi with a screen and headphones generates a ballot as the browser does (4.3). In that case the secrecy depends on that device's software.
 
 ### 4.3 Online
@@ -118,7 +120,8 @@ In order: the election parameters; `P_L`, `P_C` with their proofs; the manifest 
 - the mail reception and the online server know voter ↔ code, but not the arrows;
 - the generating software and the print shop know code ↔ arrows, but not who received which ballot;
 - decrypting arrows before the shuffle needs LucentCrypto **and** t committee members together;
-- a compromised browser, or the accessibility Pi, sees the arrows while the voter votes. The scanning box never does.
+- a compromised browser, or the accessibility Pi, sees the arrows while the voter votes. The scanning box and the arrow voting machine never do;
+- someone who **photographs ballots or slips** before they are used learns code ↔ arrows for those codes, and with the cast table the vote cast with each. They still need to know who received which ballot. Sealed slips, random draws out of sight, mailing without recording codes, and machine records exported in code order rather than casting order keep that unknown. This threatens secrecy, not the result, and the seals make it visible.
 
 **Coercion.** At home (mail, online) nothing prevents someone from watching the voter, as with any remote vote. Because each row is revealed, a coercer may demand an unusual combination and look for it in the table (the "Italian attack"): with 4 of 12 there are 794 combinations for a few hundred voters. Accepted, and stated to the organizer.
 

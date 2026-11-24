@@ -4,14 +4,25 @@
 
 This brief is for whoever builds the machine, person or assistant. It assumes the reader has already prepared an air-gapped Raspberry Pi (as for the DuraShare key ceremony) and has read `spec/SETAS.md`, the arrow ballot.
 
+> **In one paragraph.** The arrows exist only on paper. Each voter draws a sealed slip with the candidates, the arrows and a code. In the booth the voter scans the code, reads the arrows on the slip, and types **box numbers** on a keypad. The machine prints a strip with the code and the box numbers, which goes into a sealed box; the slip is destroyed. The machine knows codes and box numbers, **never candidates**: it cannot read a vote, and it cannot favour a candidate, because it does not know which box belongs to whom.
+
 ## 0. What the machine is
 
 An in-person voting machine for the arrow ballot that **never sees the arrows**.
 
-1. The voter receives a **preprinted arrow ballot** (the same sheet as by mail, SETAS.md section 3), picked at random from a pile.
-2. In the booth, the voter **scans the ballot's QR code** with the machine's scanner, follows the arrows on the paper, and **types the numbers of the boxes** of their candidates on a numeric keypad.
+1. The voter draws a **sealed ballot slip** (section 6a) at random from an opaque box. The slip is an 80 mm strip with the candidates in the fixed order, the arrows, and the code with its QR code; it can also be the A4 mail sheet (SETAS.md section 3).
+2. In the booth, the voter opens the slip, **scans its QR code** with the machine's scanner, follows the arrows on the paper, and **types the numbers of the boxes** of their candidates on a numeric keypad.
 3. The machine **prints the vote part** on an 80 mm thermal printer: the ballot code, the chosen box numbers, and a signature.
-4. The voter checks the printed part against the paper, **destroys the paper sheet** (shredder in the booth) and drops the printed part into a **sealed box**.
+4. The voter checks the printed part against the slip, **destroys the slip** (shredder in the booth) and drops the printed part into a **sealed box**.
+
+**What this machine is not.** It MUST NOT:
+
+- store, receive or derive candidate names, permutations, arrows, or encrypted arrows;
+- show a candidate or an arrow on the screen: the screen shows instructions and box numbers only;
+- decrypt anything, or hold any key but its own signing key;
+- print the ballot slips. Slips are printed beforehand on a separate printer (section 6a).
+
+A design that preloads permutations, shows arrows on screen, or unlocks a ballot with a typed code is a **different scheme**, in which the machine could display false arrows and shift votes undetectably. It is out of scope.
 
 What follows from this design, and MUST be kept:
 
@@ -35,6 +46,8 @@ What follows from this design, and MUST be kept:
 | Export | USB stick | Formatted FAT32, used only at closing |
 | Case | Closed, with tamper-evident seals over the SD slot, the screws and unused ports | Block unused USB ports with port blockers |
 | Booth | Shredder or slotted bin, the sealed box beside or outside it | The screen and keypad face the voter only |
+| Slip box | Opaque, with a hand opening, at the desk | The voter draws a slip without the poll worker seeing which |
+| Slip printer | A **separate** printer, used only during preparation (section 6a) | Never connected to the voting machine |
 
 ## 2. Operating system and hardening
 
@@ -121,6 +134,11 @@ One JSON line per event, canonical (sorted keys, no spaces), in `/var/lib/urna/r
 
 No time, no voter data, no screen content beyond the boxes.
 
+**Casting order.** The chain on the data partition is in the order of voting, and the desk's list of who checked in could be in the same order. Together they would link the nth voter to the nth code. Therefore:
+
+- the **export** (section 7.5) MUST list the `vote` and `spoil` records **sorted by code**, each with its machine signature, plus one SHA-256 over the sorted list and the chain head, signed by the machine. The ordered chain stays only on the sealed SD card, for disputes;
+- the desk's list of voters MUST record names only: no order numbers, no times.
+
 ## 6. Preparation (before election day, air-gapped)
 
 1. Flash the published image; compare its SHA-256 with the published hash.
@@ -128,6 +146,23 @@ No time, no voter data, no screen content beyond the boxes.
 3. Insert the election package stick; the machine verifies `package.sig`, copies the package, and shows the election title, box count and number of codes.
 4. Print the **preparation report**: image hash, package hash, machine key fingerprint, number of valid codes. LucentCrypto keeps it; the public key goes to the bulletin board.
 5. Power off, seal the case, the SD slot and unused ports. Record the seal numbers on the report.
+
+## 6a. Ballot slips
+
+**Printing.** Slips are printed from the ballot file (SETAS.md section 3) on a separate 80 mm printer, by a computer that never connects to the voting machine. Each slip, about 15 cm long: the title, the candidates in the fixed order, the arrows into numbered boxes as in SETAS.md, the code in text and as a QR code. The QR code holds only the code.
+
+**Sealing.** Each slip is folded so that the arrows are inside and sealed with a numbered sticker, like a bank PIN letter (or the arrows are covered by a scratch-off strip). The voter opens it in the booth. Photographing the arrows means breaking a seal, which shows.
+
+**Custody.**
+
+- At printing: slips are counted, put in bags with numbered seals, and the seal numbers and counts go into the minutes.
+- Before printing ends: a random sample is opened in public to check that the printed arrows match the encrypted ones (SETAS.md section 5); those codes are voided.
+- At opening: the bag is opened in front of the poll workers and observers; the slips go into the opaque slip box.
+- At closing: used (codes on the machine), spoiled, and unused slips MUST add up to the number received. Unused slips are sealed back in their bag. A slip with a broken seal is set aside as spoiled.
+
+**Drawing.** The voter draws one slip from the slip box, out of the poll worker's sight; the code stays inside the sealed slip until the booth. Nobody records which slip a voter took.
+
+**What photographing the slips would give.** Someone who photographs open slips knows which arrows go with which codes; with the votes per code (machine records, cast table) they know the vote cast with each photographed code. They still do not know **who** cast it, unless they also know which slip each voter drew. Seals make photographing visible; the draw and the sorted export (section 5) keep "who drew which code" unknown. This is a risk to secrecy, not to the result.
 
 ## 7. Election day: the state machine
 
@@ -201,7 +236,7 @@ The QR code holds the code, the boxes and the machine's signature, so the count 
 
 ### 7.4 Spoiling a wrong printout
 
-If the voter says the printed boxes differ from what they typed: the poll worker presses ANULAR (poll worker keypad, or the card `ANULAR:<secret>`) and scans the printed part's QR. The machine appends `spoil` for that code; the printed part goes into a separate envelope, marked *anulada*. The voter receives a **new ballot sheet** and votes again. Spoils are counted and published; many spoils on one machine are a reason to take it out of service.
+If the voter says the printed boxes differ from what they typed: the poll worker presses ANULAR (poll worker keypad, or the card `ANULAR:<secret>`) and scans the printed part's QR. The machine appends `spoil` for that code; the printed part goes into a separate envelope, marked *anulada*. The voter draws a **new slip** and votes again. Spoils are counted and published; many spoils on one machine are a reason to take it out of service.
 
 ### 7.5 Closing
 
@@ -209,14 +244,14 @@ The poll worker enters ENCERRAR (poll worker keypad, or `ENCERRAR:<secret>`), th
 
 1. stops accepting votes, appends `close` with the counts;
 2. prints the **closing report** (*boletim*): votes, blank votes, spoils, codes used, chain head, machine fingerprint. It contains **no tally of boxes**: boxes mean nothing without the arrows;
-3. asks for the export stick, mounts it, writes `records.jsonl`, the package, the closing report as text, and `SHA256SUMS`; unmounts; asks to remove it;
+3. asks for the export stick, mounts it, writes the records **sorted by code** with the signed fingerprint (section 5), the package, the closing report as text, and `SHA256SUMS`; unmounts; asks to remove it;
 4. powers off.
 
 The data partition keeps everything; the SD card stays sealed in the machine as a second copy.
 
 ### 7.6 Power loss
 
-On boot, `store.py` checks the chain from the start. If the last record is `pending` without a following `vote`, the machine shows, to the poll worker only: *Voto pendente: código K7F2-9QXM. O papel foi impresso?* The poll worker answers by key: printed → append `vote`; not printed → append `spoil` and give the voter a new ballot. A corrupted last line (cut in the middle) is dropped and noted in the closing report.
+On boot, `store.py` checks the chain from the start. If the last record is `pending` without a following `vote`, the machine shows, to the poll worker only: *Voto pendente: código K7F2-9QXM. O papel foi impresso?* The poll worker answers by key: printed → append `vote`; not printed → append `spoil` and the voter draws a new slip. A corrupted last line (cut in the middle) is dropped and noted in the closing report.
 
 ## 8. Checker
 
@@ -231,13 +266,16 @@ On boot, `store.py` checks the chain from the start. If the last record is `pend
 | 500 votes | 500 scripted votes on real hardware; `verify.py` passes; time per vote is measured |
 | Power cut | The plug is pulled at random moments, 50 times; the machine always recovers by 7.6 and the chain verifies |
 | Printer | Accents, QR legible by the same scanner, paper out (the machine waits and says so), paper jam |
-| No arrows | Search the code and the data partition for candidate names; there must be none |
+| No arrows (acceptance) | The image, the election package and the data partition contain no candidate name, permutation or encrypted arrow (search for the candidate names of a test election); every screen in a full test election shows only instructions and box numbers |
+| Sorted export | The exported records are in code order; nothing in the export reveals the casting order |
+| Slip custody | A test election's used, spoiled and unused slips add up to the number printed |
 | No network | No network interface is up; no listening sockets (`ss -tlnp` empty) |
 | Seals | A tester tries to reach the SD card without breaking a seal |
 
 ## 10. Open points
 
-- Whether the scanned QR code on the sheet should also carry a short checksum, so a mistyped code is caught before the server lookup.
+- Whether the code should carry a short checksum, so a mistyped code (when the scanner fails) is caught at once.
+- The seal for slips: folded with a numbered sticker, or a scratch-off strip; cost and how well each resists careful opening.
 - Thermal paper fades over months to years: keep the box only for the challenge period, or use long-life thermal paper.
 - Accessibility: audio guidance through headphones (the Pi 4 has an audio jack, the Pi 5 needs USB audio) and a tactile keypad.
 - Whether one machine serves 500 voters in a day: measure the time per vote in the 500-vote test.
