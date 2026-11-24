@@ -49,7 +49,7 @@ What follows from this design, and MUST be kept:
 | Booth | Shredder or slotted bin, the sealed box beside or outside it | The screen and keypad face the voter only |
 | Slip box | Opaque, with a hand opening, at the desk | The voter draws a slip without the poll worker seeing which |
 | Slip printer | A **separate** printer, used only during preparation (section 6a) | Never connected to the voting machine |
-| Strip scanner | A sheet-fed document scanner, at the count (section 7.7), not in the booth | Thermal strips curl: test feeding 80 mm strips before choosing; a flatbed with a template is the fallback |
+| Count camera | A **separate** Raspberry Pi with the Camera Module 3 on a fixed stand, used at the count (section 7.7); never the voting machine | The stand holds the camera at a fixed height over a matte black base with guides for the strip; diffuse light from the side avoids glare on the thermal paper. Same air-gapped image as the voting machine, with the reading software; a screen, no keypad, scanner or printer |
 
 ## 2. Operating system and hardening
 
@@ -236,6 +236,8 @@ Rendered as an image as wide as the print line (576 pixels on most 80 mm printer
    Urna 4F2A·9C1E
 ```
 
+Four small black squares mark the corners of the printed area, so the reading software can straighten and crop each photo.
+
 The strip has **no QR code and no signature**. It is read at the count by scanning (section 7.7), from three parts: the code in large characters in an OCR-friendly font, the grid with the chosen boxes filled, and the box numbers in text. The grid and the numbers are read independently and must agree, and a person can check both by eye. The layout is fixed for the election, so the scanner finds each part in the same place on every strip. Blank vote: all boxes empty and *Quadrados: em branco*.
 
 ### 7.4 Spoiling a wrong printout
@@ -261,11 +263,12 @@ On boot, `store.py` checks the chain from the start. If the last record is `pend
 
 The sealed box is opened at the count, in public.
 
-1. **Scan.** Every strip is scanned. Its reading is `(code, boxes)`: the boxes from the grid, checked against the box numbers in text, and the code from its printed characters. A strip whose parts disagree, or that cannot be read, is set aside, read by eye by the count committee, and noted in the minutes.
+1. **Photograph.** Every strip is photographed on the count camera's stand (section 1), one at a time. The reading software on that Pi (open source, OpenCV) straightens each image by its corner marks and reads it; the images and readings are written to a USB stick for publication. The reading is `(code, boxes)`: the boxes from the grid, checked against the box numbers in text, and the code from its printed characters. A strip whose parts disagree, or that cannot be read, is set aside, read by eye by the count committee, and noted in the minutes.
 2. **Publish.** Each strip's image is published next to its reading (SETAS.md section 7), so anyone can check by eye that the reading matches the paper.
 3. **Check.** Every code is in `codes.txt` and appears once; no strip has more than `maxChoices` boxes; the number of strips equals the number of voters on the desk list minus the spoils; used, spoiled and unused slips add up (section 6a). These counts also catch forged strips.
 4. **Count.** The readings form this polling place's part of the cast table (SETAS.md section 6), alongside the scanned mail parts.
-5. **Cross-check, low profile.** The readings are compared with the machine's exported log. A difference is noted in the minutes and investigated; the strips decide.
+5. **Observers.** Anyone may photograph the strips during the public count, and may run the same reading software on their own photos.
+6. **Cross-check, low profile.** The readings are compared with the machine's exported log. A difference is noted in the minutes and investigated; the strips decide.
 
 ## 8. Checker
 
@@ -280,7 +283,7 @@ The sealed box is opened at the count, in public.
 | 500 votes | 500 scripted votes on real hardware; `verify.py` passes; time per vote is measured |
 | Power cut | The plug is pulled at random moments, 50 times; the machine always recovers by 7.6 and the chain verifies |
 | Printer | Accents; paper out (the machine waits and says so); paper jam |
-| Strip reading | All strips of the 500-vote test are scanned; every reading is correct, the grid and the printed numbers agree, and the readings match the log |
+| Strip reading | All strips of the 500-vote test are photographed on the count camera's stand; every reading is correct, the grid and the printed numbers agree, and the readings match the log |
 | No arrows (acceptance) | The image, the election package and the data partition contain no candidate name, permutation or encrypted arrow (search for the candidate names of a test election); every screen in a full test election shows only instructions and box numbers |
 | Sorted export | The exported records are in code order; nothing in the export reveals the casting order |
 | Slip custody | A test election's used, spoiled and unused slips add up to the number printed |
@@ -294,4 +297,4 @@ The sealed box is opened at the count, in public.
 - Thermal paper fades over months to years: keep the box only for the challenge period, or use long-life thermal paper.
 - Accessibility, to be discussed when a client needs it: audio guidance through headphones (the Pi 4 has an audio jack, the Pi 5 needs USB audio) and a tactile keypad. Audio on this machine can read the instructions and the typed box numbers, never the arrows; a voter who cannot read the arrows needs another solution (SETAS.md section 4.2).
 - Whether one machine serves 500 voters in a day: measure the time per vote in the 500-vote test.
-- The strip scanner and its reading software: the error rate on thermal paper, and how many strips need reading by eye.
+- The count camera's stand and lighting, and the reading software: the error rate on thermal paper, and how many strips need reading by eye.
