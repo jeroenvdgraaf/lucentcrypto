@@ -13,7 +13,7 @@ OUT="${1:-dist}"
 case "$OUT" in ""|/|.|..) echo "pasta de saída inválida: $OUT" >&2; exit 1 ;; esac
 rm -rf "$OUT"
 mkdir -p "$OUT/sorteios" "$OUT/amigo-oculto" "$OUT/spec" "$OUT/verifier"
-cp site/index.html site/robots.txt site/sitemap.xml "$OUT/"
+cp site/index.html site/robots.txt site/sitemap.xml site/logo.png site/c04cc0abe797b12ebf2dec3719c0bcc7.txt "$OUT/"   # o .txt: chave do IndexNow (tools/indexnow.mjs)
 for l in pt es nl; do mkdir -p "$OUT/$l" && cp "site/$l/index.html" "$OUT/$l/index.html"; done   # gerados por tools/build-home.mjs
 mkdir -p "$OUT/embaralhamento" && cp embaralhamento/index.html "$OUT/embaralhamento/index.html"
 mkdir -p "$OUT/cruzamento" && cp cruzamento/index.html cruzamento/core.mjs "$OUT/cruzamento/"
