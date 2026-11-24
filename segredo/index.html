@@ -67,8 +67,11 @@ p { margin: 0; }
 @media (max-width: 620px) { .partner { grid-template-columns: 1fr; } }
 .danger { display: grid; grid-template-columns: auto 1fr; gap: 12px 16px; align-items: start; background: var(--warn-soft); border: 2px solid var(--warn); border-radius: 14px; padding: 14px 18px; }
 .danger svg { width: 40px; height: 40px; color: var(--warn); flex: none; }
-.danger b { font: 700 17px var(--display); color: var(--warn); display: block; margin-bottom: 2px; }
+.danger > div > b { font: 700 17px var(--display); color: var(--warn); display: block; margin-bottom: 2px; }
 .danger p { font-size: 14.5px; }
+details.notice { margin-top: 8px; font-size: 13.5px; }
+details.notice summary { cursor: pointer; font-weight: 600; color: var(--warn); }
+details.notice p { margin-top: 6px; }
 .disclaimer { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 8px; font-size: 14px; }
 .disclaimer h3 { margin: 0; font: 700 16px var(--display); color: var(--warn); }
 .import { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--bg); display: grid; gap: 8px; }
@@ -182,7 +185,12 @@ code { font-family: var(--mono); font-size: 12.5px; }
   <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 2 44h44L24 4z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M24 18v12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="36.5" r="2.6" fill="currentColor"/></svg>
   <div>
     <b id="dangerTitle">Versão de demonstração</b>
-    <p>Feita de boa-fé e com cuidado, mas <b style="display:inline;font:inherit;font-weight:700;color:inherit">sem garantias e sem responsabilidade</b> por perdas. Não use para guardar o acesso a dinheiro, investimentos ou outros bens de valor. Leia o aviso completo no fim da página.</p>
+    <p>Feita de boa-fé e com cuidado, mas use por sua conta e risco. Não use para guardar o acesso a dinheiro, investimentos ou outros bens de valor.</p>
+    <details class="notice" id="aviso"><summary>Ler o aviso completo</summary>
+    <p>Esta página é uma demonstração, feita de boa-fé e com cuidado, para mostrar como funciona a divisão de um segredo entre pessoas de confiança. Ela é oferecida “como está”, <b>sem garantia de qualquer tipo</b>, expressa ou implícita, inclusive de funcionamento, de segurança ou de adequação a um uso específico. Os autores e a LucentCrypto <b>não se responsabilizam</b> por perda de segredos, de acessos, de dinheiro ou de outros bens, nem por qualquer dano decorrente do uso.</p>
+    <p>O código ainda não passou por auditoria independente. Um aparelho com vírus ou programa espião pode ver o segredo enquanto ele é digitado ou recuperado, seja qual for a matemática. Erros de uso, como apagar partes, perder links ou enviar todas as partes pelo mesmo canal, podem tornar o segredo irrecuperável ou exposto.</p>
+    <p><b>Não use esta demonstração para guardar o acesso a dinheiro, investimentos ou outros bens de valor.</b> Para isso, procure uma solução com auditoria independente e apoio profissional, como o DuraShare, da empresa parceira <a href="https://grifortis.com" target="_blank" rel="noopener">Grifortis</a>.</p>
+    </details>
   </div>
 </div>
 
@@ -274,12 +282,6 @@ code { font-family: var(--mono); font-size: 12.5px; }
     <li><b>O ponto fraco é o envio:</b> as mensagens enviadas ficam no seu celular e nas cópias de segurança. Apague-as, use canais diferentes, ou entregue pessoalmente pelo QR.</li>
     <li><b>Nada fica guardado em servidor:</b> se guardiões demais perderem suas partes, a ponto de não restar o número combinado, ninguém consegue recuperar o segredo, nem nós.</li>
   </ul>
-  <div class="disclaimer" id="aviso">
-    <h3>Aviso: demonstração, sem garantias</h3>
-    <p>Esta página é uma demonstração, feita de boa-fé e com cuidado, para mostrar como funciona a divisão de um segredo entre pessoas de confiança. Ela é oferecida “como está”, <b>sem garantia de qualquer tipo</b>, expressa ou implícita, inclusive de funcionamento, de segurança ou de adequação a um uso específico. Os autores e a LucentCrypto <b>não se responsabilizam</b> por perda de segredos, de acessos, de dinheiro ou de outros bens, nem por qualquer dano decorrente do uso.</p>
-    <p>O código ainda não passou por auditoria independente. Um aparelho com vírus ou programa espião pode ver o segredo enquanto ele é digitado ou recuperado, seja qual for a matemática. Erros de uso, como apagar partes, perder links ou enviar todas as partes pelo mesmo canal, podem tornar o segredo irrecuperável ou exposto.</p>
-    <p><b>Não use esta demonstração para guardar o acesso a dinheiro, investimentos ou outros bens de valor.</b> Para isso, procure uma solução com auditoria independente e apoio profissional, como o DuraShare, da empresa parceira <a href="https://grifortis.com" target="_blank" rel="noopener">Grifortis</a>.</p>
-  </div>
 </section>
 <!-- FRAME-END -->
 <section class="lcf-end lcf-labend" id="lcfEnd" aria-label="Mais no Laboratório">

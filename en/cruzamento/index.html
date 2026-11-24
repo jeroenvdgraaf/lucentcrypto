@@ -202,6 +202,9 @@ label.inline { display: inline-flex; gap: 6px; align-items: center; font-size: 1
 .lcf-solend .lcf-box { background: var(--bg, #eef2f3); border: 1px solid var(--line, #cdd8dc); border-radius: 14px; padding: 20px; display: grid; gap: 12px; justify-items: start; }
 .lcf-solend .lcf-box p { margin: 0; }
 /* FRAME-END */
+details.notice { margin-top: 12px; font-size: 13.5px; }
+details.notice summary { cursor: pointer; font-weight: 600; color: var(--muted); }
+details.notice p { margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -274,8 +277,11 @@ label.inline { display: inline-flex; gap: 6px; align-items: center; font-size: 1
     <li><b>The sizes are visible:</b> each side learns how many records the other has. That is on purpose: it is what lets you spot a dictionary attack.</li>
     <li><b>Dictionary attack:</b> a side can put the identifiers it wants to test into its own list, and any PSI allows that. The defense is to agree on a maximum size beforehand, check the announced size and stop if it makes no sense.</li>
     <li><b>Honest but curious sides:</b> the demo assumes each side follows the protocol. Against a side that deliberately deviates from it, stronger versions exist.</li>
-    <li><b>A demo, without guarantees</b> and without legal value. To match real lists, with hundreds of thousands of records, contact us.</li>
+    <li><b>A demo</b>, made in good faith and with care: use at your own risk. To match real lists, with hundreds of thousands of records, contact us.</li>
   </ul>
+  <details class="notice" id="aviso"><summary>Read the full notice</summary>
+    <p>This page is a demo, made in good faith and with care. It is offered “as is”, <b>without warranty of any kind</b>, including of operation, security or fitness for a particular purpose. No legal value can be attributed to its results. The authors and LucentCrypto accept no liability for any damage arising from its use. The code has not yet been independently audited.</p>
+  </details>
 </section>
 <!-- FRAME-END -->
 <section class="lcf-end lcf-solend" id="lcfEnd" aria-label="For use in your organization">

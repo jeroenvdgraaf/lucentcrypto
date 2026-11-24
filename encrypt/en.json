@@ -10,8 +10,6 @@
  "<a class=\"theme\" id=\"langBtn\" href=\"/en/encrypt/\" hreflang=\"en\" lang=\"en\">English</a>": "<a class=\"theme\" id=\"langBtn\" href=\"/encrypt/\" hreflang=\"pt\" lang=\"pt-BR\">Português</a>",
  "<a href=\"/\">LucentCrypto</a> · demonstração</div>": "<a href=\"/\">LucentCrypto</a> · demo</div>",
  "<p class=\"lead\">Uma frase de 7 palavras vira a sua chave. Você publica um link, e qualquer pessoa pode usá-lo para cifrar uma mensagem que só você abre, com a frase. Nada é guardado em lugar nenhum: tudo acontece nesta página. Três modos, lado a lado: o clássico (X25519), o pós-quântico (ML-KEM-768) e o híbrido dos dois (X-Wing).</p>": "<p class=\"lead\">A 7-word phrase becomes your key. You publish a link, and anyone can use it to encrypt a message that only you can open, with the phrase. Nothing is stored anywhere: everything happens on this page. Three modes, side by side: classic (X25519), post-quantum (ML-KEM-768) and the hybrid of the two (X-Wing).</p>",
- "<b>Não use para nada de valor</b>": "<b>Don’t use it for anything of value</b>",
- "<p>Não use para guardar senhas de bancos, chaves de carteiras de criptomoedas ou qualquer coisa de valor. É uma demonstração, feita com cuidado, mas sem garantias e sem auditoria independente. Quem perde a frase perde as mensagens, para sempre.</p>": "<p>Don’t use it for bank passwords, cryptocurrency wallet keys or anything of value. It is a demo, made with care, but without guarantees and without an independent audit. Lose the phrase and you lose the messages, forever.</p>",
  ">Criar minha chave<": ">Create my key<",
  ">Cifrar para alguém<": ">Encrypt for someone<",
  ">Abrir uma mensagem<": ">Open a message<",
@@ -61,7 +59,6 @@
  "<li><b>Remetente desconhecido.</b> Quem recebe não sabe quem cifrou. Não há assinaturas.</li>": "<li><b>Unknown sender.</b> The recipient doesn’t know who encrypted. There are no signatures.</li>",
  "<li><b>Links podem ser falsificados.</b> Alguém pode publicar um link em nome de outra pessoa. A defesa é a impressão digital, conferida por outro meio.</li>": "<li><b>Links can be forged.</b> Someone can publish a link in another person’s name. The defense is the fingerprint, checked another way.</li>",
  "<li><b>Não protege:</b> vírus no aparelho; alguém olhando a frase ser digitada; arquivos (só texto, até 2000 caracteres).</li>": "<li><b>Does not protect:</b> against malware on the device or someone watching the phrase being typed; files are not supported (text only, up to 2000 characters).</li>",
- "<h3>Aviso: demonstração, sem garantias</h3>": "<h3>Notice: demo, no guarantees</h3>",
  "<p>Esta página é uma demonstração, feita de boa-fé e com cuidado. Ela é oferecida “como está”, <b>sem garantia de qualquer tipo</b>, inclusive de funcionamento, de segurança ou de adequação a um uso específico. Os autores e a LucentCrypto não se responsabilizam por qualquer dano decorrente do uso. O código ainda não passou por auditoria independente.</p>": "<p>This page is a demo, made in good faith and with care. It is offered “as is”, <b>without warranty of any kind</b>, including of operation, security or fitness for a particular purpose. The authors and LucentCrypto accept no liability for any damage arising from its use. The code has not yet been independently audited.</p>",
  "<p>Formato LucentEncrypt/1 · frase de 7 palavras (77 bits) → Argon2id (64 MiB, 3 passadas) com o identificador como sal → uma chave por modo; KEM e AES-256-GCM. Especificação: ": "<p>Format LucentEncrypt/1 · 7-word phrase (77 bits) → Argon2id (64 MiB, 3 passes) with the identifier as salt → one key per mode; KEM and AES-256-GCM. Specification: ",
  ". Funciona salva, sem internet.</p>": ". Works when saved, offline.</p>",
@@ -100,5 +97,8 @@
  "$(\"oHide\").textContent = \"Esconder\";": "$(\"oHide\").textContent = \"Hide\";",
  "e.message === \"frase\" ? \"Frase errada.\" : e.message === \"alterada\" ? \"A mensagem foi alterada ou está incompleta.\" : \"Não foi possível abrir: \" + e.message": "e.message === \"frase\" ? \"Wrong phrase.\" : e.message === \"alterada\" ? \"The message was altered or is incomplete.\" : \"Could not open: \" + (e.message === \"formato\" ? \"invalid message link\" : e.message)",
  "h ? \"Mostrar\" : \"Esconder\"": "h ? \"Show\" : \"Hide\"",
- "content=\"https://lucentcrypto.org/og/encrypt.png\"": "content=\"https://lucentcrypto.org/og/en/encrypt.png\""
+ "content=\"https://lucentcrypto.org/og/encrypt.png\"": "content=\"https://lucentcrypto.org/og/en/encrypt.png\"",
+ "<p>Feita de boa-fé e com cuidado, mas use por sua conta e risco. Não use para senhas de bancos ou chaves de criptomoedas: quem perde a frase perde as mensagens, para sempre.</p>": "<p>Made in good faith and with care, but use at your own risk. Don’t use it for bank passwords or cryptocurrency keys: lose the phrase and you lose the messages, forever.</p>",
+ "<summary>Ler o aviso completo</summary>": "<summary>Read the full notice</summary>",
+ "<b>Versão de demonstração</b>": "<b>Demo version</b>"
 }

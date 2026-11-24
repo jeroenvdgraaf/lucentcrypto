@@ -64,8 +64,11 @@ p { margin: 0; }
 .theme { text-decoration: none; font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
 .danger { display: grid; grid-template-columns: auto 1fr; gap: 12px 16px; align-items: start; background: var(--warn-soft); border: 2px solid var(--warn); border-radius: 14px; padding: 14px 18px; }
 .danger svg { width: 40px; height: 40px; color: var(--warn); flex: none; }
-.danger b { font: 700 17px var(--display); color: var(--warn); display: block; margin-bottom: 2px; }
+.danger > div > b { font: 700 17px var(--display); color: var(--warn); display: block; margin-bottom: 2px; }
 .danger p { font-size: 14.5px; }
+details.notice { margin-top: 8px; font-size: 13.5px; }
+details.notice summary { cursor: pointer; font-weight: 600; color: var(--warn); }
+details.notice p { margin-top: 6px; }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
 .panel.strong { border: 2px solid var(--accent); }
 .f { display: grid; gap: 6px; }
@@ -214,7 +217,10 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
   <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 2 44h44L24 4z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M24 18v12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="36.5" r="2.6" fill="currentColor"/></svg>
   <div>
     <b>Versão de avaliação</b>
-    <p>Funciona de verdade, e qualquer pessoa confere o resultado, mas é oferecida sem garantias. <b style="display:inline;font:inherit;font-weight:700;color:inherit">Nenhum valor jurídico pode ser atribuído a estas votações.</b> Para uso oficial, fale conosco.</p>
+    <p>Funciona de verdade, e qualquer pessoa confere o resultado. Feita de boa-fé e com cuidado, mas use por sua conta e risco. Para votações com valor jurídico, fale conosco.</p>
+    <details class="notice" id="aviso"><summary>Ler o aviso completo</summary>
+    <p>Esta página é uma demonstração, feita de boa-fé e com cuidado. Ela é oferecida “como está”, <b>sem garantia de qualquer tipo</b>, inclusive de funcionamento, de segurança ou de adequação a um uso específico. <b>Nenhum valor jurídico pode ser atribuído a estas votações.</b> Os autores e a LucentCrypto não se responsabilizam por qualquer dano decorrente do uso. O código ainda não passou por auditoria independente.</p>
+    </details>
   </div>
 </div>
 
@@ -398,10 +404,6 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
     <li><b>Não protege:</b> quem vota sob o olhar de outra pessoa ou repassa o seu link; vírus no celular; a perda do link do organizador.</li>
     <li><b>Tudo é apagado</b> 24 horas depois da meia-noite seguinte ao fim da reunião. A ata baixada continua conferível.</li>
   </ul>
-  <div class="disclaimer">
-    <h3>Aviso: demonstração, sem garantias</h3>
-    <p>Esta página é uma demonstração, feita de boa-fé e com cuidado. Ela é oferecida “como está”, <b>sem garantia de qualquer tipo</b>, inclusive de funcionamento, de segurança ou de adequação a um uso específico. <b>Nenhum valor jurídico pode ser atribuído a estas votações.</b> Os autores e a LucentCrypto não se responsabilizam por qualquer dano decorrente do uso. O código ainda não passou por auditoria independente.</p>
-  </div>
 </details>
 <!-- FRAME-END -->
 <section class="lcf-end lcf-solend" id="lcfEnd" aria-label="Para usar na sua organização">

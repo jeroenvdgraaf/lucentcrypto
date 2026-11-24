@@ -65,8 +65,11 @@ p { margin: 0; }
 .theme { text-decoration: none; font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
 .danger { display: grid; grid-template-columns: auto 1fr; gap: 12px 16px; align-items: start; background: var(--warn-soft); border: 2px solid var(--warn); border-radius: 14px; padding: 14px 18px; }
 .danger svg { width: 40px; height: 40px; color: var(--warn); flex: none; }
-.danger b { font: 700 17px var(--display); color: var(--warn); display: block; margin-bottom: 2px; }
+.danger > div > b { font: 700 17px var(--display); color: var(--warn); display: block; margin-bottom: 2px; }
 .danger p { font-size: 14.5px; }
+details.notice { margin-top: 8px; font-size: 13.5px; }
+details.notice summary { cursor: pointer; font-weight: 600; color: var(--warn); }
+details.notice p { margin-top: 6px; }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
 .panel.strong { border: 2px solid var(--accent); }
 .f { display: grid; gap: 6px; }
@@ -215,7 +218,10 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
   <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 2 44h44L24 4z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M24 18v12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="36.5" r="2.6" fill="currentColor"/></svg>
   <div>
     <b>Trial version</b>
-    <p>It really works, and anyone can check the result, but it comes without guarantees. <b style="display:inline;font:inherit;font-weight:700;color:inherit">No legal value can be attributed to these votes.</b> For official use, contact us.</p>
+    <p>It really works, and anyone can check the result. Made in good faith and with care, but use at your own risk. For votes with legal value, contact us.</p>
+    <details class="notice" id="aviso"><summary>Read the full notice</summary>
+    <p>This page is a demo, made in good faith and with care. It is offered “as is”, <b>without warranty of any kind</b>, including of operation, security or fitness for a particular purpose. <b>No legal value can be attributed to these votes.</b> The authors and LucentCrypto accept no liability for any damage arising from its use. The code has not yet been independently audited.</p>
+    </details>
   </div>
 </div>
 
@@ -399,10 +405,6 @@ body.tela .bar .track { height: clamp(16px, 2vw, 28px); }
     <li><b>Does not protect against:</b> someone voting while another person watches, or passing on their link; malware on the phone; losing the organizer link.</li>
     <li><b>Everything is deleted</b> 24 hours after the first midnight (Brasília time) following the end of the meeting. A downloaded record can still be checked.</li>
   </ul>
-  <div class="disclaimer">
-    <h3>Notice: demo, no guarantees</h3>
-    <p>This page is a demo, made in good faith and with care. It is offered “as is”, <b>without warranty of any kind</b>, including of operation, security or fitness for a particular purpose. <b>No legal value can be attributed to these votes.</b> The authors and LucentCrypto accept no liability for any damage arising from its use. The code has not yet been independently audited.</p>
-  </div>
 </details>
 <!-- FRAME-END -->
 <section class="lcf-end lcf-solend" id="lcfEnd" aria-label="For use in your organization">

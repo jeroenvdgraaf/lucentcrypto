@@ -61,8 +61,11 @@ p { margin: 0; }
 .theme { text-decoration: none; font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
 .danger { display: grid; grid-template-columns: auto 1fr; gap: 12px 16px; align-items: start; background: var(--warn-soft); border: 2px solid var(--warn); border-radius: 14px; padding: 14px 18px; }
 .danger svg { width: 40px; height: 40px; color: var(--warn); flex: none; }
-.danger b { font: 700 17px var(--display); color: var(--warn); display: block; margin-bottom: 2px; }
+.danger > div > b { font: 700 17px var(--display); color: var(--warn); display: block; margin-bottom: 2px; }
 .danger p { font-size: 14.5px; }
+details.notice { margin-top: 8px; font-size: 13.5px; }
+details.notice summary { cursor: pointer; font-weight: 600; color: var(--warn); }
+details.notice p { margin-top: 6px; }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
 .panel.strong { border: 2px solid var(--accent); }
 .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -174,8 +177,11 @@ footer { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
 <div class="danger" role="note">
   <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 2 44h44L24 4z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M24 18v12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="36.5" r="2.6" fill="currentColor"/></svg>
   <div>
-    <b>Não use para nada de valor</b>
-    <p>Não use para guardar senhas de bancos, chaves de carteiras de criptomoedas ou qualquer coisa de valor. É uma demonstração, feita com cuidado, mas sem garantias e sem auditoria independente. Quem perde a frase perde as mensagens, para sempre.</p>
+    <b>Versão de demonstração</b>
+    <p>Feita de boa-fé e com cuidado, mas use por sua conta e risco. Não use para senhas de bancos ou chaves de criptomoedas: quem perde a frase perde as mensagens, para sempre.</p>
+    <details class="notice" id="aviso"><summary>Ler o aviso completo</summary>
+    <p>Esta página é uma demonstração, feita de boa-fé e com cuidado. Ela é oferecida “como está”, <b>sem garantia de qualquer tipo</b>, inclusive de funcionamento, de segurança ou de adequação a um uso específico. Os autores e a LucentCrypto não se responsabilizam por qualquer dano decorrente do uso. O código ainda não passou por auditoria independente.</p>
+    </details>
   </div>
 </div>
 
@@ -284,10 +290,6 @@ footer { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
     <li><b>Links podem ser falsificados.</b> Alguém pode publicar um link em nome de outra pessoa. A defesa é a impressão digital, conferida por outro meio.</li>
     <li><b>Não protege:</b> vírus no aparelho; alguém olhando a frase ser digitada; arquivos (só texto, até 2000 caracteres).</li>
   </ul>
-  <div class="disclaimer">
-    <h3>Aviso: demonstração, sem garantias</h3>
-    <p>Esta página é uma demonstração, feita de boa-fé e com cuidado. Ela é oferecida “como está”, <b>sem garantia de qualquer tipo</b>, inclusive de funcionamento, de segurança ou de adequação a um uso específico. Os autores e a LucentCrypto não se responsabilizam por qualquer dano decorrente do uso. O código ainda não passou por auditoria independente.</p>
-  </div>
 </details>
 <!-- FRAME-END -->
 <section class="lcf-end lcf-labend" id="lcfEnd" aria-label="Mais no Laboratório">

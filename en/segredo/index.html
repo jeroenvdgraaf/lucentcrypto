@@ -68,8 +68,11 @@ p { margin: 0; }
 @media (max-width: 620px) { .partner { grid-template-columns: 1fr; } }
 .danger { display: grid; grid-template-columns: auto 1fr; gap: 12px 16px; align-items: start; background: var(--warn-soft); border: 2px solid var(--warn); border-radius: 14px; padding: 14px 18px; }
 .danger svg { width: 40px; height: 40px; color: var(--warn); flex: none; }
-.danger b { font: 700 17px var(--display); color: var(--warn); display: block; margin-bottom: 2px; }
+.danger > div > b { font: 700 17px var(--display); color: var(--warn); display: block; margin-bottom: 2px; }
 .danger p { font-size: 14.5px; }
+details.notice { margin-top: 8px; font-size: 13.5px; }
+details.notice summary { cursor: pointer; font-weight: 600; color: var(--warn); }
+details.notice p { margin-top: 6px; }
 .disclaimer { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 8px; font-size: 14px; }
 .disclaimer h3 { margin: 0; font: 700 16px var(--display); color: var(--warn); }
 .import { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--bg); display: grid; gap: 8px; }
@@ -183,7 +186,12 @@ code { font-family: var(--mono); font-size: 12.5px; }
   <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 2 44h44L24 4z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M24 18v12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="36.5" r="2.6" fill="currentColor"/></svg>
   <div>
     <b id="dangerTitle">Demo version</b>
-    <p>Made in good faith and with care, but <b style="display:inline;font:inherit;font-weight:700;color:inherit">without guarantees and without liability</b> for losses. Don’t use it to keep access to money, investments or other things of value. Read the full notice at the end of the page.</p>
+    <p>Made in good faith and with care, but use at your own risk. Don’t use it to keep access to money, investments or other things of value.</p>
+    <details class="notice" id="aviso"><summary>Read the full notice</summary>
+    <p>This page is a demo, made in good faith and with care, to show how splitting a secret among people you trust works. It is offered “as is”, <b>without warranty of any kind</b>, express or implied, including of operation, security or fitness for a particular purpose. The authors and LucentCrypto <b>accept no liability</b> for loss of secrets, access, money or other assets, nor for any damage arising from its use.</p>
+    <p>The code has not yet been independently audited. A device with malware or spyware can see the secret while it is typed or recovered, whatever the mathematics. Mistakes in use, such as deleting shares, losing links or sending all shares through the same channel, can make the secret unrecoverable or exposed.</p>
+    <p><b>Don’t use this demo to keep access to money, investments or other things of value.</b> For that, look for a solution with an independent audit and professional support, such as DuraShare, from our partner company <a href="https://grifortis.com" target="_blank" rel="noopener">Grifortis</a>.</p>
+    </details>
   </div>
 </div>
 
@@ -275,12 +283,6 @@ code { font-family: var(--mono); font-size: 12.5px; }
     <li><b>The weak point is sending:</b> sent messages stay on your phone and in backups. Delete them, use different channels, or hand the shares over in person with the QR code.</li>
     <li><b>Nothing is stored on a server:</b> if too many guardians lose their shares, so that fewer than the agreed number remain, nobody can recover the secret, not even us.</li>
   </ul>
-  <div class="disclaimer" id="aviso">
-    <h3>Notice: demo, no guarantees</h3>
-    <p>This page is a demo, made in good faith and with care, to show how splitting a secret among people you trust works. It is offered “as is”, <b>without warranty of any kind</b>, express or implied, including of operation, security or fitness for a particular purpose. The authors and LucentCrypto <b>accept no liability</b> for loss of secrets, access, money or other assets, nor for any damage arising from its use.</p>
-    <p>The code has not yet been independently audited. A device with malware or spyware can see the secret while it is typed or recovered, whatever the mathematics. Mistakes in use, such as deleting shares, losing links or sending all shares through the same channel, can make the secret unrecoverable or exposed.</p>
-    <p><b>Don’t use this demo to keep access to money, investments or other things of value.</b> For that, look for a solution with an independent audit and professional support, such as DuraShare, from our partner company <a href="https://grifortis.com" target="_blank" rel="noopener">Grifortis</a>.</p>
-  </div>
 </section>
 <!-- FRAME-END -->
 <section class="lcf-end lcf-labend" id="lcfEnd" aria-label="More in the Lab">

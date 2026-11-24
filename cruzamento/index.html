@@ -201,6 +201,9 @@ label.inline { display: inline-flex; gap: 6px; align-items: center; font-size: 1
 .lcf-solend .lcf-box { background: var(--bg, #eef2f3); border: 1px solid var(--line, #cdd8dc); border-radius: 14px; padding: 20px; display: grid; gap: 12px; justify-items: start; }
 .lcf-solend .lcf-box p { margin: 0; }
 /* FRAME-END */
+details.notice { margin-top: 12px; font-size: 13.5px; }
+details.notice summary { cursor: pointer; font-weight: 600; color: var(--muted); }
+details.notice p { margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -273,8 +276,11 @@ label.inline { display: inline-flex; gap: 6px; align-items: center; font-size: 1
     <li><b>Os tamanhos aparecem:</b> cada lado fica sabendo quantos registros o outro tem. É de propósito: é o que permite perceber um ataque de dicionário.</li>
     <li><b>Ataque de dicionário:</b> um lado pode pôr na própria lista os identificadores que quer testar, e qualquer PSI permite isso. A defesa é combinar antes o tamanho máximo, conferir o tamanho anunciado e parar se ele não fizer sentido.</li>
     <li><b>Lados honestos, mas curiosos:</b> a demonstração supõe que cada lado segue o protocolo. Contra quem desvia dele de propósito, existem versões mais fortes.</li>
-    <li><b>Demonstração, sem garantias</b> e sem valor jurídico. Para cruzar listas de verdade, com centenas de milhares de registros, fale conosco.</li>
+    <li><b>Demonstração</b>, feita de boa-fé e com cuidado: use por sua conta e risco. Para cruzar listas de verdade, com centenas de milhares de registros, fale conosco.</li>
   </ul>
+  <details class="notice" id="aviso"><summary>Ler o aviso completo</summary>
+    <p>Esta página é uma demonstração, feita de boa-fé e com cuidado. Ela é oferecida “como está”, <b>sem garantia de qualquer tipo</b>, inclusive de funcionamento, de segurança ou de adequação a um uso específico. Nenhum valor jurídico pode ser atribuído aos seus resultados. Os autores e a LucentCrypto não se responsabilizam por qualquer dano decorrente do uso. O código ainda não passou por auditoria independente.</p>
+  </details>
 </section>
 <!-- FRAME-END -->
 <section class="lcf-end lcf-solend" id="lcfEnd" aria-label="Para usar na sua organização">
