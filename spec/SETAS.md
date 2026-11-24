@@ -69,29 +69,45 @@ The online and mail channels MUST close before in-person voting starts. The list
 - In the booth the voter marks, separates the parts and destroys the left part (a small shredder or bin is in the booth). The identification block is not used in person; the list at the desk is the record.
 - **The scanning box:** a Raspberry Pi with a camera at the slot of a sealed box. It reads the code and the marks and MUST return the part to the voter if the code is not in the manifest, is already used, or the part has more than k marks. Otherwise it shows *Cédula K7F2-9QXM recebida* and lets the paper drop into the box. It never sees the arrows, so not even a compromised box can reveal a vote.
 - At closing the box prints and signs the list of codes received; the images and the list are exported. The paper stays sealed for a recount.
-- **Alternative: the arrow voting machine** (build brief: `SETAS-URNA.md`). The voter draws a **sealed 80 mm slip** with the names, the arrows and the code, scans the code at the machine, reads the arrows on the slip and types the **box numbers** on a keypad. The machine prints the vote part (code and boxes) for the sealed box; the slip is destroyed. Like the scanning box, the machine never knows the arrows, so it can neither read a vote nor favour a candidate; it also needs no reading of pen marks and refuses more than k boxes.
+- **Alternative: the arrow voting machine** (build brief: `SETAS-URNA.md`). The voter draws a **sealed 80 mm slip** with the names, the arrows and the code, scans the code at the machine, reads the arrows on the slip and types the **box numbers** on a keypad. The machine prints a vote strip (code and boxes) for the sealed box; the slip is destroyed. At the count the strips are scanned like the mail parts, each image published next to its reading. Like the scanning box, the machine never knows the arrows, so it can neither read a vote nor favour a candidate; it also needs no reading of pen marks and refuses more than k boxes.
 - **Slips and sheets in person** are drawn by the voter out of the poll worker's sight, and nobody records which one a voter took. Sealed slips make photographing their arrows visible (`SETAS-URNA.md` section 6a).
 - **Accessibility:** for a voter who cannot read the arrows, a Pi with a screen and headphones generates a ballot as the browser does (4.3). In that case the secrecy depends on that device's software.
 
 ### 4.3 Online
 
-- The voter signs in. The **browser** generates π and the code, encrypts the arrows under `P` and sends `(code, c_1 … c_n)` to the board **before** showing the ballot. The server MUST NOT generate π.
-- The ballot is shown with the same layout. The voter may **audit** it: the browser reveals the randomness of each `c_j`, anyone can check it against the arrows shown, and the ballot is discarded for a new one.
-- The voter marks the boxes and submits `(code, marks)`. The browser then forgets π; the voter may keep a screenshot of the right part as a receipt.
-- The server knows which voter submitted which code, as the mail reception does. Neither knows the arrows.
-- The software is the same open-source code as the Pi's, served with a published hash.
+Online is plan A for most clients: no mailing, only a browser. The arrows are drawn in the voter's browser; LucentCrypto's server never sees them.
+
+- **Sign-in.** The voter signs in with the organizer's usual credentials. The server knows who is voting, as the mail reception does.
+- **The ballot component.** The arrows are drawn by a small, fixed component: open source, built reproducibly, its hash published on the board before the election. It is loaded from a separate origin into a sandboxed frame whose content security policy forbids all network access. It draws π and the code from the browser's random generator, encrypts the arrows under `P`, and passes only `(code, c_1 … c_n)` to the voting page. The frame shows the left part of the ballot (names and arrows) and the voting page the right part (boxes and code), side by side. The browser's same-origin rule keeps the arrows out of reach of the server's page. The server MUST NOT generate π.
+- **Commit before showing.** The voting page posts `(code, c_1 … c_n)` to the board before the component shows the arrows.
+- **Audits, kept low profile.**
+  - *Automatic.* The component prepares two ballots and commits both. Once both commitments are on the board, a random choice by the server decides which one is shown; the component opens the other (reveals π and the randomness) and the board checks it. The voter is asked nothing. This catches a component that encrypts anything other than a permutation.
+  - *Manual, for careful voters.* A discreet link, *auditar esta cédula*, opens the ballot just shown. The voter checks it on a second device (a phone scans a QR code with the opening) against the arrows they saw, and receives a new ballot. This catches a component that shows arrows other than those it committed; it works because the component cannot know who will check.
+- **Voting.** The voter clicks the boxes. The voting page submits `(code, boxes)` and shows *Código K7F2-9QXM: quadrados 3 · 7 · 11*, which the voter can later find in the published cast table. The component then forgets π.
+- **Who voted online** (member numbers or names) is published after closing, so that a member who did not vote can object (section 8).
+- The accessibility Pi (4.2) runs the same component.
+
+**Option: a pre-generated pool, fetched by PIR.** For clients who want every online ballot committed before the election, and who do not want to rely on LucentCrypto for secrecy or against ballot stuffing.
+
+- Before the election, LucentCrypto generates a pool far larger than the number of voters (e.g. 10 million ballots), each with a code, π, and a seed from which the encryption randomness is derived. The manifest is published and sampled in public, as for paper (section 5).
+- Two servers run by independent operators each hold the pool. The browser picks an index at random and fetches that ballot by **two-server private information retrieval**: each server sees a random-looking query and learns nothing about the index. The fetch needs no sign-in.
+- The component recomputes the ballot's encryptions from π and the seed and checks them against the manifest entry; the voter then votes as above. The automatic two-ballot audit is not needed.
+- If the code was already cast (two voters drew the same ballot), the vote is refused and the browser fetches another ballot.
+- The pool MUST be served only through PIR. A pool holder that also runs the voting server would otherwise know every online vote.
+
+**Option: mailed arrows.** For a client who asks for it, every voter receives the mail sheet or a sealed slip by post and may vote online by typing its code and boxes. The arrows then never touch a computer. The cost of the mailing makes this an exception.
 
 ## 5. Audits
 
 - **Blank-ballot audit.** After printing, a random sample of the blank ballots is drawn, with a seed that the *chapas* contribute to in public. The sample's encrypted arrows are decrypted jointly (with proofs, section 6) and compared with the print; the audited codes are voided. If a fraction f of the ballots is wrong, a sample of s catches it with probability 1 − (1 − f)^s: s = 60 catches f = 5 % with 95 %.
-- **Voter-initiated audit.** In person, the second ballot a voter hands back goes into an audit envelope and is decrypted at the count ceremony. Online, the audit is immediate (4.3).
+- **Voter-initiated audit.** In person, the second ballot a voter hands back goes into an audit envelope and is decrypted at the count ceremony. Online, see the audits in 4.3.
 - **Each voter** finds their code in the published table and compares the marks with their photo or screenshot.
 - **Counts.** Per channel, the number of vote parts MUST equal the number of voters marked as voted; blank ballots handed out, returned, audited and unused MUST add up. All counts are published.
 - **Recount.** The paper of the in-person box and of the mail is kept; anyone may compare it with the scanned table.
 
 ## 6. The count
 
-1. **Rows.** For each cast ballot: the marked boxes `j₁ … j_r` (r ≤ k) give the row `(c_{j₁}, …, c_{j_r})`, padded to k entries with encryptions of 0 (*no choice*). The unmarked boxes are not used. Rows carry no code and no channel.
+1. **Rows.** For each cast ballot (mail parts and in-person strips are read from their scanned images, each published next to its reading): the marked boxes `j₁ … j_r` (r ≤ k) give the row `(c_{j₁}, …, c_{j_r})`, padded to k entries with encryptions of 0 (*no choice*). The unmarked boxes are not used. Rows carry no code and no channel.
 2. **Shuffle, twice.** LucentCrypto, then the committee, each re-encrypt every entry and permute the rows, with a **cut-and-choose proof** (Sako–Kilian): λ = 40 intermediate shuffles, challenge bits from a hash of the transcript, each opening either the input side or the output side. Nothing can be added, removed or changed without detection, except with probability 2⁻⁴⁰. One honest shuffle is enough for nobody to know which row came from which ballot.
 3. **Reveal.** LucentCrypto and t committee members decrypt each entry of the shuffled rows: each side contributes its partial decryption with a Chaum–Pedersen proof of equality of discrete logarithms. The committee's share is reassembled from t passphrases on the ceremony device, used, and erased.
 4. **Table.** Each row now reads as up to k candidate numbers. The table and the totals per candidate are published. Anyone can recount from the table, and check every proof, with any program.
@@ -100,7 +116,7 @@ Only the candidates behind the **marked** boxes are ever revealed; the rest of e
 
 ## 7. Bulletin board
 
-In order: the election parameters; `P_L`, `P_C` with their proofs; the manifest hash, then the manifest; the seeds and results of the blank-ballot audit; the online `(code, encrypted arrows)` as they are created; at closing, the cast table `(code, marks, channel)` and the counts; the rows; each shuffle with its proof; each decryption with its proof; the result table and the totals.
+In order: the election parameters; the source and hash of the online ballot component; `P_L`, `P_C` with their proofs; the manifest hash, then the manifest; the seeds and results of the blank-ballot audit; the online `(code, encrypted arrows)` as they are created; at closing, the cast table `(code, marks, channel)`, the scanned images of the mail parts and strips each next to its reading, the list of members who voted online, and the counts; the rows; each shuffle with its proof; each decryption with its proof; the result table and the totals.
 
 ## 8. Security
 
@@ -113,6 +129,8 @@ In order: the election parameters; `P_L`, `P_C` with their proofs; the manifest 
 | A row added, dropped or changed in a shuffle | The shuffle proofs |
 | A wrong decryption | The Chaum–Pedersen proofs |
 | Ballots stuffed by an insider | Each cast ballot needs a listed voter; counts per channel must match |
+| Online ballots cast by the server for members who did not vote | The published list of who voted online (with browser-generated ballots the server could favour a candidate this way; with the PIR pool it could only add random votes) |
+| An online component that shows arrows other than those it committed | The manual audit on a second device (4.3) |
 | Voting twice across channels | Online and mail close first; one list |
 
 **Secrecy.** Linking a voter to a vote needs the code of their ballot **and** its arrows before the shuffle:
@@ -120,7 +138,8 @@ In order: the election parameters; `P_L`, `P_C` with their proofs; the manifest 
 - the mail reception and the online server know voter ↔ code, but not the arrows;
 - the generating software and the print shop know code ↔ arrows, but not who received which ballot;
 - decrypting arrows before the shuffle needs LucentCrypto **and** t committee members together;
-- a compromised browser, or the accessibility Pi, sees the arrows while the voter votes. The scanning box and the arrow voting machine never do;
+- online, the arrows are drawn by the pinned component in the voter's browser: a compromised component or browser sees them, LucentCrypto's server does not (4.3). The accessibility Pi is in the same position. The scanning box and the arrow voting machine never see them;
+- the online server knows voter ↔ code, like the mail reception. A pre-generated pool MUST be served only through PIR: its holder knows code ↔ arrows, and if it also ran the server it would know every online vote;
 - someone who **photographs ballots or slips** before they are used learns code ↔ arrows for those codes, and with the cast table the vote cast with each. They still need to know who received which ballot. Sealed slips, random draws out of sight, mailing without recording codes, and machine records exported in code order rather than casting order keep that unknown. This threatens secrecy, not the result, and the seals make it visible.
 
 **Coercion.** At home (mail, online) nothing prevents someone from watching the voter, as with any remote vote. Because each row is revealed, a coercer may demand an unusual combination and look for it in the table (the "Italian attack"): with 4 of 12 there are 794 combinations for a few hundred voters. Accepted, and stated to the organizer.
@@ -133,4 +152,5 @@ In order: the election parameters; `P_L`, `P_C` with their proofs; the manifest 
 - Reading marks with a camera: tolerance for faint, partial or crossed-out marks; what counts as a mark.
 - The Portuguese word list for passphrases.
 - Seeds for audits: how the *chapas* contribute (dice, numbers read out in public).
-- Whether to publish the scanned images of the vote parts, or only the table.
+- Benchmark two-server PIR for the pool option; single-server PIR (lattice-based) for a client without a second independent operator.
+- Reading the scanned strips and mail parts: scanner, software, and error rate.
