@@ -1,20 +1,123 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://lucentcrypto.org/</loc></url>
-  <url><loc>https://lucentcrypto.org/sorteios/</loc></url>
-  <url><loc>https://lucentcrypto.org/embaralhamento/</loc></url>
-  <url><loc>https://lucentcrypto.org/segredo/</loc></url>
-  <url><loc>https://lucentcrypto.org/votacao/</loc></url>
-  <url><loc>https://lucentcrypto.org/en/votacao/</loc></url>
-  <url><loc>https://lucentcrypto.org/en/sorteios/</loc></url>
-  <url><loc>https://lucentcrypto.org/en/embaralhamento/</loc></url>
-  <url><loc>https://lucentcrypto.org/cruzamento/</loc></url>
-  <url><loc>https://lucentcrypto.org/en/cruzamento/</loc></url>
-  <url><loc>https://lucentcrypto.org/en/encrypt/</loc></url>
-  <url><loc>https://lucentcrypto.org/en/segredo/</loc></url>
-  <url><loc>https://lucentcrypto.org/encrypt/</loc></url>
-  <url><loc>https://lucentcrypto.org/pt/</loc></url>
-  <url><loc>https://lucentcrypto.org/es/</loc></url>
-  <url><loc>https://lucentcrypto.org/nl/</loc></url>
-  <url><loc>https://lucentcrypto.org/amigo-oculto/</loc></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://lucentcrypto.org/</loc>
+    <lastmod>2026-11-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://lucentcrypto.org/pt/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://lucentcrypto.org/es/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://lucentcrypto.org/nl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://lucentcrypto.org/"/>
+  </url>
+  <url>
+    <loc>https://lucentcrypto.org/pt/</loc>
+    <lastmod>2026-11-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://lucentcrypto.org/pt/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://lucentcrypto.org/es/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://lucentcrypto.org/nl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://lucentcrypto.org/"/>
+  </url>
+  <url>
+    <loc>https://lucentcrypto.org/es/</loc>
+    <lastmod>2026-11-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://lucentcrypto.org/pt/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://lucentcrypto.org/es/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://lucentcrypto.org/nl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://lucentcrypto.org/"/>
+  </url>
+  <url>
+    <loc>https://lucentcrypto.org/nl/</loc>
+    <lastmod>2026-11-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://lucentcrypto.org/pt/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://lucentcrypto.org/es/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://lucentcrypto.org/nl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://lucentcrypto.org/"/>
+  </url>
+  <url>
+    <loc>https://lucentcrypto.org/sorteios/</loc>
+    <lastmod>2026-11-21</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/sorteios/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/sorteios/"/>
+  </url>
+  <url>
+    <loc>https://lucentcrypto.org/en/sorteios/</loc>
+    <lastmod>2026-11-21</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/sorteios/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/sorteios/"/>
+  </url>
+  <url>
+    <loc>https://lucentcrypto.org/embaralhamento/</loc>
+    <lastmod>2026-11-21</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/embaralhamento/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/embaralhamento/"/>
+  </url>
+  <url>
+    <loc>https://lucentcrypto.org/en/embaralhamento/</loc>
+    <lastmod>2026-11-21</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/embaralhamento/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/embaralhamento/"/>
+  </url>
+  <url>
+    <loc>https://lucentcrypto.org/cruzamento/</loc>
+    <lastmod>2026-11-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/cruzamento/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/cruzamento/"/>
+  </url>
+  <url>
+    <loc>https://lucentcrypto.org/en/cruzamento/</loc>
+    <lastmod>2026-11-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/cruzamento/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/cruzamento/"/>
+  </url>
+  <url>
+    <loc>https://lucentcrypto.org/votacao/</loc>
+    <lastmod>2026-11-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/votacao/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/votacao/"/>
+  </url>
+  <url>
+    <loc>https://lucentcrypto.org/en/votacao/</loc>
+    <lastmod>2026-11-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/votacao/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/votacao/"/>
+  </url>
+  <url>
+    <loc>https://lucentcrypto.org/encrypt/</loc>
+    <lastmod>2026-11-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/encrypt/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/encrypt/"/>
+  </url>
+  <url>
+    <loc>https://lucentcrypto.org/en/encrypt/</loc>
+    <lastmod>2026-11-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/encrypt/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/encrypt/"/>
+  </url>
+  <url>
+    <loc>https://lucentcrypto.org/segredo/</loc>
+    <lastmod>2026-11-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/segredo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/segredo/"/>
+  </url>
+  <url>
+    <loc>https://lucentcrypto.org/en/segredo/</loc>
+    <lastmod>2026-11-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/segredo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/segredo/"/>
+  </url>
+  <url>
+    <loc>https://lucentcrypto.org/amigo-oculto/</loc>
+    <lastmod>2026-11-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/amigo-oculto/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/amigo-oculto/"/>
+  </url>
+  <url>
+    <loc>https://lucentcrypto.org/en/amigo-oculto/</loc>
+    <lastmod>2026-11-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://lucentcrypto.org/amigo-oculto/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://lucentcrypto.org/en/amigo-oculto/"/>
+  </url>
 </urlset>
